@@ -4,8 +4,6 @@ package com.example.CS_IU_proto_1;
 import android.media.Image;
 import android.opengl.Matrix;
 
-import com.google.ar.core.Camera;
-
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -14,32 +12,24 @@ import java.nio.ByteBuffer;
 
 public class Myutil {
 
-    public class Ray {
-        float[] rayorigin;
-        float[] raydir;
-        public Ray(float[] rayinfo){
-            rayorigin = new float[]{rayinfo[0],rayinfo[1],rayinfo[2]};
-            raydir = new float[]{rayinfo[3],rayinfo[4],rayinfo[5]};
-        }
-    }
 
-    public static float[] pickSurfacePoints(Plane plane, float[] rayinfo){
+    public static float[] pickSurfacePoints(Plane plane, Ray ray){
         // 예외 처리 하기
         float[] output = new float[3];
 
-        float parameter = (plane.dval - plane.normal[0]*rayinfo[0] - plane.normal[1]*rayinfo[1] -plane.normal[2]*rayinfo[2])
-                / (plane.normal[0]*rayinfo[3]+plane.normal[1]*rayinfo[4]+plane.normal[2]*rayinfo[5]);
+        float parameter = (plane.dval - plane.normal[0]*ray.origin[0] - plane.normal[1]*ray.origin[1] -plane.normal[2]*ray.origin[2])
+                / (plane.normal[0]*ray.dir[0]+plane.normal[1]*ray.dir[1]+plane.normal[2]*ray.dir[2]);
 
-        output[0] = rayinfo[3]*parameter + rayinfo[0];
-        output[1] = rayinfo[4]*parameter + rayinfo[1];
-        output[2] = rayinfo[5]*parameter + rayinfo[2];
+        output[0] = ray.dir[0]*parameter + ray.origin[0];
+        output[1] = ray.dir[1]*parameter + ray.origin[1];
+        output[2] = ray.dir[2]*parameter + ray.origin[2];
 
         return output;
 
     }
     //TODO Ray 적용하기
 
-    public static float[] GenerateRay(float xPx, float yPx, int screenWidth, int screenHeight,float[] projMX,float[] viewMX, float[] camera_trans) {
+    public static Ray GenerateRay(float xPx, float yPx, int screenWidth, int screenHeight,float[] projMX,float[] viewMX, float[] camera_trans) {
         // https://antongerdelan.net/opengl/raycasting.html 참고
 
         // screen space 에서 clip space 로
@@ -77,8 +67,8 @@ public class Myutil {
         out[3] = ray_wor[0] / ray_wor_length;
         out[4] = ray_wor[1] / ray_wor_length;
         out[5] = ray_wor[2] / ray_wor_length;
-
-        return out;
+        Ray ray = new Ray(out);
+        return ray;
     }
 
 

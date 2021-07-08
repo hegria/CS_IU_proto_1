@@ -130,6 +130,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     });
 
     glView.setOnTouchListener((view, event) -> {
+      Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
+
       if (state == State.FoundSurface) {
         // 바닥을 찾은 후 화면을 터치하면 카메라의 world space 좌표만큼 translate 되는 큐브 생성
 //        glView.queueEvent(() -> {
@@ -142,8 +144,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         // 카메라를 lIst로 빼두는건 나중에 생각하는걸루하고..
         // rayInfo를 origin과 dir로 빼는게 맞나???
-        float[] rayInfo = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
-        float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,rayInfo);
+        float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,ray);
         glView.queueEvent(() -> {
 //          Cube cube = new Cube();
 //          cube.xyz = new float[]{point[0],point[1],point[2]};
@@ -157,8 +158,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       } else if (state == State.PointCollected) {
         state = State.FindingSurface;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
-        float[] rayInfo = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
-        findPlaneTask.initTask(pointCollector.getPointBuffer(),rayInfo,camera.getPose().getZAxis());
+        findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
         isFoundPlane = findPlaneworker.submit(findPlaneTask);
         // 일할때까지 숨 참음
         try {
