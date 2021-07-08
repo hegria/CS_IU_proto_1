@@ -13,37 +13,42 @@ import org.opencv.imgproc.Imgproc;
 import java.nio.ByteBuffer;
 
 public class Myutil {
-    // Lay를 쏴서 평면위의 교차점 Return
-    public static float[] pickSurfacePoints(Plane plane, float[] rayorigin, float[] raydir){
+
+    public class Ray {
+        float[] rayorigin;
+        float[] raydir;
+        public Ray(float[] rayinfo){
+            rayorigin = new float[]{rayinfo[0],rayinfo[1],rayinfo[2]};
+            raydir = new float[]{rayinfo[3],rayinfo[4],rayinfo[5]};
+        }
+    }
+
+    public static float[] pickSurfacePoints(Plane plane, float[] rayinfo){
         // 예외 처리 하기
         float[] output = new float[3];
 
-        float parameter = (plane.dval - plane.normal[0]*rayorigin[0] - plane.normal[1]*rayorigin[1] -plane.normal[2]*rayorigin[2])
-                / (plane.normal[0]*raydir[0]+plane.normal[1]*raydir[1]+plane.normal[2]*raydir[2]);
+        float parameter = (plane.dval - plane.normal[0]*rayinfo[0] - plane.normal[1]*rayinfo[1] -plane.normal[2]*rayinfo[2])
+                / (plane.normal[0]*rayinfo[3]+plane.normal[1]*rayinfo[4]+plane.normal[2]*rayinfo[5]);
 
-        output[0] = raydir[0]*parameter + rayorigin[0];
-        output[1] = raydir[1]*parameter + rayorigin[1];
-        output[2] = raydir[2]*parameter + rayorigin[2];
+        output[0] = rayinfo[3]*parameter + rayinfo[0];
+        output[1] = rayinfo[4]*parameter + rayinfo[1];
+        output[2] = rayinfo[5]*parameter + rayinfo[2];
 
         return output;
 
     }
+    //TODO Ray 적용하기
 
-
-    public static float[] rayPicking(float xPx, float yPx, int screenWidth, int screenHeight, Camera camera) {
+    public static float[] GenerateRay(float xPx, float yPx, int screenWidth, int screenHeight,float[] projMX,float[] viewMX, float[] camera_trans) {
         // https://antongerdelan.net/opengl/raycasting.html 참고
 
         // screen space 에서 clip space 로
         float x = 2.0f * xPx / screenWidth - 1.0f;
         float y = 1.0f - 2.0f * yPx / screenHeight;
 
-        float[] projMX = new float[16];
-        camera.getProjectionMatrix(projMX, 0, 0.1f, 100.0f);
         float[] inverseProjMX = new float[16];
         Matrix.invertM(inverseProjMX, 0, projMX, 0);
 
-        float[] viewMX = new float[16];
-        camera.getViewMatrix(viewMX, 0);
         float[] inverseViewMX = new float[16];
         Matrix.invertM(inverseViewMX, 0, viewMX, 0);
 
@@ -64,9 +69,9 @@ public class Myutil {
         float[] out = new float[6];
 
         // 카메라의 world space 좌표
-        out[0] = camera.getPose().tx();
-        out[1] = camera.getPose().ty();
-        out[2] = camera.getPose().tz();
+        out[0] = camera_trans[0];
+        out[1] = camera_trans[1];
+        out[2] = camera_trans[2];
 
         // ray의 normalized 된 방향벡터
         out[3] = ray_wor[0] / ray_wor_length;
@@ -75,6 +80,8 @@ public class Myutil {
 
         return out;
     }
+
+
 
 
     public static Mat ArImg2CVImg(Image image){
@@ -118,4 +125,8 @@ public class Myutil {
 
         return outoutImg;
     }
+
+
+
+
 }

@@ -13,10 +13,16 @@ import java.util.concurrent.Callable;
 
 public class FindPlaneTask implements Callable<Boolean>
 {
+//    public interface FindPlaneTaskListener {
+//        public void onSuccessTask(Plane plane);
+//        public void onFailTask();
+//    }
+
     private static final String REQUEST_URL = "https://developers.curvsurf.com/FindSurface/plane"; // Plane searching server address
+    private static final float circleRad = 0.25f;
+
     FindSurfaceRequester fsr = new FindSurfaceRequester( REQUEST_URL ,false);
 
-    private float circleRad = 0.25f;
     // Reuseable Variables...
     FloatBuffer points = null;
     int seedPointID;
@@ -34,14 +40,17 @@ public class FindPlaneTask implements Callable<Boolean>
 
     //TODO SingleTone으로 할까?
 
-    public void initTask( FloatBuffer _points,float[] _layinfo, float[] _z_axis) {
+    // 카메라를 그냥 받아라 ㅅㅂ아
+    public void initTask( FloatBuffer _points, float[] _layinfo, float[] _z_axis) {
         points = _points.duplicate();
+
         layinfo = _layinfo;
         z_axis = _z_axis;
+
         plane  = null;
     }
 
-    @Override
+    @Override // - Callable<>
     public Boolean call() {
         // Ray Picking
         int pointCount  = points.capacity() / 4;
@@ -53,7 +62,6 @@ public class FindPlaneTask implements Callable<Boolean>
         rf.setPointDataDescription(0.05f, 0.02f); //accuracy, meanDistance
         rf.setTargetROI(seedPointID, Math.max(z_dist * circleRad, 0.05f));//seedIndex,touchRadius
         rf.setAlgorithmParameter(RequestForm.SearchLevel.LV7, RequestForm.SearchLevel.NORMAL);//LatExt, RadExp
-        // TODO Error handling
         try {
             ResponseForm resp = fsr.request( rf, points );
             if( resp != null &&resp.isSuccess() ) {
@@ -79,19 +87,22 @@ public class FindPlaneTask implements Callable<Boolean>
         }
         catch(Exception e) {
             e.printStackTrace();
+
+            // Error Handling
         }
         return null;
     }
 
-    public void pickPoint(FloatBuffer filterPoints, float[] layinfo) {
+    public void pickPoint(FloatBuffer filterPoints, final float[] layinfo) {
         // camera: 카메라의 world space 위치(x,y,z), ray : ray의 방향벡터
         float minDistanceSq = Float.MAX_VALUE;
 
         filterPoints.rewind();
-
+        float[] point;
+        float[] product;
         for (int i = 0; i < filterPoints.remaining(); i += 4) {
-            float[] point = new float[]{filterPoints.get(i), filterPoints.get(i + 1), filterPoints.get(i + 2), filterPoints.get(i + 3)};
-            float[] product = new float[]{point[0] - layinfo[0], point[1] - layinfo[1], point[2] - layinfo[2], 1.0f};
+            point = new float[]{filterPoints.get(i), filterPoints.get(i + 1), filterPoints.get(i + 2), filterPoints.get(i + 3)};
+            product = new float[]{point[0] - layinfo[0], point[1] - layinfo[1], point[2] - layinfo[2], 1.0f};
 
             // 카메라 -> 특징점 벡터의 크기와, 이 벡터와 카메라 -> ray 벡터를 내적한 값을 이용해 피타고라스정리
             float distanceSq = product[0] * product[0] + product[1] * product[1] + product[2] * product[2];
@@ -109,23 +120,3 @@ public class FindPlaneTask implements Callable<Boolean>
         }
     }
 }
-/*
-
-    FindPlaneTask planeTask = new FindPlaneTask();
-
-public void onClick(View v) {
-        planeTaskFlag = true;
-        }
-
-public void onDrawFrame() {
-        if( planeTaskFlag ) {
-        planeTaskFlag = false;
-
-        if( fpsvc.getActiveCount() == 0 ) {
-        planeTask.initTask( ... );
-        fpsvc.execute( planeTask );
-        }
-        }
-
-        camera.getProjectionMatrix(projMat, 0, 0.1f, 100.0f);
-        }*/

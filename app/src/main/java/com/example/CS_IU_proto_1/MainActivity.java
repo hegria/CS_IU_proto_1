@@ -31,7 +31,6 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -51,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   GLSurfaceView glView; // 띄우기 위한 View
 
 
+  // TODO ENUM 써보기
   private static final int IDLE = 1;
   private static final int POINT_COLLECTING = 2;
   private static final int POINT_COLLECTED = 3;
@@ -143,10 +143,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // ray 찾음
 
         // 카메라를 lIst로 빼두는건 나중에 생각하는걸루하고..
-        float[] rayInfo = Myutil.rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
-        float[] ray_origin = new float[]{rayInfo[0], rayInfo[1], rayInfo[2]}; //원점좌표
-        float[] ray_dir = new float[]{rayInfo[3], rayInfo[4], rayInfo[5]};
-        float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,ray_origin,ray_dir);
+        // rayInfo를 origin과 dir로 빼는게 맞나???
+        // TODO ray를 하나의 class로 만들까?
+        float[] rayInfo = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
+        float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,rayInfo);
         glView.queueEvent(() -> {
 //          Cube cube = new Cube();
 //          cube.xyz = new float[]{point[0],point[1],point[2]};
@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       } else if (state == POINT_COLLECTED) {
         state = FINDING_SURFACE;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
-        float[] rayInfo = Myutil.rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
+        float[] rayInfo = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
         findPlaneTask.initTask(pointCollector.getPointBuffer(),rayInfo,camera.getPose().getZAxis());
         isFoundPlane = findPlaneworker.submit(findPlaneTask);
         // 일할때까지 숨 참음
@@ -180,6 +180,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       return false;
     });
   }
+
+  //
+  // - Mark: MainActivity LifeCycle Override
+  //
+
 
   @Override
   protected void onDestroy() {
@@ -300,8 +305,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
   }
 
+  //
+  // - Mark: GLSurfaceView.Rendrer implements..
+  //
+
   // 새로운 시작
-  @Override
+  @Override // GLSurfaceView.Renderer.onSurfaceCreated()
   public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
     forDebugging = new SimpleDraw();
@@ -337,6 +346,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
     //평면을 찾은 뒤에 이미지를 옮길것임.
     if (state == FOUND_SURFACE) {
+      // TODO rayPicking에 필요한 정보를 넘겨야함. view, proj, txtytz 이렇게 넘겨야 함.
+      // TODO 점들을 받으면 rayCasting을 해서 worldscale -> local scale로 변환)
 
       if (!isBusy) {
         try {
