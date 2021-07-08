@@ -82,9 +82,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   Button recordButton; // 레코딩~
 
-  boolean isCollecting = false;
-  boolean isPointPicked = false;
-
   CameraConfig cameraConfig;
   FindPlaneTask findPlaneTask;
   Future<Boolean> isFoundPlane;
@@ -121,13 +118,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         });
 
         state = POINT_COLLECTED;
-      } else {
+        recordButton.setText("Reset");
+      } else if(state == IDLE) {
+        recordButton.setText("Fix");
         // collecting 시작하기 위해 버튼 누름
-        isCollecting = true;
-        isPointPicked = false;
+        state = POINT_COLLECTING;
+      }else{
+        recordButton.setText("Record");
+        state = IDLE;
         circles.clear();
         pointCollector = new PointCollector();
-        state = POINT_COLLECTING;
       }
     });
 
@@ -180,6 +180,21 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       return false;
     });
   }
+
+  @Override
+  protected void onDestroy() {
+    if (session != null) {
+      // Explicitly close ARCore Session to release native resources.
+      // Review the API reference for important considerations before calling close() in apps with
+      // more complicated lifecycle requirements:
+      // https://developers.google.com/ar/reference/java/arcore/reference/com/google/ar/core/Session#close()
+      session.close();
+      session = null;
+    }
+
+    super.onDestroy();
+  }
+
   @Override
   public void onPause() {
     super.onPause();
