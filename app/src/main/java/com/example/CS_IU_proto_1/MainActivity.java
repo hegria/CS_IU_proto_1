@@ -123,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         state = POINT_COLLECTED;
       } else {
         // collecting 시작하기 위해 버튼 누름
-        // TODO 이리저리 다 초기화
         isCollecting = true;
         isPointPicked = false;
         circles.clear();
@@ -161,23 +160,19 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       } else if (state == POINT_COLLECTED) {
         state = FINDING_SURFACE;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
-        // TODO:POINT를 수정하려면 어떻게 해야하지?
         float[] rayInfo = Myutil.rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
         findPlaneTask.initTask(pointCollector.getPointBuffer(),rayInfo,camera.getPose().getZAxis());
         isFoundPlane = findPlaneworker.submit(findPlaneTask);
         // 일할때까지 숨 참음
         try {
           if(isFoundPlane.get()){
-            Toast.makeText(this,"I got it",Toast.LENGTH_SHORT);
+            Toast.makeText(this,"I got it",Toast.LENGTH_SHORT).show();
             state = FOUND_SURFACE;
           }else{
-            Toast.makeText(this,"I can't got it",Toast.LENGTH_SHORT);
+            Toast.makeText(this,"I can't got it",Toast.LENGTH_SHORT).show();
             state = POINT_COLLECTED;
-            //TODO: 선택된 점 초기화 필요.
           }
-        } catch (ExecutionException e) {
-          e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (ExecutionException | InterruptedException e) {
           e.printStackTrace();
         }
         return false;
@@ -387,7 +382,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         pointCloudRenderer.update(frame.acquirePointCloud());
         pointCloudRenderer.draw(viewMX, projMX);
         break;
-      //TODO 깔끔하게 구조 바꾸기
       case FINDING_SURFACE:
         // 선택한 점 그리기.
         pointCloudRenderer.draw(viewMX, projMX);

@@ -1,6 +1,5 @@
 package com.example.CS_IU_proto_1;
 
-import android.annotation.SuppressLint;
 
 import com.curvsurf.fsweb.ResponseForm;
 
@@ -66,77 +65,11 @@ public class Plane {
     }
   }
 
-  public Plane(float[] ll, float[] lr, float[] ur, float[] ul, float[] center, float[] z_dir) {
-    this.ll = ll;
-    this.lr = lr;
-    this.ul = ul;
-    this.ur = ur;
-    this.center = center;
-
-    planeVertex = new float[]{
-            ul[0], ul[1], ul[2],
-            ll[0], ll[1], ll[2],
-            lr[0], lr[1], lr[2],
-            ur[0], ur[1], ur[2],
-    };
-
-    normal = new float[3];
-    this.calNormal();
-    xvec = new float[3];
-    yvec = new float[3];
-    setDval();
-
-    float[] standard = {0f,1f,0f};
-    xvec = crossprod(normal,standard);
-    yvec = crossprod(xvec,normal);
-    normalize(xvec);
-    normalize(yvec);
-    transformworldtolocal = new float[][]{
-            {xvec[0], xvec[1], xvec[2]},
-            {yvec[0], yvec[1], yvec[2]},
-            {normal[0], normal[1], normal[2]}
-    };
-
-    transformlocaltoworld = new float[][]{
-            {xvec[0],yvec[0],normal[0]},
-            {xvec[1],yvec[1],normal[1]},
-            {xvec[2],yvec[2],normal[2]}
-    };
-    neworigin = new float[3];
-
-    for(int i =0;i<3;i++){
-      for(int j = 0; j<3;j++){
-        neworigin[i] += transformworldtolocal[i][j] * center[j];
-      }
-    }
-  }
 
   protected  void setDval(){
     dval = normal[0]*ll[0] + normal[1]*ll[1] + normal[2]*ll[2];
   }
 
-  protected void calNormal() {
-    float[] vec1 = {lr[0] - ll[0], lr[1] - ll[1], lr[2] - ll[2], 1f};
-    float[] vec2 = {ul[0] - ll[0], ul[1] - ll[1], ul[2] - ll[2], 1f};
-
-    this.normal = new float[]{
-            vec1[1] * vec2[2] - vec1[2] * vec2[1],
-            vec1[2] * vec2[0] - vec1[0] * vec2[2],
-            vec1[0] * vec2[1] - vec1[1] * vec2[0]
-    };
-
-    float length = (float) Math.sqrt(
-            this.normal[0] * this.normal[0]
-                    + this.normal[1] * this.normal[1]
-                    + this.normal[2] * this.normal[2]
-    );
-
-    this.normal = new float[]{
-            this.normal[0] / length,
-            this.normal[1] / length,
-            this.normal[2] / length
-    };
-  }
 
   public void checkNormal(float[] z_dir) {
     if (z_dir[0] * normal[0] + z_dir[1] * normal[1] + z_dir[2] * normal[2] >= 0) return;
@@ -145,20 +78,6 @@ public class Plane {
     normal[2] = -normal[2];
   }
 
-  @Override
-  public String toString() {
-    @SuppressLint("DefaultLocale")
-    String ret = String.format("ll: (%f, %f, %f),\n" +
-                    "lr: (%f, %f, %f),\n" +
-                    "ul: (%f, %f, %f),\n" +
-                    "ur: (%f, %f, %f)\n",
-            ll[0], ll[1], ll[2],
-            lr[0], lr[1], lr[2],
-            ul[0], ul[1], ul[2],
-            ur[0], ur[1], ur[2]
-    );
-    return ret;
-  }
 
   float[] crossprod(float[] a, float[] b){
     float[] temp = new float[3];
@@ -177,6 +96,7 @@ public class Plane {
       a[i]/=len;
     }
   }
+
   float dotproduct(float[] a,float[] b){
     float now = 0;
     for(int i =0;i<3;i++)
