@@ -5,8 +5,6 @@ import android.content.Context;
 import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.opengl.Matrix;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -38,8 +36,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -50,7 +50,17 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   GLSurfaceView glView; // 띄우기 위한 View
 
-  boolean toggleFlag = true;
+
+  private static final int IDLE = 1;
+  private static final int POINT_COLLECTING = 2;
+  private static final int POINT_COLLECTED = 3;
+  private static final int FINDING_SURFACE = 4;
+  private static final int FOUND_SURFACE = 5;
+
+  // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 => 6
+  // plane 시작.
+  int state = IDLE;
+
   boolean installRequested = false;
   Session session; // ??
   Camera camera; // 그냥 카메라
@@ -59,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   Image image;
   ExecutorService worker;
+  ExecutorService findPlaneworker;
 
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
@@ -75,18 +86,22 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   boolean isPointPicked = false;
 
   CameraConfig cameraConfig;
-  FindPlane findPlane = null; // 아직 못찾음.
+  FindPlaneTask findPlaneTask;
+  Future<Boolean> isFoundPlane;
 
-  int seedID = -1; // ??
-  float[] seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f}; // ??
+
+  int width = 1, height = 1;
+  float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
+  float[] viewMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
 
   @SuppressLint("ClickableViewAccessibility")
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     worker = Executors.newSingleThreadExecutor();
+    findPlaneworker = Executors.newSingleThreadExecutor();
     // 전체화면
-
+    findPlaneTask = new FindPlaneTask();
     setContentView(R.layout.activity_main);
     glView = (GLSurfaceView) findViewById(R.id.surfaceView);
     glView.setPreserveEGLContextOnPause(true);
@@ -99,25 +114,26 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     recordButton = (Button) findViewById(R.id.recordButton);
     recordButton.setOnClickListener(l -> {
-      if (isCollecting) {
+      if (state == POINT_COLLECTING) {
         // collecting 끝내기 위해 버튼 누름
         glView.queueEvent(() -> {
           pointCloudRenderer.fix(pointCollector.getPointBuffer());
         });
 
-        isCollecting = false;
+        state = POINT_COLLECTED;
       } else {
         // collecting 시작하기 위해 버튼 누름
+        // TODO 이리저리 다 초기화
         isCollecting = true;
         isPointPicked = false;
-        findPlane = null;
         circles.clear();
         pointCollector = new PointCollector();
+        state = POINT_COLLECTING;
       }
     });
 
     glView.setOnTouchListener((view, event) -> {
-      if (findPlane != null && findPlane.plane != null) {
+      if (state == FOUND_SURFACE) {
         // 바닥을 찾은 후 화면을 터치하면 카메라의 world space 좌표만큼 translate 되는 큐브 생성
 //        glView.queueEvent(() -> {
 //          Cube cube = new Cube();
@@ -128,36 +144,43 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // ray 찾음
 
         // 카메라를 lIst로 빼두는건 나중에 생각하는걸루하고..
-        float[] rayInfo = rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
+        float[] rayInfo = Myutil.rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
         float[] ray_origin = new float[]{rayInfo[0], rayInfo[1], rayInfo[2]}; //원점좌표
         float[] ray_dir = new float[]{rayInfo[3], rayInfo[4], rayInfo[5]};
-        float[] point = Myutil.pickPoints(findPlane.plane,ray_origin,ray_dir);
+        float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,ray_origin,ray_dir);
         glView.queueEvent(() -> {
 //          Cube cube = new Cube();
 //          cube.xyz = new float[]{point[0],point[1],point[2]};
 //          cubes.add(cube);
           Circle circle = new Circle();
-          circle.setCircle(findPlane.plane, point);
+          circle.setCircle(findPlaneTask.plane, point);
           circles.add(circle);
 
         });
-
-      } else if (pointCollector.isFiltered) {
+        return false;
+      } else if (state == POINT_COLLECTED) {
+        state = FINDING_SURFACE;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
-        float[] rayInfo = rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
-        float[] ray_origin = new float[]{rayInfo[0], rayInfo[1], rayInfo[2]}; //원점좌표
-        float[] ray_dir = new float[]{rayInfo[3], rayInfo[4], rayInfo[5]};
-        pickPoint(pointCollector.getPointBuffer(), ray_origin, ray_dir);
-
-        isPointPicked = true;
-
-        findPlane = new FindPlane(this, pointCollector.getPointBuffer(), seedID, camera);
-        if (findPlane.getStatus() == AsyncTask.Status.FINISHED || findPlane.getStatus() == AsyncTask.Status.RUNNING) {
-          findPlane.cancel(true);
-          findPlane = new FindPlane(this, pointCollector.getPointBuffer(), seedID, camera);
+        // TODO:POINT를 수정하려면 어떻게 해야하지?
+        float[] rayInfo = Myutil.rayPicking(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), camera);
+        findPlaneTask.initTask(pointCollector.getPointBuffer(),rayInfo,camera.getPose().getZAxis());
+        isFoundPlane = findPlaneworker.submit(findPlaneTask);
+        // 일할때까지 숨 참음
+        try {
+          if(isFoundPlane.get()){
+            Toast.makeText(this,"I got it",Toast.LENGTH_SHORT);
+            state = FOUND_SURFACE;
+          }else{
+            Toast.makeText(this,"I can't got it",Toast.LENGTH_SHORT);
+            state = POINT_COLLECTED;
+            //TODO: 선택된 점 초기화 필요.
+          }
+        } catch (ExecutionException e) {
+          e.printStackTrace();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
         }
-        findPlane.execute();
-        return true;
+        return false;
       }
       return false;
     });
@@ -173,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   @Override
   protected void onResume() {
     super.onResume();
-
+    //OPENCV 쓰려면 꼭 써야함.
     if (!OpenCVLoader.initDebug()) {
       Log.d(TAG, "onResume :: Internal OpenCV library not found.");
     } else {
@@ -232,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.onResume();
   }
 
-
+  // CameraCongfing 모두 끌고와서 1920x1080선택
   private void obtainCameraConfigs() {
     // First obtain the session handle before getting the list of various camera configs.
     if (session != null) {
@@ -267,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
   }
 
+  // 새로운 시작
   @Override
   public void onSurfaceCreated(GL10 gl, EGLConfig config) {
     GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
@@ -275,10 +299,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     pointCloudRenderer = new PointCloudRenderer();
     background = new Background();
     circles = new ArrayList<>();
+    //TODO Method 이름을 적확하게 해두기
     background.SetsplitterPosition(1.0f);
   }
 
-  int width = 1, height = 1;
 
   @Override
   public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -299,9 +323,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
     // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
     session.setCameraTextureName(background.texID);
-    // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런...
+    // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
     session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
-    if (!toggleFlag) {
+    //평면을 찾은 뒤에 이미지를 옮길것임.
+    if (state == FOUND_SURFACE) {
 
       if (!isBusy) {
         try {
@@ -309,22 +334,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
 
           worker.execute(() -> {
+              if (image == null) {
+                return;
+              }
 
-                    if (image == null) {
-                      return;
-                    }
-
-                    isBusy = true;
-                    Mat img = Myutil.ArImg2CVImg(image);
-                    image.close();
-                    glView.queueEvent(() -> {
-                      background.updateCVImage(img);
-                    });
+              isBusy = true;
+              Mat img = Myutil.ArImg2CVImg(image);
+              image.close();
+              glView.queueEvent(() -> {
+                background.updateCVImage(img);
+              });
 
 
-                    isBusy = false;
-                  }
-          );
+              isBusy = false;
+          });
 
 
         } catch (NotYetAvailableException e) {
@@ -332,133 +355,48 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         }
       }
+  }
+    if (frame.hasDisplayGeometryChanged()) {
+      background.transformCoordinate(frame);
     }
-      if (frame.hasDisplayGeometryChanged()) {
-        background.transformCoordinate(frame);
-      }
 
+    camera = frame.getCamera();
+    // view matrix, projection matrix 받아오기
+    camera.getProjectionMatrix(projMX, 0, 0.1f, 100.0f);
+    camera.getViewMatrix(viewMX, 0);
 
+    // 그리기 전에 버퍼 초기화
+    // drawing phase
 
-      camera = frame.getCamera();
-      // view matrix, projection matrix 받아오기
-      float[] projMX = new float[16];
-      camera.getProjectionMatrix(projMX, 0, 0.1f, 100.0f);
-      float[] viewMX = new float[16];
-      camera.getViewMatrix(viewMX, 0);
-
-      // 그리기 전에 버퍼 초기화
-
-      GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-      background.draw();
-
-
-      // ray picking 으로 어느 점이 선택되었는지 보여주기 위함
-      // 찾은 바닥이 어떻게 생겼는지 보여주기 위함
-      if (findPlane != null && findPlane.plane != null) {
-        float[] pointForDrawingPlane = {
-                findPlane.plane.ll[0], findPlane.plane.ll[1], findPlane.plane.ll[2],
-                findPlane.plane.lr[0], findPlane.plane.lr[1], findPlane.plane.lr[2],
-                findPlane.plane.ur[0], findPlane.plane.ur[1], findPlane.plane.ur[2],
-                findPlane.plane.ll[0], findPlane.plane.ll[1], findPlane.plane.ll[2],
-                findPlane.plane.ur[0], findPlane.plane.ur[1], findPlane.plane.ur[2],
-                findPlane.plane.ul[0], findPlane.plane.ul[1], findPlane.plane.ul[2],
-        };
-
+    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+    background.draw();
+    switch(state){
+      case FOUND_SURFACE:
+        forDebugging.draw(findPlaneTask.plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
 //        for (Cube cube : cubes) {
 //          cube.update(dt, findPlane.plane);
 //          cube.draw(viewMX, projMX);
 //        }
-
-        forDebugging.draw(pointForDrawingPlane, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
         for (Circle circle : circles) {
           circle.draw(viewMX, projMX);
         }
-
-      } else {
-
-        if (isCollecting) {
-          // 매 프레임마다 보이는 특징점들을 수집하고 렌더링하기
-          pointCollector.push(frame.acquirePointCloud());
-          pointCloudRenderer.update(frame.acquirePointCloud());
-        }
+        break;
+      case POINT_COLLECTING:
+        // 일이 분리가 안된것 같긴한데 frame을 얻고 해야하므로 어쩔 수 없음.
+        pointCollector.push(frame.acquirePointCloud());
+        pointCloudRenderer.update(frame.acquirePointCloud());
         pointCloudRenderer.draw(viewMX, projMX);
-      }
-
-      if (isPointPicked)
-        forDebugging.draw(seedPointArr, GLES20.GL_POINTS, 4, 1f, 0f, 0f, viewMX, projMX);
+        break;
+      //TODO 깔끔하게 구조 바꾸기
+      case FINDING_SURFACE:
+        // 선택한 점 그리기.
+        pointCloudRenderer.draw(viewMX, projMX);
+        forDebugging.draw(findPlaneTask.seedPointArr, GLES20.GL_POINTS, 4, 1f, 0f, 0f, viewMX, projMX);
+        break;
+      case POINT_COLLECTED:
+        pointCloudRenderer.draw(viewMX, projMX);
+        break;
     }
 
-
-  float[] rayPicking(float xPx, float yPx, int screenWidth, int screenHeight, Camera camera) {
-    // https://antongerdelan.net/opengl/raycasting.html 참고
-
-    // screen space 에서 clip space 로
-    float x = 2.0f * xPx / screenWidth - 1.0f;
-    float y = 1.0f - 2.0f * yPx / screenHeight;
-
-    float[] projMX = new float[16];
-    camera.getProjectionMatrix(projMX, 0, 0.1f, 100.0f);
-    float[] inverseProjMX = new float[16];
-    Matrix.invertM(inverseProjMX, 0, projMX, 0);
-
-    float[] viewMX = new float[16];
-    camera.getViewMatrix(viewMX, 0);
-    float[] inverseViewMX = new float[16];
-    Matrix.invertM(inverseViewMX, 0, viewMX, 0);
-
-    float[] ray_clip = new float[]{x, y, -1f, 1f};
-
-    // clip space 에서 view space 로
-    float[] ray_eye = new float[4];
-    Matrix.multiplyMV(ray_eye, 0, inverseProjMX, 0, ray_clip, 0);
-    ray_eye = new float[]{ray_eye[0], ray_eye[1], -1.0f, 0.0f};
-
-    // view space 에서 world space 로
-    float[] ray_wor = new float[4];
-    Matrix.multiplyMV(ray_wor, 0, inverseViewMX, 0, ray_eye, 0);
-
-    // normalize 시켜주기 위해 벡터의 크기 계산
-    float ray_wor_length = (float) Math.sqrt(ray_wor[0] * ray_wor[0] + ray_wor[1] * ray_wor[1] + ray_wor[2] * ray_wor[2]);
-
-    float[] out = new float[6];
-
-    // 카메라의 world space 좌표
-    out[0] = camera.getPose().tx();
-    out[1] = camera.getPose().ty();
-    out[2] = camera.getPose().tz();
-
-    // ray의 normalized 된 방향벡터
-    out[3] = ray_wor[0] / ray_wor_length;
-    out[4] = ray_wor[1] / ray_wor_length;
-    out[5] = ray_wor[2] / ray_wor_length;
-
-    return out;
-  }
-
-  public void pickPoint(FloatBuffer filterPoints, float[] camera, float[] ray) {
-    // camera: 카메라의 world space 위치(x,y,z), ray : ray의 방향벡터
-    float minDistanceSq = Float.MAX_VALUE;
-
-    filterPoints.rewind();
-
-    for (int i = 0; i < filterPoints.remaining(); i += 4) {
-      float[] point = new float[]{filterPoints.get(i), filterPoints.get(i + 1), filterPoints.get(i + 2), filterPoints.get(i + 3)};
-      float[] product = new float[]{point[0] - camera[0], point[1] - camera[1], point[2] - camera[2], 1.0f};
-
-      // 카메라 -> 특징점 벡터의 크기와, 이 벡터와 카메라 -> ray 벡터를 내적한 값을 이용해 피타고라스정리
-      float distanceSq = product[0] * product[0] + product[1] * product[1] + product[2] * product[2];
-      float innerProduct = ray[0] * product[0] + ray[1] * product[1] + ray[2] * product[2];
-      distanceSq = distanceSq - (innerProduct * innerProduct);
-
-      if (distanceSq < 0.01f && distanceSq < minDistanceSq) {
-        //찾은 점의 index.
-        seedPointArr[0] = point[0];
-        seedPointArr[1] = point[1];
-        seedPointArr[2] = point[2];
-        seedID = i / 4;
-        minDistanceSq = distanceSq;
-      }
-    }
   }
 }

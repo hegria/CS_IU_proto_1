@@ -2,6 +2,8 @@ package com.example.CS_IU_proto_1;
 
 import android.annotation.SuppressLint;
 
+import com.curvsurf.fsweb.ResponseForm;
+
 public class Plane {
   public float[] ll, lr, ul, ur;
   public float[] normal;
@@ -17,23 +19,24 @@ public class Plane {
   float[] yvec;
   float[] neworigin;
 
-  public Plane(float[] ll, float[] lr, float[] ur, float[] ul, float[] center, float[] z_dir) {
-    this.ll = ll;
-    this.lr = lr;
-    this.ul = ul;
-    this.ur = ur;
-    this.center = center;
+  public Plane(ResponseForm.PlaneParam param, float[] z_dir){
+    ll = param.ll;
+    lr = param.lr;
+    ul = param.ul;
+    ur = param.ur;
+    center = param.c;
+    normal = param.n;
+
+    this.checkNormal(z_dir);
 
     planeVertex = new float[]{
-            ul[0], ul[1], ul[2],
             ll[0], ll[1], ll[2],
             lr[0], lr[1], lr[2],
             ur[0], ur[1], ur[2],
+            ll[0], ll[1], ll[2],
+            ur[0], ur[1], ur[2],
+            ul[0], ul[1], ul[2],
     };
-
-    normal = new float[3];
-    this.calNormal();
-    this.checkNormal(z_dir);
     xvec = new float[3];
     yvec = new float[3];
     setDval();
@@ -57,7 +60,52 @@ public class Plane {
     neworigin = new float[3];
 
     for(int i =0;i<3;i++){
-        for(int j = 0; j<3;j++){
+      for(int j = 0; j<3;j++){
+        neworigin[i] += transformworldtolocal[i][j] * center[j];
+      }
+    }
+  }
+
+  public Plane(float[] ll, float[] lr, float[] ur, float[] ul, float[] center, float[] z_dir) {
+    this.ll = ll;
+    this.lr = lr;
+    this.ul = ul;
+    this.ur = ur;
+    this.center = center;
+
+    planeVertex = new float[]{
+            ul[0], ul[1], ul[2],
+            ll[0], ll[1], ll[2],
+            lr[0], lr[1], lr[2],
+            ur[0], ur[1], ur[2],
+    };
+
+    normal = new float[3];
+    this.calNormal();
+    xvec = new float[3];
+    yvec = new float[3];
+    setDval();
+
+    float[] standard = {0f,1f,0f};
+    xvec = crossprod(normal,standard);
+    yvec = crossprod(xvec,normal);
+    normalize(xvec);
+    normalize(yvec);
+    transformworldtolocal = new float[][]{
+            {xvec[0], xvec[1], xvec[2]},
+            {yvec[0], yvec[1], yvec[2]},
+            {normal[0], normal[1], normal[2]}
+    };
+
+    transformlocaltoworld = new float[][]{
+            {xvec[0],yvec[0],normal[0]},
+            {xvec[1],yvec[1],normal[1]},
+            {xvec[2],yvec[2],normal[2]}
+    };
+    neworigin = new float[3];
+
+    for(int i =0;i<3;i++){
+      for(int j = 0; j<3;j++){
         neworigin[i] += transformworldtolocal[i][j] * center[j];
       }
     }
