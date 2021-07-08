@@ -45,21 +45,18 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MainActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
 
+
   private static final String TAG = "opencv";
 
   GLSurfaceView glView; // 띄우기 위한 View
 
-
-  // TODO ENUM 써보기
-  private static final int IDLE = 1;
-  private static final int POINT_COLLECTING = 2;
-  private static final int POINT_COLLECTED = 3;
-  private static final int FINDING_SURFACE = 4;
-  private static final int FOUND_SURFACE = 5;
+  private enum State {
+    Idle, PointCollecting, PointCollected, FindingSurface, FoundSurface
+  }
 
   // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 => 6
   // plane 시작.
-  int state = IDLE;
+  State state = State.Idle;
 
   boolean installRequested = false;
   Session session; // ??
@@ -111,28 +108,29 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     recordButton = (Button) findViewById(R.id.recordButton);
     recordButton.setOnClickListener(l -> {
-      if (state == POINT_COLLECTING) {
+      if (state == State.PointCollecting) {
         // collecting 끝내기 위해 버튼 누름
         glView.queueEvent(() -> {
           pointCloudRenderer.fix(pointCollector.getPointBuffer());
         });
 
-        state = POINT_COLLECTED;
+        state = State.PointCollected;
         recordButton.setText("Reset");
-      } else if(state == IDLE) {
+      } else if(state == State.Idle) {
         recordButton.setText("Fix");
         // collecting 시작하기 위해 버튼 누름
-        state = POINT_COLLECTING;
+        state = State.PointCollecting;
       }else{
+        // TODO  Reset 있는거 싹다 치워야함!!!!!! (왠지 모르겠는데 오버해드 발생)
         recordButton.setText("Record");
-        state = IDLE;
+        state = State.Idle;
         circles.clear();
         pointCollector = new PointCollector();
       }
     });
 
     glView.setOnTouchListener((view, event) -> {
-      if (state == FOUND_SURFACE) {
+      if (state == State.FoundSurface) {
         // 바닥을 찾은 후 화면을 터치하면 카메라의 world space 좌표만큼 translate 되는 큐브 생성
 //        glView.queueEvent(() -> {
 //          Cube cube = new Cube();
@@ -144,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         // 카메라를 lIst로 빼두는건 나중에 생각하는걸루하고..
         // rayInfo를 origin과 dir로 빼는게 맞나???
-        // TODO ray를 하나의 class로 만들까?
         float[] rayInfo = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
         float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,rayInfo);
         glView.queueEvent(() -> {
@@ -157,8 +154,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         });
         return false;
-      } else if (state == POINT_COLLECTED) {
-        state = FINDING_SURFACE;
+      } else if (state == State.PointCollected) {
+        state = State.FindingSurface;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
         float[] rayInfo = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
         findPlaneTask.initTask(pointCollector.getPointBuffer(),rayInfo,camera.getPose().getZAxis());
@@ -167,10 +164,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         try {
           if(isFoundPlane.get()){
             Toast.makeText(this,"I got it",Toast.LENGTH_SHORT).show();
-            state = FOUND_SURFACE;
+            state = State.FoundSurface;
           }else{
             Toast.makeText(this,"I can't got it",Toast.LENGTH_SHORT).show();
-            state = POINT_COLLECTED;
+            state = State.PointCollected;
           }
         } catch (ExecutionException | InterruptedException e) {
           e.printStackTrace();
@@ -270,40 +267,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.onResume();
   }
 
-  // CameraCongfing 모두 끌고와서 1920x1080선택
-  private void obtainCameraConfigs() {
-    // First obtain the session handle before getting the list of various camera configs.
-    if (session != null) {
-      // Create filter here with desired fps filters.
-      CameraConfigFilter cameraConfigFilter =
-              new CameraConfigFilter(session)
-                      .setTargetFps(
-                              EnumSet.of(
-                                      CameraConfig.TargetFps.TARGET_FPS_30, CameraConfig.TargetFps.TARGET_FPS_60));
-      List<CameraConfig> cameraConfigs = session.getSupportedCameraConfigs(cameraConfigFilter);
-      List<CameraConfig> cameraConfigsByResolution =
-              new ArrayList<>(
-                      cameraConfigs.subList(0, Math.min(cameraConfigs.size(), 3)));
-      Collections.sort(
-              cameraConfigsByResolution,
-              (CameraConfig p1, CameraConfig p2) ->
-                      Integer.compare(p1.getImageSize().getHeight(), p2.getImageSize().getHeight()));
-      cameraConfig = cameraConfigsByResolution.get(2);
-    }
-  }
-  @Override
-  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    if (!CameraPermissionHelper.hasCameraPermission(this)) {
-      Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
-              .show();
-      if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
-        // Permission denied with checking "Do not ask again".
-        CameraPermissionHelper.launchPermissionSettings(this);
-      }
-      finish();
-    }
-  }
+
 
   //
   // - Mark: GLSurfaceView.Rendrer implements..
@@ -345,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
     session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
     //평면을 찾은 뒤에 이미지를 옮길것임.
-    if (state == FOUND_SURFACE) {
+    if (state == State.FoundSurface) {
       // TODO rayPicking에 필요한 정보를 넘겨야함. view, proj, txtytz 이렇게 넘겨야 함.
       // TODO 점들을 받으면 rayCasting을 해서 worldscale -> local scale로 변환)
 
@@ -392,7 +356,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     background.draw();
     switch(state){
-      case FOUND_SURFACE:
+      case FoundSurface:
         forDebugging.draw(findPlaneTask.plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
 //        for (Cube cube : cubes) {
 //          cube.update(dt, findPlane.plane);
@@ -402,21 +366,59 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           circle.draw(viewMX, projMX);
         }
         break;
-      case POINT_COLLECTING:
+      case PointCollecting:
         // 일이 분리가 안된것 같긴한데 frame을 얻고 해야하므로 어쩔 수 없음.
         pointCollector.push(frame.acquirePointCloud());
         pointCloudRenderer.update(frame.acquirePointCloud());
         pointCloudRenderer.draw(viewMX, projMX);
         break;
-      case FINDING_SURFACE:
+      case FindingSurface:
         // 선택한 점 그리기.
         pointCloudRenderer.draw(viewMX, projMX);
         forDebugging.draw(findPlaneTask.seedPointArr, GLES20.GL_POINTS, 4, 1f, 0f, 0f, viewMX, projMX);
         break;
-      case POINT_COLLECTED:
+      case PointCollected:
         pointCloudRenderer.draw(viewMX, projMX);
         break;
     }
 
+  }
+  //
+  // GL ends
+  //
+
+  // CameraCongfing 모두 끌고와서 1920x1080선택
+  private void obtainCameraConfigs() {
+    // First obtain the session handle before getting the list of various camera configs.
+    if (session != null) {
+      // Create filter here with desired fps filters.
+      CameraConfigFilter cameraConfigFilter =
+              new CameraConfigFilter(session)
+                      .setTargetFps(
+                              EnumSet.of(
+                                      CameraConfig.TargetFps.TARGET_FPS_30, CameraConfig.TargetFps.TARGET_FPS_60));
+      List<CameraConfig> cameraConfigs = session.getSupportedCameraConfigs(cameraConfigFilter);
+      List<CameraConfig> cameraConfigsByResolution =
+              new ArrayList<>(
+                      cameraConfigs.subList(0, Math.min(cameraConfigs.size(), 3)));
+      Collections.sort(
+              cameraConfigsByResolution,
+              (CameraConfig p1, CameraConfig p2) ->
+                      Integer.compare(p1.getImageSize().getHeight(), p2.getImageSize().getHeight()));
+      cameraConfig = cameraConfigsByResolution.get(2);
+    }
+  }
+  @Override // FragmentAcitvity.onRequestPermissionsResult()
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (!CameraPermissionHelper.hasCameraPermission(this)) {
+      Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
+              .show();
+      if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
+        // Permission denied with checking "Do not ask again".
+        CameraPermissionHelper.launchPermissionSettings(this);
+      }
+      finish();
+    }
   }
 }

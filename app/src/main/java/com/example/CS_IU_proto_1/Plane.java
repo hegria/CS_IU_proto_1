@@ -71,7 +71,7 @@ public class Plane {
   }
 
 
-  public void checkNormal(float[] z_dir) {
+  private void checkNormal(float[] z_dir) {
     if (z_dir[0] * normal[0] + z_dir[1] * normal[1] + z_dir[2] * normal[2] >= 0) return;
     normal[0] = -normal[0];
     normal[1] = -normal[1];

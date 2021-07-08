@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 
 public class FindPlaneTask implements Callable<Boolean>
 {
+    //TODO listener로 구현하기
 //    public interface FindPlaneTaskListener {
 //        public void onSuccessTask(Plane plane);
 //        public void onFailTask();
@@ -38,7 +39,6 @@ public class FindPlaneTask implements Callable<Boolean>
         seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f};
     }
 
-    //TODO SingleTone으로 할까?
 
     // 카메라를 그냥 받아라 ㅅㅂ아
     public void initTask( FloatBuffer _points, float[] _layinfo, float[] _z_axis) {
@@ -93,7 +93,7 @@ public class FindPlaneTask implements Callable<Boolean>
         return null;
     }
 
-    public void pickPoint(FloatBuffer filterPoints, final float[] layinfo) {
+    private void pickPoint(FloatBuffer filterPoints, final float[] layinfo) {
         // camera: 카메라의 world space 위치(x,y,z), ray : ray의 방향벡터
         float minDistanceSq = Float.MAX_VALUE;
 
