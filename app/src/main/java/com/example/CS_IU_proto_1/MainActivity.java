@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -160,11 +161,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           Circle circle = new Circle();
           circle.setCircle(plane, point);
           circles.add(circle);
-          ContourForDraw contourForDraw = new ContourForDraw();
-          float[] newlocal = plane.transintolocal(point);
-          contourForDraw.setContour(plane,  new float[]{newlocal[0]+0.01f,newlocal[1],
-                  newlocal[0],newlocal[1]+0.01f,newlocal[0]-0.01f,newlocal[1],newlocal[0],newlocal[1]-0.01f});
-          contourForDraws.add(contourForDraw);
+//          ContourForDraw contourForDraw = new ContourForDraw();
+//          float[] newlocal = plane.transintolocal(point);
+//          Log.i("Point", Float.toString(newlocal[0])+Float.toString(newlocal[1]));
+//          contourForDraw.setContour(plane,  new float[]{0+0.01f,0,
+//                  0,0+0.01f,0-0.01f,0,0,0-0.01f});
+//          contourForDraws.add(contourForDraw);
         });
         return false;
       } else if (state == State.PointCollected) {
@@ -328,7 +330,17 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               Mat img = Myutil.ArImg2CVImg(image);
               image.close();
               glView.queueEvent(() -> {
+                if(contourForDraws.size() == 20){
+                  contourForDraws.clear();
+                }
                 background.updateCVImage(img);
+                ContourForDraw contourForDraw = new ContourForDraw();
+                float[] newpoints = new float[10];
+                for(int i = 0; i<10;i++){
+                  newpoints[i] = (float)Math.random()-0.5f;
+                }
+                contourForDraw.setContour(plane,newpoints);
+                contourForDraws.add(contourForDraw);
               });
               isBusy = false;
           });
