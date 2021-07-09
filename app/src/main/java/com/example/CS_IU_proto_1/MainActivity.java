@@ -48,15 +48,15 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   private static final String TAG = "opencv";
 
-  GLSurfaceView glView; // 띄우기 위한 View
 
-  // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 => 6
-  // plane 시작.
+  // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 Plane Find
 
   private enum State {
     Idle, PointCollecting, PointCollected, FindingSurface, FoundSurface
   }
   State state = State.Idle;
+
+  // ARCORE 관련
 
   boolean installRequested = false;
   Session session; // ??
@@ -73,12 +73,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
   ArrayList<ContourForDraw> contourForDraws;
-  ArrayList<Cube> cubes; // 클릭하면 cubes가 만들어질거임
+//  ArrayList<Cube> cubes; // 클릭하면 cubes가 만들어질거임
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
   Plane plane;
 
+  GLSurfaceView glView; // 띄우기 위한 View
   Button recordButton; // 레코딩~
 
   int width = 1, height = 1;
@@ -91,8 +92,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     super.onCreate(savedInstanceState);
     worker = Executors.newSingleThreadExecutor();
     findPlaneworker = Executors.newSingleThreadExecutor();
-    // 전체화면
-
     findPlaneTask = new FindPlaneTask();
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
@@ -102,10 +101,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         });
         state = State.FoundSurface;
         plane = _plane;
-
-        ContourForDraw contourForDraw = new ContourForDraw();
-        contourForDraw.setContour(plane,new float[]{1.0f,0f,0,1.0f,-1.0f,0f,0,-1.0f});
-        contourForDraws.add(contourForDraw);
       }
 
       @Override
@@ -117,13 +112,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         state = State.PointCollected;
       }
     });
+
     setContentView(R.layout.activity_main);
     glView = (GLSurfaceView) findViewById(R.id.surfaceView);
     glView.setPreserveEGLContextOnPause(true);
     glView.setEGLContextClientVersion(2);
     glView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
     glView.setRenderer(this);
-
     glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
     glView.setWillNotDraw(false);
 
@@ -142,10 +137,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // collecting 시작하기 위해 버튼 누름
         state = State.PointCollecting;
       }else{
-        // TODO  Reset 있는거 싹다 치워야함!!!!!! (왠지 모르겠는데 오버해드 발생)
+        // TODO  Reset 있는거 싹다 치워야함!!!!!! (왠지 모르겠는데 오버해드 발생) 아직 잘모르겠음
         recordButton.setText("Record");
         state = State.Idle;
         circles.clear();
+        contourForDraws.clear();
 
         plane = null;
         pointCollector = new PointCollector();
@@ -156,17 +152,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
 
       if (state == State.FoundSurface) {
-        // 바닥을 찾은 후 화면을 터치하면 카메라의 world space 좌표만큼 translate 되는 큐브 생성
-//        glView.queueEvent(() -> {
-//          Cube cube = new Cube();
-//          cube.xyz = new float[]{camera.getPose().tx(), camera.getPose().ty(), camera.getPose().tz()};
-//          cubes.add(cube);
-//
-//        });
-        // ray 찾음
-
-        // 카메라를 lIst로 빼두는건 나중에 생각하는걸루하고..
-        // rayInfo를 origin과 dir로 빼는게 맞나???
         float[] point = Myutil.pickSurfacePoints(plane,ray);
         glView.queueEvent(() -> {
 //          Cube cube = new Cube();
@@ -175,7 +160,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           Circle circle = new Circle();
           circle.setCircle(plane, point);
           circles.add(circle);
-
+          ContourForDraw contourForDraw = new ContourForDraw();
+          float[] newlocal = plane.transintolocal(point);
+          contourForDraw.setContour(plane,  new float[]{newlocal[0]+0.01f,newlocal[1],
+                  newlocal[0],newlocal[1]+0.01f,newlocal[0]-0.01f,newlocal[1],newlocal[0],newlocal[1]-0.01f});
+          contourForDraws.add(contourForDraw);
         });
         return false;
       } else if (state == State.PointCollected) {
@@ -183,7 +172,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
         findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
         findPlaneworker.execute(findPlaneTask);
-        // 일할때까지 숨 참음
         return false;
       }
       return false;
@@ -279,8 +267,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.onResume();
   }
 
-
-
   //
   // - Mark: GLSurfaceView.Rendrer implements..
   //
@@ -323,13 +309,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
     //평면을 찾은 뒤에 이미지를 옮길것임.
     if (state == State.FoundSurface) {
-      // TODO rayPicking에 필요한 정보를 넘겨야함. view, proj, txtytz 이렇게 넘겨야 함.
-      // TODO 점들을 받으면 rayCasting을 해서 worldscale -> local scale로 변환)
 
       if (!isBusy) {
         try {
           image = frame.acquireCameraImage();
           // viewMX, ProjMax 훔침
+          // SnapShot 과정..
           float[] snapviewMX = viewMX; // 복사가 되나???
           float[] snapprojMX = projMX;
           float[] snapcameratrans = camera.getPose().getTranslation();
@@ -339,15 +324,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               if (image == null) {
                 return;
               }
-
               isBusy = true;
               Mat img = Myutil.ArImg2CVImg(image);
               image.close();
               glView.queueEvent(() -> {
                 background.updateCVImage(img);
               });
-
-
               isBusy = false;
           });
 
@@ -403,6 +385,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
 
   }
+
   //
   // GL ends
   //
@@ -428,6 +411,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       cameraConfig = cameraConfigsByResolution.get(2);
     }
   }
+
   @Override // FragmentAcitvity.onRequestPermissionsResult()
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);

@@ -2,19 +2,20 @@ package com.example.CS_IU_proto_1;
 
 import android.opengl.Matrix;
 
+// OpenCV팀에서 아웃풋으로 뱉을 거
 public class Contour {
 
 
     private float[] points;
 
-    private float[] localpoints;
+    public float[] localpoints;
 
     public Contour(float[] _points){
         points = _points;
     }
 
-
-    // Contour의 points 좌표를 Local 좌표로 바꾸는.....
+    // Contour의 points 좌표를 Local 좌표로 바꾸는.....일을 하였음.
+    // TODO 최적화 더 할 수 있음.
     public void cliptolocal(float[] projMX, float[] viewMX, float[] camera, Plane plane){
         int len = points.length/2;
 

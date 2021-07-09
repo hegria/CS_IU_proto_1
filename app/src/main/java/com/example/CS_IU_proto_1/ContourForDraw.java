@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 // Return된 Image
-// Local scale을 받는다고 가정
+// Local 2차원 좌표들을 받으면 Draw
 public class ContourForDraw {
 
     int program;
@@ -51,7 +51,9 @@ public class ContourForDraw {
 
     }
 
-    // Local 좌표들을 받으면, 이를 bindbuffer에 집어넣음.. points 가 Contour가 되야할수도 있음.
+
+    // 2차원 Local 좌표를 받습니다!!
+    // TODO float array보다는 Contour 자료형을 받는 걸로 생각하기.
     public void setContour(Plane plane, float[] points ){
         numpoints = points.length/2;
         FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();

@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 
 public class Myutil {
 
-
+    //생성된 Ray와 평면의 교차점 Return
     public static float[] pickSurfacePoints(Plane plane, Ray ray){
         // 예외 처리 하기
         float[] output = new float[3];
@@ -27,8 +27,9 @@ public class Myutil {
         return output;
 
     }
-    //TODO Ray 적용하기
 
+    // 선택한 점을 향하는 Ray 생성
+    // TODO 최적화 더 할 수 있을듯???????
     public static Ray GenerateRay(float xPx, float yPx, int screenWidth, int screenHeight,float[] projMX,float[] viewMX, float[] camera_trans) {
         // https://antongerdelan.net/opengl/raycasting.html 참고
 

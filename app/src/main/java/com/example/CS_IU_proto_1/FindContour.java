@@ -3,6 +3,7 @@ package com.example.CS_IU_proto_1;
 import java.util.List;
 
 public class FindContour {
+    // TODO 아직 생각중
     // 1. RawContour의 points들을 받음
     // 2. points Local points로 변환함 -> clips to local
     //    clip points들을 Lays 바꿈 (Lay Origin은 동일함, project Matrix와 View Matrix 필요.
@@ -18,7 +19,7 @@ public class FindContour {
     List<Contour> rawContour;
 
     boolean isinital;
-    
+
 
     // Contour들을 쌓는...
     public void push(float[] viewMX, float[] projMX[], float[] cameratrans, List<Contour> nowcontour){

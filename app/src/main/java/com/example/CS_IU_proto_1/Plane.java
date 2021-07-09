@@ -14,13 +14,14 @@ public class Plane {
   public float dval;
 
   public float[] planeVertex;
-  float[][] transformworldtolocal;
-  float[][] transformlocaltoworld;
-  float[] xvec;
-  float[] yvec;
-  float[] neworigin;
+  private float[][] transformworldtolocal;
+  private float[][] transformlocaltoworld;
+  private float[] xvec;
+  private float[] yvec;
+  private float[] neworigin;
 
   public Plane(ResponseForm.PlaneParam param, float[] z_dir){
+
     ll = param.ll;
     lr = param.lr;
     ul = param.ul;
@@ -38,8 +39,7 @@ public class Plane {
             ur[0], ur[1], ur[2],
             ul[0], ul[1], ul[2],
     };
-    xvec = new float[3];
-    yvec = new float[3];
+
     setDval();
 
     float[] standard = {0f,1f,0f};
@@ -47,6 +47,7 @@ public class Plane {
     yvec = crossprod(xvec,normal);
     normalize(xvec);
     normalize(yvec);
+
     transformworldtolocal = new float[][]{
             {xvec[0], xvec[1], xvec[2]},
             {yvec[0], yvec[1], yvec[2]},
@@ -58,6 +59,7 @@ public class Plane {
             {xvec[1],yvec[1],normal[1]},
             {xvec[2],yvec[2],normal[2]}
     };
+
     neworigin = new float[3];
 
     for(int i =0;i<3;i++){
@@ -66,12 +68,15 @@ public class Plane {
       }
     }
   }
-
+  //
+  // 초기화 함수들
+  //
 
   protected  void setDval(){
     dval = normal[0]*ll[0] + normal[1]*ll[1] + normal[2]*ll[2];
   }
 
+  //법선벡터 방향 정하기
 
   private void checkNormal(float[] z_dir) {
     if (z_dir[0] * normal[0] + z_dir[1] * normal[1] + z_dir[2] * normal[2] >= 0) return;
@@ -80,16 +85,10 @@ public class Plane {
     normal[2] = -normal[2];
   }
 
-
-  float[] crossprod(float[] a, float[] b){
-    float[] temp = new float[3];
-
-    temp[0] = a[1]*b[2]-a[2]*b[1];
-    temp[1] = a[2]*b[0]-a[0]*b[2];
-    temp[2] = a[0]*b[1]-a[1]*b[0];
-    return temp;
-  }
-  float distance(float[] a){
+  //
+  // 백터연산
+  //
+  private float distance(float[] a){
     return (float) Math.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2]);
   }
   void normalize(float[] a){
@@ -99,13 +98,13 @@ public class Plane {
     }
   }
 
-  float dotproduct(float[] a,float[] b){
-    float now = 0;
-    for(int i =0;i<3;i++)
-    {
-      now+= a[i]*b[i];
-    }
-    return now;
+  private float[] crossprod(float[] a, float[] b){
+    float[] temp = new float[3];
+
+    temp[0] = a[1]*b[2]-a[2]*b[1];
+    temp[1] = a[2]*b[0]-a[0]*b[2];
+    temp[2] = a[0]*b[1]-a[1]*b[0];
+    return temp;
   }
 
   float[] substractvec(float[] a, float[] b){
@@ -123,7 +122,8 @@ public class Plane {
     return temp;
   }
 
-
+  // 평면위의 점의 월드좌표에서 평면의 로컬 좌표로 바꾸기 -> 평면이라면 z좌표는 0이라서 그냥 제거
+  // TODO 그냥 2차원 점으로 점근해도 될듯????
   public float[] transintolocal(float[] point){
 
     float[] newpoint = new float[3];
@@ -138,6 +138,8 @@ public class Plane {
     resultpoint[2] = 0;
     return resultpoint;
   }
+
+  // 평면 로컬 좌표에서 월드 좌표로 바꾸기
 
   public float[] transintoworld(float[] point){
     float[] newpoint = addvec(point,neworigin);

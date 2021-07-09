@@ -8,33 +8,33 @@ import com.curvsurf.fsweb.RequestForm;
 import com.curvsurf.fsweb.ResponseForm;
 
 import java.nio.FloatBuffer;
-import java.util.concurrent.Callable;
 
 public class FindPlaneTask implements Runnable
 {
-    //TODO listener로 구현하기
     public interface FindPlaneTaskListener {
         public void onSuccessTask(Plane plane);
         public void onFailTask();
     }
 
+    //상수들
     private static final String REQUEST_URL = "https://developers.curvsurf.com/FindSurface/plane"; // Plane searching server address
     private static final float circleRad = 0.25f;
 
     FindSurfaceRequester fsr = new FindSurfaceRequester( REQUEST_URL ,false);
     FindPlaneTaskListener findPlaneTaskListener;
 
-    //For Debug
+    // 원래는 버려도 되는 값인데 Debug를 위해 남겨둠 -> 왕코로 그려짐
     int seedPointID;
-    float[] z_axis;
+    float[] seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f}; // ??
 
     // Reuseable Variables...
     FloatBuffer points = null;
-    // Result
-    // 점을 선택하는 과정을 FindPlane에 집어 넣었다.
-    Ray ray;
-    float[] seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f}; // ??
 
+    // 받는 변수들
+    private Ray ray;
+    private float[] z_axis;
+
+    // For Debugg
     public void resetSeedPoint(){
         seedPointID = -1;
         seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f};
@@ -44,9 +44,6 @@ public class FindPlaneTask implements Runnable
         findPlaneTaskListener = _findPlaneTaskListener;
     }
 
-
-
-    // 카메라를 그냥 받아라 ㅅㅂ아
     public void initTask( FloatBuffer _points, Ray _ray, float[] _z_axis) {
         points = _points.duplicate();
         ray = _ray;
@@ -54,11 +51,11 @@ public class FindPlaneTask implements Runnable
 
     }
 
-    @Override // - Callable<>
+    @Override // runnable
     public void run() {
         // Ray Picking
         int pointCount  = points.capacity() / 4;
-        pickPoint(points,ray);
+        pickSeedPoint(points,ray);
         float z_dist = 1.0f;
 
         RequestForm rf = new RequestForm();
@@ -100,7 +97,8 @@ public class FindPlaneTask implements Runnable
         return;
     }
 
-    private void pickPoint(FloatBuffer filterPoints, final Ray ray) {
+    // 선택한 포인트에서 가장 가까운 특징 점 찾기
+    private void pickSeedPoint(FloatBuffer filterPoints, final Ray ray) {
         // camera: 카메라의 world space 위치(x,y,z), ray : ray의 방향벡터
         float minDistanceSq = Float.MAX_VALUE;
 
