@@ -10,18 +10,19 @@ import com.curvsurf.fsweb.ResponseForm;
 import java.nio.FloatBuffer;
 import java.util.concurrent.Callable;
 
-public class FindPlaneTask implements Callable<Boolean>
+public class FindPlaneTask implements Runnable
 {
     //TODO listener로 구현하기
-//    public interface FindPlaneTaskListener {
-//        public void onSuccessTask(Plane plane);
-//        public void onFailTask();
-//    }
+    public interface FindPlaneTaskListener {
+        public void onSuccessTask(Plane plane);
+        public void onFailTask();
+    }
 
     private static final String REQUEST_URL = "https://developers.curvsurf.com/FindSurface/plane"; // Plane searching server address
     private static final float circleRad = 0.25f;
 
     FindSurfaceRequester fsr = new FindSurfaceRequester( REQUEST_URL ,false);
+    FindPlaneTaskListener findPlaneTaskListener;
 
     //For Debug
     int seedPointID;
@@ -30,7 +31,6 @@ public class FindPlaneTask implements Callable<Boolean>
     // Reuseable Variables...
     FloatBuffer points = null;
     // Result
-    Plane       plane = null;
     // 점을 선택하는 과정을 FindPlane에 집어 넣었다.
     Ray ray;
     float[] seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f}; // ??
@@ -40,19 +40,22 @@ public class FindPlaneTask implements Callable<Boolean>
         seedPointArr = new float[]{0.0f, 0.0f, 0.0f, 1.0f};
     }
 
+    public void setFindPlaneTaskListener(FindPlaneTaskListener _findPlaneTaskListener){
+        findPlaneTaskListener = _findPlaneTaskListener;
+    }
+
+
 
     // 카메라를 그냥 받아라 ㅅㅂ아
     public void initTask( FloatBuffer _points, Ray _ray, float[] _z_axis) {
         points = _points.duplicate();
-
         ray = _ray;
         z_axis = _z_axis;
 
-        plane  = null;
     }
 
     @Override // - Callable<>
-    public Boolean call() {
+    public void run() {
         // Ray Picking
         int pointCount  = points.capacity() / 4;
         pickPoint(points,ray);
@@ -72,26 +75,29 @@ public class FindPlaneTask implements Callable<Boolean>
                 if(param == null){
                     Log.d("Plane", "평면 추출 실패");
                     resetSeedPoint();
-                    return false;
+                    findPlaneTaskListener.onFailTask();
+
                 }else{
 
-                    plane = new Plane( param, z_axis );
-                    return  true;
+                    findPlaneTaskListener.onSuccessTask(new Plane( param, z_axis ));
+
                 }
 
                 // Success notification...
             } else{
                 Log.d("Plane","request fail");
                 resetSeedPoint();
-                return  false;
+                findPlaneTaskListener.onFailTask();
+
             }
+            return;
         }
         catch(Exception e) {
             e.printStackTrace();
 
             // Error Handling
         }
-        return null;
+        return;
     }
 
     private void pickPoint(FloatBuffer filterPoints, final Ray ray) {

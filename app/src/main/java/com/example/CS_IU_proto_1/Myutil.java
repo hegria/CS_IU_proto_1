@@ -97,8 +97,14 @@ public class Myutil {
         ByteBuffer bufferY = planes[0].getBuffer();
         ByteBuffer bufferUV = planes[1].getBuffer();
 
-        ByteBuffer bufferYUV = ByteBuffer.allocate( (bufferY.remaining() +  bufferUV.remaining()) );
+        ByteBuffer bufferYUV = ByteBuffer.allocateDirect( (bufferY.remaining() +  bufferUV.remaining()) );
+
         bufferYUV.put( bufferY ).put( bufferUV );
+
+        // bufferYUV = > Input FIX!!!!!!!!!!!!!!!!!
+        // List<Contour>  -> output FIX!!!!!!
+
+        // Contour
 
         Mat inImg = new Mat( image.getHeight() + image.getHeight() / 2, image.getWidth(), CvType.CV_8UC1);
         // bufferdata가 안됨...

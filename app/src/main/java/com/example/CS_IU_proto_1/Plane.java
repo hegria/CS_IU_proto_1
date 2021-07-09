@@ -1,6 +1,8 @@
 package com.example.CS_IU_proto_1;
 
 
+import android.util.Log;
+
 import com.curvsurf.fsweb.ResponseForm;
 
 public class Plane {
@@ -127,10 +129,14 @@ public class Plane {
     float[] newpoint = new float[3];
     for(int i =0;i<3;i++){
         for(int j=0;j<3;j++){
-        newpoint[i]+=transformworldtolocal[i][j]*point[j];
+            newpoint[i]+=transformworldtolocal[i][j]*point[j];
           }
       }
-    return substractvec(newpoint,neworigin);
+
+    Log.i("Point", Float.toString(newpoint[2])+Float.toString(neworigin[2]));
+    float[] resultpoint = substractvec(newpoint,neworigin);
+    resultpoint[2] = 0;
+    return resultpoint;
   }
 
   public float[] transintoworld(float[] point){

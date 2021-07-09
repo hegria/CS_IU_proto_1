@@ -6,6 +6,7 @@ import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -45,44 +46,40 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MainActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
 
-
   private static final String TAG = "opencv";
 
   GLSurfaceView glView; // 띄우기 위한 View
 
+  // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 => 6
+  // plane 시작.
+
   private enum State {
     Idle, PointCollecting, PointCollected, FindingSurface, FoundSurface
   }
-
-  // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 => 6
-  // plane 시작.
   State state = State.Idle;
 
   boolean installRequested = false;
   Session session; // ??
   Camera camera; // 그냥 카메라
+  CameraConfig cameraConfig;
 
   boolean isBusy = false;
-
   Image image;
+
   ExecutorService worker;
   ExecutorService findPlaneworker;
+  FindPlaneTask findPlaneTask;
 
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
+  ArrayList<ContourForDraw> contourForDraws;
   ArrayList<Cube> cubes; // 클릭하면 cubes가 만들어질거임
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
-
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
-
   PointCollector pointCollector; // 모을거임
+  Plane plane;
 
   Button recordButton; // 레코딩~
-
-  CameraConfig cameraConfig;
-  FindPlaneTask findPlaneTask;
-  Future<Boolean> isFoundPlane;
-
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -95,7 +92,31 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     worker = Executors.newSingleThreadExecutor();
     findPlaneworker = Executors.newSingleThreadExecutor();
     // 전체화면
+
     findPlaneTask = new FindPlaneTask();
+    findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
+      @Override
+      public void onSuccessTask(Plane _plane) {
+        runOnUiThread(() -> {
+          Toast.makeText(MainActivity.this,"I got it",Toast.LENGTH_SHORT).show();
+        });
+        state = State.FoundSurface;
+        plane = _plane;
+
+        ContourForDraw contourForDraw = new ContourForDraw();
+        contourForDraw.setContour(plane,new float[]{1.0f,0f,0,1.0f,-1.0f,0f,0,-1.0f});
+        contourForDraws.add(contourForDraw);
+      }
+
+      @Override
+      public void onFailTask() {
+        runOnUiThread(() -> {
+
+          Toast.makeText(MainActivity.this,"I can't got it",Toast.LENGTH_SHORT).show();
+        });
+        state = State.PointCollected;
+      }
+    });
     setContentView(R.layout.activity_main);
     glView = (GLSurfaceView) findViewById(R.id.surfaceView);
     glView.setPreserveEGLContextOnPause(true);
@@ -125,6 +146,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         recordButton.setText("Record");
         state = State.Idle;
         circles.clear();
+
+        plane = null;
         pointCollector = new PointCollector();
       }
     });
@@ -144,13 +167,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         // 카메라를 lIst로 빼두는건 나중에 생각하는걸루하고..
         // rayInfo를 origin과 dir로 빼는게 맞나???
-        float[] point = Myutil.pickSurfacePoints(findPlaneTask.plane,ray);
+        float[] point = Myutil.pickSurfacePoints(plane,ray);
         glView.queueEvent(() -> {
 //          Cube cube = new Cube();
 //          cube.xyz = new float[]{point[0],point[1],point[2]};
 //          cubes.add(cube);
           Circle circle = new Circle();
-          circle.setCircle(findPlaneTask.plane, point);
+          circle.setCircle(plane, point);
           circles.add(circle);
 
         });
@@ -159,19 +182,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         state = State.FindingSurface;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
         findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
-        isFoundPlane = findPlaneworker.submit(findPlaneTask);
+        findPlaneworker.execute(findPlaneTask);
         // 일할때까지 숨 참음
-        try {
-          if(isFoundPlane.get()){
-            Toast.makeText(this,"I got it",Toast.LENGTH_SHORT).show();
-            state = State.FoundSurface;
-          }else{
-            Toast.makeText(this,"I can't got it",Toast.LENGTH_SHORT).show();
-            state = State.PointCollected;
-          }
-        } catch (ExecutionException | InterruptedException e) {
-          e.printStackTrace();
-        }
         return false;
       }
       return false;
@@ -282,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     pointCloudRenderer = new PointCloudRenderer();
     background = new Background();
     circles = new ArrayList<>();
+    contourForDraws = new ArrayList<>();
     //TODO Method 이름을 적확하게 해두기
     background.SetsplitterPosition(1.0f);
   }
@@ -316,6 +329,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if (!isBusy) {
         try {
           image = frame.acquireCameraImage();
+          // viewMX, ProjMax 훔침
+          float[] snapviewMX = viewMX; // 복사가 되나???
+          float[] snapprojMX = projMX;
+          float[] snapcameratrans = camera.getPose().getTranslation();
 
 
           worker.execute(() -> {
@@ -357,13 +374,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background.draw();
     switch(state){
       case FoundSurface:
-        forDebugging.draw(findPlaneTask.plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
+        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
 //        for (Cube cube : cubes) {
 //          cube.update(dt, findPlane.plane);
 //          cube.draw(viewMX, projMX);
 //        }
         for (Circle circle : circles) {
           circle.draw(viewMX, projMX);
+        }
+        for (ContourForDraw contourForDraw : contourForDraws){
+          contourForDraw.draw(viewMX,projMX);
         }
         break;
       case PointCollecting:

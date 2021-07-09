@@ -1,13 +1,14 @@
 package com.example.CS_IU_proto_1;
 
 import android.opengl.GLES20;
-import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+// Return된 Image
+// Local scale을 받는다고 가정
+public class ContourForDraw {
 
-public class Circle {
     int program;
     int vBuffer;
 
@@ -31,7 +32,7 @@ public class Circle {
             "  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);" +
             "}";
 
-    public Circle() {
+    public ContourForDraw() {
         int vs = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
         GLES20.glShaderSource(vs, vscode);
         GLES20.glCompileShader(vs);
@@ -49,17 +50,22 @@ public class Circle {
         vBuffer = buffers[0];
 
     }
-    public void setCircle(Plane plane, float[] point){
-        float[] newpoint = plane.transintolocal(point);
 
-        FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*101).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        for(int i =0; i<101;i++){
-            float[] temppoint = {(float) (newpoint[0]+0.01f*Math.cos(i*Math.PI/50)), (float) (newpoint[1]+0.01f*Math.sin(i*Math.PI/50)),0};
+    // Local 좌표들을 받으면, 이를 bindbuffer에 집어넣음.. points 가 Contour가 되야할수도 있음.
+    public void setContour(Plane plane, float[] points ){
+        numpoints = points.length/2;
+        FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        for(int i =0; i<numpoints;i++){
+
+            float[] temppoint = {points[i*2],points[i*2+1],0};
             float[] newtemp = plane.transintoworld(temppoint);
             pointsBuffer.put(newtemp);
         }
+        float[] temppoint = {points[0],points[1],0};
+        float[] newtemp = plane.transintoworld(temppoint);
+        pointsBuffer.put(newtemp);
+
         pointsBuffer.position(0);
-        numpoints = 101;
 
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
         GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, pointsBuffer.remaining() * 4, pointsBuffer, GLES20.GL_DYNAMIC_DRAW);
@@ -81,9 +87,8 @@ public class Circle {
         pos = GLES20.glGetUniformLocation(program, "projMX");
         GLES20.glUniformMatrix4fv(pos, 1, false, projMX, 0);
         GLES20.glLineWidth(5.0f);
-        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numpoints);
+        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numpoints+1);
         GLES20.glDisableVertexAttribArray(vPos);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
     }
 }
-

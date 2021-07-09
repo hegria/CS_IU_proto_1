@@ -1,94 +1,54 @@
 package com.example.CS_IU_proto_1;
 
-import android.opengl.GLES20;
+import android.opengl.Matrix;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-// Return된 Image
-// Local scale을 받는다고 가정
 public class Contour {
 
-    int program;
-    int vBuffer;
 
-    int numpoints;
+    private float[] points;
 
-    private final String vscode = "" +
-            "attribute vec3 vPosition;" +
+    private float[] localpoints;
 
-            "uniform mat4 viewMX;" +
-            "uniform mat4 projMX;" +
-
-            "void main() {" +
-            "  gl_Position = projMX * viewMX * vec4(vPosition, 1.0);" +
-            "  gl_PointSize = 10.0;" +
-            "}";
-
-    private final String fscode = "" +
-            "precision mediump float;" +
-
-            "void main() {" +
-            "  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);" +
-            "}";
-
-    public Contour() {
-        int vs = GLES20.glCreateShader(GLES20.GL_VERTEX_SHADER);
-        GLES20.glShaderSource(vs, vscode);
-        GLES20.glCompileShader(vs);
-        int fs = GLES20.glCreateShader(GLES20.GL_FRAGMENT_SHADER);
-        GLES20.glShaderSource(fs, fscode);
-        GLES20.glCompileShader(fs);
-
-        program = GLES20.glCreateProgram();
-        GLES20.glAttachShader(program, vs);
-        GLES20.glAttachShader(program, fs);
-        GLES20.glLinkProgram(program);
-
-        int[] buffers = new int[1];
-        GLES20.glGenBuffers(1, buffers, 0);
-        vBuffer = buffers[0];
-
+    public Contour(float[] _points){
+        points = _points;
     }
 
-    // Local Scale일 경우...
-    public void setContour(Plane plane, float[] points ){
-        numpoints = points.length/3;
-        FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*numpoints).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        for(int i =0; i<numpoints;i++){
 
-            float[] temppoint = {points[i*3],points[i*3+1],points[i*3+2]};
-            float[] newtemp = plane.transintoworld(temppoint);
-            pointsBuffer.put(newtemp);
+    // Contour의 points 좌표를 Local 좌표로 바꾸는.....
+    public void cliptolocal(float[] projMX, float[] viewMX, float[] camera, Plane plane){
+        int len = points.length/2;
+
+        localpoints = new float[points.length];
+
+        float[] ray_clip;
+        float[] ray_eye;
+        float[] ray_wor;
+        float[] out;
+        float[] inverseProjMX = new float[16];
+        Matrix.invertM(inverseProjMX, 0, projMX, 0);
+
+        float[] inverseViewMX = new float[16];
+        Matrix.invertM(inverseViewMX, 0, viewMX, 0);
+        Ray ray;
+
+        float[] surpoints;
+
+        for( int i = 0; i<points.length;i++){
+            ray_clip = new float[]{points[2*i], points[2*i+1], -1f, 1f};
+            ray_eye = new float[4];
+            Matrix.multiplyMV(ray_eye, 0, inverseProjMX, 0, ray_clip, 0);
+            ray_eye = new float[]{ray_eye[0], ray_eye[1], -1.0f, 0.0f};
+            ray_wor = new float[4];
+            Matrix.multiplyMV(ray_wor, 0, inverseViewMX, 0, ray_eye, 0);
+            float ray_wor_length = (float) Math.sqrt(ray_wor[0] * ray_wor[0] + ray_wor[1] * ray_wor[1] + ray_wor[2] * ray_wor[2]);
+            out = new float[]{ray_wor[0]/ray_wor_length, ray_wor[1]/ray_wor_length ,ray_wor[2]/ray_wor_length};
+            ray = new Ray(camera,out);
+            surpoints = Myutil.pickSurfacePoints(plane,ray);
+            localpoints[2*i] = surpoints[0];
+            localpoints[2*i+1] = surpoints[1];
         }
-        float[] temppoint = {points[0],points[1],points[2]};
-        float[] newtemp = plane.transintoworld(temppoint);
-        pointsBuffer.put(newtemp);
 
-        pointsBuffer.position(0);
-
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
-        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, pointsBuffer.remaining() * 4, pointsBuffer, GLES20.GL_DYNAMIC_DRAW);
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
     }
-    public void draw(float[] viewMX, float[] projMX) {
-        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
-        GLES20.glUseProgram(program);
 
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
-        int vPos = GLES20.glGetAttribLocation(program, "vPosition");
-        GLES20.glEnableVertexAttribArray(vPos);
-        GLES20.glVertexAttribPointer(vPos, 3, GLES20.GL_FLOAT, false, 3 * 4, 0);
-        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
 
-        int pos = GLES20.glGetUniformLocation(program, "viewMX");
-        GLES20.glUniformMatrix4fv(pos, 1, false, viewMX, 0);
-
-        pos = GLES20.glGetUniformLocation(program, "projMX");
-        GLES20.glUniformMatrix4fv(pos, 1, false, projMX, 0);
-        GLES20.glLineWidth(5.0f);
-        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numpoints+1);
-        GLES20.glDisableVertexAttribArray(vPos);
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-    }
 }
