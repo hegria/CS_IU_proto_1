@@ -54,16 +54,16 @@ public class ContourForDraw {
 
     // 2차원 Local 좌표를 받습니다!!
     // TODO float array보다는 Contour 자료형을 받는 걸로 생각하기.
-    public void setContour(Plane plane, float[] points ){
-        numpoints = points.length/2;
+    public void setContour(Plane plane, Contour contour){
+        numpoints = contour.points.length/2;
         FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
         for(int i =0; i<numpoints;i++){
 
-            float[] temppoint = {points[i*2],points[i*2+1],0};
+            float[] temppoint = {contour.points[i*2],contour.points[i*2+1],0};
             float[] newtemp = plane.transintoworld(temppoint);
             pointsBuffer.put(newtemp);
         }
-        float[] temppoint = {points[0],points[1],0};
+        float[] temppoint = {contour.points[0],contour.points[1],0};
         float[] newtemp = plane.transintoworld(temppoint);
         pointsBuffer.put(newtemp);
 

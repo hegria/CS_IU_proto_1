@@ -323,12 +323,18 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               isBusy = true;
 
               // SnapShot 과정..
-              float[] snapviewMX = viewMX.clone();
               float[] snapprojMX = projMX.clone();
+              float[] snapviewMX = viewMX.clone();
               float[] snapcameratrans = camera.getPose().getTranslation();
 
               ArrayList<Contour> contours = Myutil.findCircle(image);
-              int contoursSize = contours.size();
+              ArrayList<Contour> localcontours = new ArrayList<>();
+
+              for (Contour contour: contours
+                   ) {
+                localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
+              }
+              
               image.close();
 
               glView.queueEvent(() -> {
@@ -337,12 +343,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   contourForDraws.clear();
                 }
 
-                for(int i = 0; i < contoursSize; i++){
-                  float[] localPoints = contours.get(i).cliptolocal(snapprojMX, snapviewMX, snapcameratrans, plane);
+                for (Contour localContor: localcontours
+                     ) {
                   ContourForDraw contourForDraw = new ContourForDraw();
-                  contourForDraw.setContour(plane, localPoints);
+                  contourForDraw.setContour(plane, localContor);
                   contourForDraws.add(contourForDraw);
                 }
+
 
               });
               isBusy = false;
