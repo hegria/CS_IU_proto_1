@@ -24,12 +24,7 @@ public class Background {
   private FloatBuffer quadCoords;
   private FloatBuffer quadTexCoords;
 
-
-
-  private float splitterPosition = 1.0f;
-
   int[] textures = new int[2];
-  int quadSplitterUniform;
   int vpos;
   int tpos;
 //    int ipos;
@@ -55,21 +50,13 @@ public class Background {
           "#extension GL_OES_EGL_image_external : require\n" +
           "" +
           "precision mediump float;\n" + // 정밀도라네요~
-          "uniform float splitterPos;\n" +
           "uniform samplerExternalOES tex;\n" + // uniform1i로 texture를 바인딩함
           "uniform sampler2D tei;\n" + // uniform1i로 texture를 바인딩함
           "varying vec2 tc;\n" + // 지들끼리 옮기는거
           //        "varying vec2 ti;\n" + // 지들끼리 옮기는거
 
           "void main() {\n" +
-          " if(tc.x < splitterPos)\n"+
-          " {\n"+
           " gl_FragColor = texture2D(tex,tc);\n"+
-          " }\n"+
-          " else\n"+
-          " {\n"+
-          "  gl_FragColor = texture2D(tei, tc);\n"  + // 함수 호출
-          " }\n"+
           "}\n";
 
   public Background() {
@@ -128,8 +115,6 @@ public class Background {
     int postexi = GLES20.glGetUniformLocation(program, "tei");
     GLES20.glUniform1i(postexi, 1); // Texture를 uniform sampler 값에 집어쳐넣기
 
-    quadSplitterUniform = GLES20.glGetUniformLocation(program, "splitterPos");
-
     vpos = GLES20.glGetAttribLocation(program, "vPosition");
     tpos = GLES20.glGetAttribLocation(program, "vTexcoord");
 
@@ -144,10 +129,6 @@ public class Background {
 
   }
 
-  public void SetsplitterPosition(float splitterPosition){
-    this.splitterPosition = splitterPosition;
-  }
-
   public void draw() {
     GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
@@ -159,7 +140,6 @@ public class Background {
     GLES20.glUseProgram(program);
 
     // attribute 값 assgin
-    GLES20.glUniform1f(quadSplitterUniform, splitterPosition);
     GLES20.glEnableVertexAttribArray(vpos);
     GLES20.glVertexAttribPointer(vpos, 2, GLES20.GL_FLOAT, false, 0, quadCoords);
     //????????????????????????????????? 버퍼 없이 바로?
