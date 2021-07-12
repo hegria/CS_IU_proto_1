@@ -74,6 +74,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
   ArrayList<ContourForDraw> contourForDraws;
+
+  ArrayList<Contour> jniContours;
+  OpenCVJNI jni;
+
 //  ArrayList<Cube> cubes; // 클릭하면 cubes가 만들어질거임
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
@@ -328,6 +332,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               }
               isBusy = true;
               Mat img = Myutil.ArImg2CVImg(image);
+
+              // ADDED BY OPENCV TEAM
+              jniContours = jni.findTimberContours(image);
+              // ADDED BY OPENCV TEAM
+
               image.close();
               glView.queueEvent(() -> {
                 if(contourForDraws.size() == 20){
@@ -335,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 }
                 background.updateCVImage(img);
                 ContourForDraw contourForDraw = new ContourForDraw();
+
                 float[] newpoints = new float[10];
                 for(int i = 0; i<10;i++){
                   newpoints[i] = (float)Math.random()-0.5f;
