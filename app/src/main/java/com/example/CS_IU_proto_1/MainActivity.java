@@ -283,8 +283,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background = new Background();
     circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
-    //TODO Method 이름을 적확하게 해두기
-    background.SetsplitterPosition(1.0f);
+
   }
 
 
@@ -315,32 +314,36 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if (!isBusy) {
         try {
           image = frame.acquireCameraImage();
-          // viewMX, ProjMax 훔침
-          // SnapShot 과정..
-          float[] snapviewMX = viewMX; // 복사가 되나???
-          float[] snapprojMX = projMX;
-          float[] snapcameratrans = camera.getPose().getTranslation();
-
 
           worker.execute(() -> {
               if (image == null) {
                 return;
               }
+
               isBusy = true;
-              Mat img = Myutil.ArImg2CVImg(image);
+
+              // SnapShot 과정..
+              float[] snapviewMX = viewMX.clone();
+              float[] snapprojMX = projMX.clone();
+              float[] snapcameratrans = camera.getPose().getTranslation();
+
+              ArrayList<Contour> contours = Myutil.findCircle(image);
+              int contoursSize = contours.size();
               image.close();
+
               glView.queueEvent(() -> {
+
                 if(contourForDraws.size() == 20){
                   contourForDraws.clear();
                 }
-                background.updateCVImage(img);
-                ContourForDraw contourForDraw = new ContourForDraw();
-                float[] newpoints = new float[10];
-                for(int i = 0; i<10;i++){
-                  newpoints[i] = (float)Math.random()-0.5f;
+
+                for(int i = 0; i < contoursSize; i++){
+                  float[] localPoints = contours.get(i).cliptolocal(snapprojMX, snapviewMX, snapcameratrans, plane);
+                  ContourForDraw contourForDraw = new ContourForDraw();
+                  contourForDraw.setContour(plane, localPoints);
+                  contourForDraws.add(contourForDraw);
                 }
-                contourForDraw.setContour(plane,newpoints);
-                contourForDraws.add(contourForDraw);
+
               });
               isBusy = false;
           });
@@ -351,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         }
       }
-  }
+    }
     if (frame.hasDisplayGeometryChanged()) {
       background.transformCoordinate(frame);
     }
