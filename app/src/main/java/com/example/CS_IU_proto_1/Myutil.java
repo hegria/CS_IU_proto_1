@@ -6,11 +6,9 @@ import android.opengl.Matrix;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Myutil {
 
@@ -124,7 +122,7 @@ public class Myutil {
         return contours;
     }
 
-    public static RectangleSize elliToRect (EllipseSize elli){
+    public static RectEllipseSize elliToRect (EllipseSize elli){
 
         float[] temp = new float[2];
         float[] rect_ll = new float[2];
@@ -150,10 +148,10 @@ public class Myutil {
         rect_ll[0] = rect_ul[0] - temp[0]*2;
         rect_ll[1] = rect_ul[1] - temp[1]*2;
 
-        return new RectangleSize(rect_ll, rect_lr, rect_ul, rect_ur);
+        return new RectEllipseSize(rect_ll, rect_lr, rect_ul, rect_ur);
     }
 
-    public static EllipseSize rectToElli (RectangleSize rect){
+    public static EllipseSize rectToElli (RectEllipseSize rect){
         float elli_lr, elli_sr;
         float[] elli_cp = new float[2];
         float[] elli_p1 = new float[2];
@@ -174,4 +172,11 @@ public class Myutil {
 
         return new EllipseSize(elli_lr, elli_sr, elli_cp, elli_p1, elli_p2);
     }
+    
+//    public static EllipseSize findElipses ( Contour localContour){
+//
+//    }
+//    public static RectEllipseSize findElipses ( Contour localContour){
+//
+//    }
 }
