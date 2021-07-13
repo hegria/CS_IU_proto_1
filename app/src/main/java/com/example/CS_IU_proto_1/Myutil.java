@@ -130,17 +130,17 @@ public class Myutil {
         float[] rect_ul = new float[2];
         float[] rect_ur = new float[2];
 
-        temp[0] = elli.p1[0] - elli.cp[0];
-        temp[1] = elli.p1[1] - elli.cp[1];
+        temp[0] = elli.longvertex[0] - elli.cp[0];
+        temp[1] = elli.longvertex[1] - elli.cp[1];
 
-        rect_ur[0] = elli.p2[0] + temp[0];
-        rect_ur[1] = elli.p2[1] + temp[1];
+        rect_ur[0] = elli.shortvertex[0] + temp[0];
+        rect_ur[1] = elli.shortvertex[1] + temp[1];
 
-        rect_ul[0] = elli.p2[0] - temp[0];
-        rect_ul[1] = elli.p2[1] - temp[1];
+        rect_ul[0] = elli.shortvertex[0] - temp[0];
+        rect_ul[1] = elli.shortvertex[1] - temp[1];
 
-        temp[0] = elli.p2[0] - elli.cp[0];
-        temp[1] = elli.p2[1] - elli.cp[1];
+        temp[0] = elli.shortvertex[0] - elli.cp[0];
+        temp[1] = elli.shortvertex[1] - elli.cp[1];
 
         rect_lr[0] = rect_ur[0] - temp[0]*2;
         rect_lr[1] = rect_ur[1] - temp[1]*2;
