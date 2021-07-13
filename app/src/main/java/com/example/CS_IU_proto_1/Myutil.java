@@ -152,7 +152,7 @@ public class Myutil {
     }
 
     public static EllipseSize rectToElli (RectEllipseSize rect){
-        float elli_lr, elli_sr;
+        float elli_r1, elli_r2;
         float[] elli_cp = new float[2];
         float[] elli_p1 = new float[2];
         float[] elli_p2 = new float[2];
@@ -167,10 +167,13 @@ public class Myutil {
         elli_cp[0] = (rect.ll[0] + rect.lr[0] + rect.ul[0] + rect.ur[0]) / 4f;
         elli_cp[1] = (rect.ll[1] + rect.lr[1] + rect.ul[1] + rect.ur[1]) / 4f;
 
-        elli_lr = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p1[0] ,2) + Math.pow(elli_cp[1] - elli_p1[1] ,2));
-        elli_sr = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p2[0] ,2) + Math.pow(elli_cp[1] - elli_p2[1] ,2));
+        elli_r1 = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p1[0] ,2) + Math.pow(elli_cp[1] - elli_p1[1] ,2));
+        elli_r2 = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p2[0] ,2) + Math.pow(elli_cp[1] - elli_p2[1] ,2));
 
-        return new EllipseSize(elli_lr, elli_sr, elli_cp, elli_p1, elli_p2);
+        if(elli_r1 > elli_r2)
+            return new EllipseSize(elli_r1, elli_r2, elli_cp, elli_p1, elli_p2);
+        else
+            return new EllipseSize(elli_r2, elli_r1, elli_cp, elli_p2, elli_p1);
     }
     
 //    public static EllipseSize findElipses ( Contour localContour){
