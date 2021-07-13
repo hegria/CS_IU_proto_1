@@ -33,6 +33,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -158,18 +159,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if (state == State.FoundSurface) {
         float[] point = Myutil.pickSurfacePoints(plane,ray);
         glView.queueEvent(() -> {
-//          Cube cube = new Cube();
-//          cube.xyz = new float[]{point[0],point[1],point[2]};
-//          cubes.add(cube);
           Circle circle = new Circle();
           circle.setCircle(plane, point);
           circles.add(circle);
-//          ContourForDraw contourForDraw = new ContourForDraw();
-//          float[] newlocal = plane.transintolocal(point);
-//          Log.i("Point", Float.toString(newlocal[0])+Float.toString(newlocal[1]));
-//          contourForDraw.setContour(plane,  new float[]{0+0.01f,0,
-//                  0,0+0.01f,0-0.01f,0,0,0-0.01f});
-//          contourForDraws.add(contourForDraw);
         });
         return false;
       } else if (state == State.PointCollected) {
@@ -319,9 +311,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           image = frame.acquireCameraImage();
           // viewMX, ProjMax 훔침
           // SnapShot 과정..
-          float[] snapviewMX = viewMX.clone(); // 복사가 되나???
-          float[] snapprojMX = projMX.clone();
-          float[] snapcameratrans = camera.getPose().getTranslation();
 
 
           worker.execute(() -> {
@@ -330,6 +319,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               }
               isBusy = true;
 
+              float[] snapprojMX = projMX.clone();
+              float[] snapviewMX = viewMX.clone(); // 복사가 되나???
+              float[] snapcameratrans = camera.getPose().getTranslation();
               // ADDED BY OPENCV TEAM
               ArrayList<Contour> contours =  jni.findTimberContours(image);
               ArrayList<Contour> localcontours = new ArrayList<>();
