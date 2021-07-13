@@ -198,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onPause() {
     super.onPause();
     if (session != null) {
+      glView.onPause();
       session.pause();
     }
   }
