@@ -123,4 +123,55 @@ public class Myutil {
 
         return contours;
     }
+
+    public static RectangleSize elliToRect (EllipseSize elli){
+
+        float[] temp = new float[2];
+        float[] rect_ll = new float[2];
+        float[] rect_lr = new float[2];
+        float[] rect_ul = new float[2];
+        float[] rect_ur = new float[2];
+
+        temp[0] = elli.p1[0] - elli.cp[0];
+        temp[1] = elli.p1[1] - elli.cp[1];
+
+        rect_ur[0] = elli.p2[0] + temp[0];
+        rect_ur[1] = elli.p2[1] + temp[1];
+
+        rect_ul[0] = elli.p2[0] - temp[0];
+        rect_ul[1] = elli.p2[1] - temp[1];
+
+        temp[0] = elli.p2[0] - elli.cp[0];
+        temp[1] = elli.p2[1] - elli.cp[1];
+
+        rect_lr[0] = rect_ur[0] - temp[0]*2;
+        rect_lr[1] = rect_ur[1] - temp[1]*2;
+
+        rect_ll[0] = rect_ul[0] - temp[0]*2;
+        rect_ll[1] = rect_ul[1] - temp[1]*2;
+
+        return new RectangleSize(rect_ll, rect_lr, rect_ul, rect_ur);
+    }
+
+    public static EllipseSize rectToElli (RectangleSize rect){
+        float elli_lr, elli_sr;
+        float[] elli_cp = new float[2];
+        float[] elli_p1 = new float[2];
+        float[] elli_p2 = new float[2];
+
+
+        elli_p1[0] = (rect.ul[0] + rect.ur[0]) / 2f;
+        elli_p1[1] = (rect.ul[1] + rect.ur[1]) / 2f;
+
+        elli_p2[0] = (rect.ur[0] + rect.lr[0]) / 2f;
+        elli_p2[1] = (rect.ur[1] + rect.lr[1]) / 2f;
+
+        elli_cp[0] = (rect.ll[0] + rect.lr[0] + rect.ul[0] + rect.ur[0]) / 4f;
+        elli_cp[1] = (rect.ll[1] + rect.lr[1] + rect.ul[1] + rect.ur[1]) / 4f;
+
+        elli_lr = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p1[0] ,2) + Math.pow(elli_cp[1] - elli_p1[1] ,2));
+        elli_sr = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p2[0] ,2) + Math.pow(elli_cp[1] - elli_p2[1] ,2));
+
+        return new EllipseSize(elli_lr, elli_sr, elli_cp, elli_p1, elli_p2);
+    }
 }
