@@ -75,7 +75,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
   ArrayList<ContourForDraw> contourForDraws;
-
+  ArrayList<Contour> contours;
+  ArrayList<Contour> localcontours;
   OpenCVJNI jni;
 
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
@@ -278,6 +279,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background = new Background();
     circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
+    contours = new ArrayList<>();
+    localcontours = new ArrayList<>();
     //TODO Method 이름을 적확하게 해두기
   }
 
@@ -323,8 +326,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               float[] snapviewMX = viewMX.clone(); // 복사가 되나???
               float[] snapcameratrans = camera.getPose().getTranslation();
               // ADDED BY OPENCV TEAM
-              ArrayList<Contour> contours =  jni.findTimberContours(image);
-              ArrayList<Contour> localcontours = new ArrayList<>();
+              contours.clear();
+              localcontours.clear();
+
+              contours =  jni.findTimberContours(image);
+              localcontours = new ArrayList<>();
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours
               ) {
