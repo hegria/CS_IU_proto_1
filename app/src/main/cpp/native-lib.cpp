@@ -89,13 +89,12 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
 
-#if 1
     for (const auto& contour : contours) {
         std::vector<float> arr;
         arr.reserve(contour.size() * 2);
         for (const auto& point : contour) {
-            arr.push_back( -point.x * x_factor + 1.0f );
-            arr.push_back( -point.y * y_factor + 1.0f );
+            arr.push_back( point.x * x_factor - 1.0f );
+            arr.push_back( point.y * y_factor - 1.0f );
         }
         auto* ptr = reinterpret_cast<jfloat*>(&arr[0]);
         jfloatArray jxy = env->NewFloatArray(arr.size());
@@ -103,14 +102,6 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)
         jobject jcontour = env->NewObject(JC_Contour, JMID_Contour_Ctor, jxy);
         env->CallBooleanMethod(contour_list, JMID_ArrayList_Add, jcontour);
     }
-#else
-    float triangle[] = { 0.0, 0.5, -0.5, -0.5, 0.5, -0.5};
-    auto* ptr = reinterpret_cast<jfloat*>(triangle);
-    jfloatArray jxy = env->NewFloatArray(6);
-    env->SetFloatArrayRegion(jxy, 0, 6, ptr);
-    jobject jcontour = env->NewObject(JC_Contour, JMID_Contour_Ctor, jxy);
-    env->CallBooleanMethod(contour_list, JMID_ArrayList_Add, jcontour);
-#endif
 
     return contour_list;
 }
@@ -127,6 +118,7 @@ cv::Mat getMatrixFromYUV420N12(const byte* buffer, int width, int height) {
 
     cv::cvtColor(img_in, img_out, cv::COLOR_YUV2BGR_NV12);
     cv::transpose(img_out, img_out);
+    cv::flip(img_out, img_out, -1);
     return img_out;
 }
 
@@ -282,15 +274,10 @@ void findTimberContours(const cv::Mat& img_bgr, std::vector<std::vector<cv::Poin
     cv::Mat segmented;
     int num = segmentAreas(img_bgr, segmented);
 
-    for (int label = 2; label <= num; label++) {
-        cv::Mat mask;
-        cv::inRange(segmented, cv::Scalar(label), cv::Scalar(label), mask);
-
-        std::vector<std::vector<cv::Point>> contour;
-        cv::findContours(mask, contour, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-        contours.push_back(contour[0]);
-    }
-
+    cv::Mat seg;
+    cv::inRange(segmented, cv::Scalar(2), cv::Scalar(num), seg);
+    cv::erode(seg, seg, cv::Mat::ones(3, 3, CV_8UC1));
+    cv::findContours(seg, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 }
 
 cv::Mat getBackground(const cv::Mat& src) {
