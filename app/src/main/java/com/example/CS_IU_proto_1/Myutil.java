@@ -9,6 +9,8 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Myutil {
 
@@ -76,25 +78,9 @@ public class Myutil {
 
 
     public static Mat ArImg2CVImg(Image image){
-        /* Image.Plane Y = image.getPlanes()[0];
-         Image.Plane U = image.getPlanes()[1];
-
-         int Yb = Y.getBuffer().remaining();
-         int Ub = U.getBuffer().remaining();
-
-         byte[] data = new byte[Yb + Ub];
-
-         Y.getBuffer().get(data, 0, Yb);
-         U.getBuffer().get(data, Yb, Ub);
-
-         Mat matInput2 = new Mat(image.getHeight()+image.getHeight()/2,image.getWidth(), CvType.CV_8UC1);
-         matInput2.put(0,0,data);
-
-         Mat matoutput = new Mat(image.getHeight(),image.getWidth(),CvType.CV_8UC4);
-
-         Imgproc.cvtColor(matInput2,matoutput,Imgproc.COLOR_YUV2RGB_NV12);*/
 
         Image.Plane[] planes = image.getPlanes();
+
         ByteBuffer bufferY = planes[0].getBuffer();
         ByteBuffer bufferUV = planes[1].getBuffer();
 
@@ -108,22 +94,33 @@ public class Myutil {
         // Contour
 
         Mat inImg = new Mat( image.getHeight() + image.getHeight() / 2, image.getWidth(), CvType.CV_8UC1);
-        // bufferdata가 안됨...
         inImg.put(0,0, bufferYUV.array());
 
 
-        Mat outImg = new Mat( image.getHeight(), image.getWidth(), CvType.CV_8UC4 );
-
-        Mat outoutImg = new Mat( image.getHeight(), image.getWidth(), CvType.CV_8UC4 );
-
-        // // YUV to RGB -> cvCvtColor();
-        Imgproc.cvtColor( inImg, outImg, Imgproc.COLOR_YUV2RGB_NV12 );
-        Imgproc.threshold(outImg,outoutImg,100,255,Imgproc.THRESH_BINARY_INV);
-
-        return outoutImg;
+        return inImg;
     }
 
+    public static ArrayList<Contour> findCircle(Image image){
+        Image.Plane[] planes = image.getPlanes();
 
+        ByteBuffer bufferY = planes[0].getBuffer();
+        ByteBuffer bufferUV = planes[1].getBuffer();
 
+        ByteBuffer bufferYUV = ByteBuffer.allocateDirect( (bufferY.remaining() +  bufferUV.remaining()) );
 
+        bufferYUV.put( bufferY ).put( bufferUV );
+
+        return openCVProcessing(bufferYUV, image.getHeight(), image.getWidth());
+    }
+
+    private static ArrayList<Contour> openCVProcessing (ByteBuffer bb, float height, float width){
+
+        ArrayList<Contour> contours = new ArrayList<>();
+        Contour tmpContour1 = new Contour(new float[]{0.4f, 0.4f, 0.4f, -0.4f, -0.4f, -0.4f, -0.4f, 0.4f});
+        Contour tmpContour2 = new Contour(new float[]{0.6f, 0.6f, 0.6f, -0.6f, -0.6f, -0.6f, -0.6f, 0.6f});
+        contours.add(tmpContour1);
+        contours.add(tmpContour2);
+
+        return contours;
+    }
 }
