@@ -296,15 +296,18 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onDrawFrame(GL10 gl) {
     if (session == null) return;
     Frame frame = null;
+
+    // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
+    session.setCameraTextureName(background.texID);
+    // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
+    session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
+
     try {
       frame = session.update();
     } catch (CameraNotAvailableException e) {
       return;
     }
-    // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
-    session.setCameraTextureName(background.texID);
-    // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
-    session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
+
     //평면을 찾은 뒤에 이미지를 옮길것임.
     if (state == State.FoundSurface) {
 
