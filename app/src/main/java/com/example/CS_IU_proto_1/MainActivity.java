@@ -75,10 +75,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Background background; // background
   ArrayList<ContourForDraw> contourForDraws;
 
-  ArrayList<Contour> jniContours;
   OpenCVJNI jni;
 
-//  ArrayList<Cube> cubes; // 클릭하면 cubes가 만들어질거임
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
@@ -98,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     worker = Executors.newSingleThreadExecutor();
     findPlaneworker = Executors.newSingleThreadExecutor();
     findPlaneTask = new FindPlaneTask();
+    jni = new OpenCVJNI();
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
@@ -288,7 +287,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
     //TODO Method 이름을 적확하게 해두기
-    background.SetsplitterPosition(1.0f);
   }
 
 
@@ -321,8 +319,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           image = frame.acquireCameraImage();
           // viewMX, ProjMax 훔침
           // SnapShot 과정..
-          float[] snapviewMX = viewMX; // 복사가 되나???
-          float[] snapprojMX = projMX;
+          float[] snapviewMX = viewMX.clone(); // 복사가 되나???
+          float[] snapprojMX = projMX.clone();
           float[] snapcameratrans = camera.getPose().getTranslation();
 
 
@@ -331,26 +329,25 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 return;
               }
               isBusy = true;
-              Mat img = Myutil.ArImg2CVImg(image);
 
               // ADDED BY OPENCV TEAM
-              jniContours = jni.findTimberContours(image);
+              ArrayList<Contour> contours =  jni.findTimberContours(image);
+              ArrayList<Contour> localcontours = new ArrayList<>();
               // ADDED BY OPENCV TEAM
-
+              for (Contour contour: contours
+              ) {
+                localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
+              }
               image.close();
               glView.queueEvent(() -> {
-                if(contourForDraws.size() == 20){
                   contourForDraws.clear();
-                }
-                background.updateCVImage(img);
-                ContourForDraw contourForDraw = new ContourForDraw();
 
-                float[] newpoints = new float[10];
-                for(int i = 0; i<10;i++){
-                  newpoints[i] = (float)Math.random()-0.5f;
-                }
-                contourForDraw.setContour(plane,newpoints);
-                contourForDraws.add(contourForDraw);
+                  for (Contour localContor: localcontours)
+                  {
+                    ContourForDraw contourForDraw = new ContourForDraw();
+                    contourForDraw.setContour(plane, localContor);
+                    contourForDraws.add(contourForDraw);
+                  }
               });
               isBusy = false;
           });
