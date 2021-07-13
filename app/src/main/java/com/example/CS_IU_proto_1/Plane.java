@@ -133,7 +133,6 @@ public class Plane {
           }
       }
 
-    Log.i("Point", Float.toString(newpoint[2])+Float.toString(neworigin[2]));
     float[] resultpoint = substractvec(newpoint,neworigin);
     resultpoint[2] = 0;
     return resultpoint;
