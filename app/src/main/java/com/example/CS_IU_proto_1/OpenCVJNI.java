@@ -1,6 +1,7 @@
 package com.example.CS_IU_proto_1;
 
 import android.media.Image;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
