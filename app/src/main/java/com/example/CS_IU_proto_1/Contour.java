@@ -7,7 +7,7 @@ import android.util.Log;
 public class Contour {
 
 
-    private float[] points;
+    public float[] points;
 
     public Contour(float[] _points){
         points = _points;
@@ -15,7 +15,7 @@ public class Contour {
 
     // Contour의 points 좌표를 Local 좌표로 바꾸는.....일을 하였음.
     // TODO 최적화 더 할 수 있음.
-    public float[] cliptolocal(float[] projMX, float[] viewMX, float[] camera, Plane plane){
+    public Contour cliptolocal(float[] projMX, float[] viewMX, float[] camera, Plane plane){
         int len = points.length/2;
 
         float[] localpoints = new float[points.length];
@@ -49,8 +49,9 @@ public class Contour {
             localpoints[2*i] = localpoint[0];
             localpoints[2*i+1] = localpoint[1];
         }
+        Contour localContor = new Contour(localpoints);
 
-        return localpoints;
+        return localContor;
     }
 
 
