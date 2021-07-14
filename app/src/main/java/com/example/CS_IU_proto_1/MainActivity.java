@@ -332,17 +332,22 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
               contours =  jni.findTimberContours(image);
               ArrayList<Contour> localcontours = new ArrayList<>();
+              ArrayList<Contour> boundingboxs = new ArrayList<>();
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours
               ) {
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
+              }
+              for (Contour contour: localcontours)
+              {
+                boundingboxs.add(Myutil.findSVD(contour));
               }
 
               image.close();
               glView.queueEvent(() -> {
                   contourForDraws.clear();
 
-                  for (Contour localContor: localcontours)
+                  for (Contour localContor: boundingboxs)
                   {
                     ContourForDraw contourForDraw = new ContourForDraw();
                     contourForDraw.setContour(plane, localContor);
