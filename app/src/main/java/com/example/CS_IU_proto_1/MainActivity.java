@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -146,9 +147,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         recordButton.setText("Record");
         state = State.Idle;
         circles.clear();
-        contourForDraws.clear();
-
+        try {
+          worker.awaitTermination(100, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
         plane = null;
+        contourForDraws.clear();
         pointCollector = new PointCollector();
       }
     });
@@ -348,6 +353,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   contourForDraws.clear();
 
                   for (Contour localContor: boundingboxs)
+                  {
+                    ContourForDraw contourForDraw = new ContourForDraw();
+                    contourForDraw.setContour(plane, localContor);
+                    contourForDraws.add(contourForDraw);
+                  }
+                  for (Contour localContor: localcontours
+                  )
                   {
                     ContourForDraw contourForDraw = new ContourForDraw();
                     contourForDraw.setContour(plane, localContor);
