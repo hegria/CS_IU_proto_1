@@ -195,6 +195,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       session.close();
       session = null;
     }
+    worker.shutdown();
+    findPlaneworker.shutdown();
 
     super.onDestroy();
   }
