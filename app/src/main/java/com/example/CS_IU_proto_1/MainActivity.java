@@ -33,6 +33,7 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -74,7 +75,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
   ArrayList<ContourForDraw> contourForDraws;
-//  ArrayList<Cube> cubes; // 클릭하면 cubes가 만들어질거임
+  ArrayList<Contour> contours;
+  OpenCVJNI jni;
+
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
@@ -94,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     worker = Executors.newSingleThreadExecutor();
     findPlaneworker = Executors.newSingleThreadExecutor();
     findPlaneTask = new FindPlaneTask();
+    jni = new OpenCVJNI();
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
@@ -155,18 +159,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if (state == State.FoundSurface) {
         float[] point = Myutil.pickSurfacePoints(plane,ray);
         glView.queueEvent(() -> {
-//          Cube cube = new Cube();
-//          cube.xyz = new float[]{point[0],point[1],point[2]};
-//          cubes.add(cube);
           Circle circle = new Circle();
           circle.setCircle(plane, point);
           circles.add(circle);
-//          ContourForDraw contourForDraw = new ContourForDraw();
-//          float[] newlocal = plane.transintolocal(point);
-//          Log.i("Point", Float.toString(newlocal[0])+Float.toString(newlocal[1]));
-//          contourForDraw.setContour(plane,  new float[]{0+0.01f,0,
-//                  0,0+0.01f,0-0.01f,0,0,0-0.01f});
-//          contourForDraws.add(contourForDraw);
         });
         return false;
       } else if (state == State.PointCollected) {
@@ -203,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onPause() {
     super.onPause();
     if (session != null) {
+      glView.onPause();
       session.pause();
     }
   }
@@ -283,7 +279,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background = new Background();
     circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
-
+    contours = new ArrayList<>();
+    //TODO Method 이름을 적확하게 해두기
   }
 
 
@@ -299,58 +296,58 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onDrawFrame(GL10 gl) {
     if (session == null) return;
     Frame frame = null;
+
+    // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
+    session.setCameraTextureName(background.texID);
+    // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
+    session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
+
     try {
       frame = session.update();
     } catch (CameraNotAvailableException e) {
       return;
     }
-    // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
-    session.setCameraTextureName(background.texID);
-    // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
-    session.setDisplayGeometry(((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation(), width, height);
+
     //평면을 찾은 뒤에 이미지를 옮길것임.
     if (state == State.FoundSurface) {
 
       if (!isBusy) {
         try {
           image = frame.acquireCameraImage();
+          // viewMX, ProjMax 훔침
+          // SnapShot 과정..
+
 
           worker.execute(() -> {
               if (image == null) {
                 return;
               }
-
               isBusy = true;
 
-              // SnapShot 과정..
               float[] snapprojMX = projMX.clone();
-              float[] snapviewMX = viewMX.clone();
+              float[] snapviewMX = viewMX.clone(); // 복사가 되나???
               float[] snapcameratrans = camera.getPose().getTranslation();
+              // ADDED BY OPENCV TEAM
+              contours.clear();
 
-              ArrayList<Contour> contours = Myutil.findCircle(image);
+              contours =  jni.findTimberContours(image);
               ArrayList<Contour> localcontours = new ArrayList<>();
-
+              // ADDED BY OPENCV TEAM
               for (Contour contour: contours
-                   ) {
+              ) {
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
               }
-              
+
               image.close();
-
               glView.queueEvent(() -> {
-
-                if(contourForDraws.size() == 20){
                   contourForDraws.clear();
-                }
 
-                for (Contour localContor: localcontours
-                     ) {
-                  ContourForDraw contourForDraw = new ContourForDraw();
-                  contourForDraw.setContour(plane, localContor);
-                  contourForDraws.add(contourForDraw);
-                }
-
-
+                  for (Contour localContor: localcontours)
+                  {
+                    ContourForDraw contourForDraw = new ContourForDraw();
+                    contourForDraw.setContour(plane, localContor);
+                    contourForDraws.add(contourForDraw);
+                  }
               });
               isBusy = false;
           });
@@ -361,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         }
       }
-    }
+  }
     if (frame.hasDisplayGeometryChanged()) {
       background.transformCoordinate(frame);
     }
