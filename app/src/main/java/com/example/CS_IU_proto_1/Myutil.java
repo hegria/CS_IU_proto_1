@@ -175,6 +175,140 @@ public class Myutil {
         else
             return new EllipseSize(elli_r2, elli_r1, elli_cp, elli_p2, elli_p1);
     }
+
+    public static Contour findSVD(Contour contour){
+
+        float[] COM = new float[2];
+        for(int i =0; i< contour.points.length/2; i++){
+            COM[0] += contour.points[2*i];
+            COM[1] += contour.points[2*i+1];
+        }
+        COM[0] /= contour.points.length/2f;
+        COM[1] /= contour.points.length/2f;
+        System.out.println(""+COM[0]+COM[1]);
+
+        float xx = 0;
+        float xy = 0;
+        float yy = 0;
+        float[] temp = new float[2];
+        for(int i = 0; i<contour.points.length/2;i++){
+            temp[0] = contour.points[2*i] - COM[0];
+            temp[1] = contour.points[2*i+1] - COM[1];
+
+            xx+= temp[0] * temp[0];
+            xy+= temp[0] * temp[1];
+            yy+= temp[1] * temp[1];
+        }
+
+        // find boundbox
+        float[][] M = new float[][]{
+                {xx, xy},
+                {xy, yy},
+        };
+        // U -> AAT를 곱한 Matrix
+        float[][] TM = new float[][]{
+                {xx*xx+xy*xy, xx*xy+xy*yy},
+                {xx*xy+xy*yy, xy*xy+yy*yy}
+        };
+
+        // Lamda에 대한 2차 방정식의 해.
+        // B랑 C
+
+        System.out.println(""+xx+xy+yy);
+        float b = TM[0][0]+TM[1][1];
+        float c = TM[0][0]*TM[1][1] - TM[0][1]*TM[0][1];
+        float det = (float)Math.sqrt(b*b-4*c);
+
+        float lamda1 = (b+ det)/2;
+        float lamda2 = (b- det)/2;
+
+        // lamda1 > lamda2 -> UM x1, x2의 비율에 대한
+        // a-lamda x1 = -b x2
+        // (lamda 1) x2 , (lamda 2) x2
+        // (lamda 1) x1 , (lamda 2) x1
+
+
+        // 내가 봤을댄 U1만 구하면 될듯??
+
+        float[][] UM = new float[][]{
+                {1,1},
+                {-(TM[0][0]-lamda1)/TM[0][1],-(TM[0][0]-lamda2)/TM[0][1]}
+        };
+
+        //Gram-Schmidt의 orthonormalization 과정
+
+
+        float dis = (float) Math.sqrt(1+UM[1][0]*UM[1][0]);
+        float[] u1 = new float[]{1/dis, UM[1][0]/dis};
+        float cross = u1[0]*UM[0][1]+u1[1]*UM[1][1];
+        float[] u2 = new float[]{
+                UM[0][1]- cross*u1[0], UM[1][1] - cross*u1[1]
+        };
+        dis = (float) Math.sqrt(u2[0]*u2[0]+u2[1]*u2[1]);
+        float[][] realUM = new float[][]{
+                {u1[0],u2[0]/dis},
+                {u1[1],u2[1]/dis}
+        };
+        System.out.println(""+realUM[0][0]+realUM[0][1]+"\n"+
+                realUM[1][0]+realUM[1][1]);
+        System.out.println(""+Math.sqrt(lamda1)+Math.sqrt(lamda2));
+
+        float[] M_axisx;
+        float[] M_axisy;
+
+
+        M_axisx = new float[]{realUM[0][0], realUM[1][0]};
+        M_axisy = new float[]{realUM[0][1], realUM[1][1]};
+
+        //nomalize
+
+
+        // 축 방향
+
+        float crossRst = M_axisx[0]*M_axisy[1] - M_axisx[1]*M_axisy[0];
+
+        if(crossRst < 0){
+            M_axisx[0] = -M_axisx[0];
+            M_axisx[1] = -M_axisx[1];
+        }
+
+        float xmax = 0;
+        float xmin = 0;
+        float ymax = 0;
+        float ymin = 0;
+
+        for(int i = 0; i<contour.points.length/2;i++){
+
+            float[] tempp = new float[]{(contour.points[2*i]-COM[0])*M_axisx[0]+(contour.points[2*i+1]-COM[1])*M_axisx[1],
+                    (contour.points[2*i]-COM[0])*M_axisy[0]+(contour.points[2*i+1]-COM[1])*M_axisy[1]};
+            if(i== 0){
+                xmax = tempp[0];
+                xmin = tempp[0];
+                ymax = tempp[1];
+                ymin = tempp[1];
+            }
+            if(tempp[0]>xmax)
+                xmax = tempp[0];
+            else if(tempp[0]<xmin)
+                xmin = tempp[0];
+            if(tempp[1]>ymax)
+                ymax = tempp[1];
+            else if(tempp[1]<ymin)
+                ymin = tempp[1];
+        }
+
+        // LOCAL CONTOUR
+
+        float[] LL = new float[]{COM[0]+xmin*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymin*M_axisy[1]};
+        float[] LR = new float[]{COM[0]+xmax*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymin*M_axisy[1]};
+        float[] UL = new float[]{COM[0]+xmin*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymax*M_axisy[1]};
+        float[] UR = new float[]{COM[0]+xmax*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymax*M_axisy[1]};
+
+        Contour boundbox = new Contour(new float[]{LL[0],LL[1],LR[0],LR[1],UR[0],UR[1],UL[0],UL[1]});
+
+        return boundbox;
+
+    }
     
 //    public static EllipseSize findElipses ( Contour localContour){
 //

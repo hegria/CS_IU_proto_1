@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -146,9 +147,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         recordButton.setText("Record");
         state = State.Idle;
         circles.clear();
-        contourForDraws.clear();
-
+        try {
+          worker.awaitTermination(100, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
         plane = null;
+        contourForDraws.clear();
         pointCollector = new PointCollector();
       }
     });
@@ -190,6 +195,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       session.close();
       session = null;
     }
+    worker.shutdown();
+    findPlaneworker.shutdown();
 
     super.onDestroy();
   }
@@ -332,17 +339,29 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
               contours =  jni.findTimberContours(image);
               ArrayList<Contour> localcontours = new ArrayList<>();
+              ArrayList<Contour> boundingboxs = new ArrayList<>();
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours
               ) {
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
+              }
+              for (Contour contour: localcontours)
+              {
+                boundingboxs.add(Myutil.findSVD(contour));
               }
 
               image.close();
               glView.queueEvent(() -> {
                   contourForDraws.clear();
 
-                  for (Contour localContor: localcontours)
+                  for (Contour localContor: boundingboxs)
+                  {
+                    ContourForDraw contourForDraw = new ContourForDraw();
+                    contourForDraw.setContour(plane, localContor);
+                    contourForDraws.add(contourForDraw);
+                  }
+                  for (Contour localContor: localcontours
+                  )
                   {
                     ContourForDraw contourForDraw = new ContourForDraw();
                     contourForDraw.setContour(plane, localContor);
