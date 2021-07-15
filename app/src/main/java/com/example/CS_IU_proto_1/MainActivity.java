@@ -6,7 +6,6 @@ import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -30,18 +29,13 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Mat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -367,10 +361,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               for (Contour contour: contours
               ) {
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
+                Log.i("dots",""+contour.points.length);
               }
               for (Contour contour: localcontours)
               {
-                boundingboxs.add(Myutil.findSVD(contour));
+                boundingboxs.add(Myutil.findBoundingBox(contour));
               }
 
               image.close();

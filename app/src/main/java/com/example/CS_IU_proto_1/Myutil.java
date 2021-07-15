@@ -151,7 +151,7 @@ public class Myutil {
         return new RectEllipseSize(rect_ll, rect_lr, rect_ul, rect_ur);
     }
 
-    public static EllipseSize rectToElli (RectEllipseSize rect){
+    public static EllipseSize rectToElli (RectEllipseSize rect) {
         float elli_r1, elli_r2;
         float[] elli_cp = new float[2];
         float[] elli_p1 = new float[2];
@@ -167,16 +167,18 @@ public class Myutil {
         elli_cp[0] = (rect.ll[0] + rect.lr[0] + rect.ul[0] + rect.ur[0]) / 4f;
         elli_cp[1] = (rect.ll[1] + rect.lr[1] + rect.ul[1] + rect.ur[1]) / 4f;
 
-        elli_r1 = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p1[0] ,2) + Math.pow(elli_cp[1] - elli_p1[1] ,2));
-        elli_r2 = (float)Math.sqrt(Math.pow(elli_cp[0] - elli_p2[0] ,2) + Math.pow(elli_cp[1] - elli_p2[1] ,2));
+        elli_r1 = (float) Math.sqrt(Math.pow(elli_cp[0] - elli_p1[0], 2) + Math.pow(elli_cp[1] - elli_p1[1], 2));
+        elli_r2 = (float) Math.sqrt(Math.pow(elli_cp[0] - elli_p2[0], 2) + Math.pow(elli_cp[1] - elli_p2[1], 2));
 
-        if(elli_r1 > elli_r2)
+        if (elli_r1 > elli_r2)
             return new EllipseSize(elli_r1, elli_r2, elli_cp, elli_p1, elli_p2);
         else
             return new EllipseSize(elli_r2, elli_r1, elli_cp, elli_p2, elli_p1);
     }
+    //TODO Contour를 RectEllipseSize로 변환할 필요는 있어보임?
+    public static Contour findBoundingBox(Contour contour){
 
-    public static Contour findSVD(Contour contour){
+        // FIND CENTER OF MASS
 
         float[] COM = new float[2];
         for(int i =0; i< contour.points.length/2; i++){
@@ -200,12 +202,18 @@ public class Myutil {
             yy+= temp[1] * temp[1];
         }
 
-        // find boundbox
-        float[][] M = new float[][]{
-                {xx, xy},
-                {xy, yy},
-        };
-        // U -> AAT를 곱한 Matrix
+//         2D MAT
+//        float[][] M = new float[][]{
+//                {xx, xy},
+//                {xy, yy},
+//        };
+
+        //
+        // -> Start SVD
+        //
+
+        // TM -> M*M^T를 곱한 Matrix > SVD 에서 쓰임
+
         float[][] TM = new float[][]{
                 {xx*xx+xy*xy, xx*xy+xy*yy},
                 {xx*xy+xy*yy, xy*xy+yy*yy}
@@ -214,29 +222,27 @@ public class Myutil {
         // Lamda에 대한 2차 방정식의 해.
         // B랑 C
 
-        System.out.println(""+xx+xy+yy);
         float b = TM[0][0]+TM[1][1];
         float c = TM[0][0]*TM[1][1] - TM[0][1]*TM[0][1];
         float det = (float)Math.sqrt(b*b-4*c);
 
-        float lamda1 = (b+ det)/2;
-        float lamda2 = (b- det)/2;
+        float lamda1 = (b + det)/2;
+        float lamda2 = (b - det)/2;
 
         // lamda1 > lamda2 -> UM x1, x2의 비율에 대한
         // a-lamda x1 = -b x2
         // (lamda 1) x2 , (lamda 2) x2
         // (lamda 1) x1 , (lamda 2) x1
 
+        // TODO 내가 봤을댄 U1만 구하면 될듯??
 
-        // 내가 봤을댄 U1만 구하면 될듯??
-
+        // UM => 내림차순 vector 두개.
         float[][] UM = new float[][]{
                 {1,1},
                 {-(TM[0][0]-lamda1)/TM[0][1],-(TM[0][0]-lamda2)/TM[0][1]}
         };
 
         //Gram-Schmidt의 orthonormalization 과정
-
 
         float dis = (float) Math.sqrt(1+UM[1][0]*UM[1][0]);
         float[] u1 = new float[]{1/dis, UM[1][0]/dis};
@@ -245,25 +251,23 @@ public class Myutil {
                 UM[0][1]- cross*u1[0], UM[1][1] - cross*u1[1]
         };
         dis = (float) Math.sqrt(u2[0]*u2[0]+u2[1]*u2[1]);
+
+        // 최종 realU Matrix
+
         float[][] realUM = new float[][]{
                 {u1[0],u2[0]/dis},
                 {u1[1],u2[1]/dis}
         };
-        System.out.println(""+realUM[0][0]+realUM[0][1]+"\n"+
-                realUM[1][0]+realUM[1][1]);
-        System.out.println(""+Math.sqrt(lamda1)+Math.sqrt(lamda2));
 
-        float[] M_axisx;
-        float[] M_axisy;
+        // x축을 lamda가 큰 것으로 지정.
 
-
-        M_axisx = new float[]{realUM[0][0], realUM[1][0]};
-        M_axisy = new float[]{realUM[0][1], realUM[1][1]};
+        float[] M_axisx = new float[]{realUM[0][0], realUM[1][0]};
+        float[] M_axisy = new float[]{realUM[0][1], realUM[1][1]};
 
         //nomalize
 
 
-        // 축 방향
+        // 축 방향조정 -> Right-Handed
 
         float crossRst = M_axisx[0]*M_axisy[1] - M_axisx[1]*M_axisy[0];
 
@@ -271,6 +275,8 @@ public class Myutil {
             M_axisx[0] = -M_axisx[0];
             M_axisx[1] = -M_axisx[1];
         }
+
+        //Bounding Box 계산.
 
         float xmax = 0;
         float xmin = 0;
@@ -297,7 +303,7 @@ public class Myutil {
                 ymin = tempp[1];
         }
 
-        // LOCAL CONTOUR
+        // LOCAL Bounding BOX
 
         float[] LL = new float[]{COM[0]+xmin*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymin*M_axisy[1]};
         float[] LR = new float[]{COM[0]+xmax*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymin*M_axisy[1]};
