@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       @Override
       public void onSuccessTask(Plane _plane) {
         runOnUiThread(() -> {
-          Toast.makeText(MainActivity.this,"I got it",Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -136,8 +136,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       @Override
       public void onFailTask() {
         runOnUiThread(() -> {
-
-          Toast.makeText(MainActivity.this,"I can't got it",Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this,"평면을 못 찾았습니다. 다시 시도하여 주세요.",Toast.LENGTH_SHORT).show();
         });
         state = State.PointCollected;
       }
@@ -439,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       case FindingSurface:
         // 선택한 점 그리기.
         pointCloudRenderer.draw(viewMX, projMX);
+        // TODO seed point 제거 해야할 지 정해야함.
         forDebugging.draw(findPlaneTask.seedPointArr, GLES20.GL_POINTS, 4, 1f, 0f, 0f, viewMX, projMX);
         break;
       case PointCollected:
