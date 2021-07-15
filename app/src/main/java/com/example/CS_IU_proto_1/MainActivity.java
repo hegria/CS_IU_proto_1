@@ -90,6 +90,30 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
   float[] viewMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
+  //앱종료시간체크
+  long backKeyPressedTime;    //앱종료 위한 백버튼 누른시간
+
+  //뒤로가기 2번하면 앱종료
+  @Override
+  public void onBackPressed() {
+    //1번째 백버튼 클릭
+    if(System.currentTimeMillis()>backKeyPressedTime+2000){
+      backKeyPressedTime = System.currentTimeMillis();
+      Toast.makeText(this, "한번 더 눌러 앱 종료", Toast.LENGTH_SHORT).show();
+    }
+    //2번째 백버튼 클릭 (종료)
+    else{
+      AppFinish();
+    }
+  }
+
+  //앱종료
+  public void AppFinish(){
+    finish();
+    System.exit(0);
+    android.os.Process.killProcess(android.os.Process.myPid());
+  }
+
 
   @SuppressLint("ClickableViewAccessibility")
   @Override
@@ -394,7 +418,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background.draw();
     switch(state){
       case FoundSurface:
-        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
+//        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
 //        for (Cube cube : cubes) {
 //          cube.update(dt, findPlane.plane);
 //          cube.draw(viewMX, projMX);
