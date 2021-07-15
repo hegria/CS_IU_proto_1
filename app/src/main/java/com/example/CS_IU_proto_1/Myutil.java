@@ -72,9 +72,6 @@ public class Myutil {
         return ray;
     }
 
-
-
-
     public static Mat ArImg2CVImg(Image image){
 
         Image.Plane[] planes = image.getPlanes();
@@ -310,10 +307,7 @@ public class Myutil {
         float[] UL = new float[]{COM[0]+xmin*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymax*M_axisy[1]};
         float[] UR = new float[]{COM[0]+xmax*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymax*M_axisy[1]};
 
-        Contour boundbox = new Contour(new float[]{LL[0],LL[1],LR[0],LR[1],UR[0],UR[1],UL[0],UL[1]});
-
-        return boundbox;
-
+        return new Contour(new float[]{LL[0],LL[1],LR[0],LR[1],UR[0],UR[1],UL[0],UL[1]});
     }
     
 //    public static EllipseSize findElipses ( Contour localContour){
