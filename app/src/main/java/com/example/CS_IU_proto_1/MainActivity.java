@@ -6,7 +6,6 @@ import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -30,18 +29,13 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Mat;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -90,6 +84,30 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
   float[] viewMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
+  //앱종료시간체크
+  long backKeyPressedTime;    //앱종료 위한 백버튼 누른시간
+
+  //뒤로가기 2번하면 앱종료
+  @Override
+  public void onBackPressed() {
+    //1번째 백버튼 클릭
+    if(System.currentTimeMillis()>backKeyPressedTime+2000){
+      backKeyPressedTime = System.currentTimeMillis();
+      Toast.makeText(this, "한번 더 눌러 앱 종료", Toast.LENGTH_SHORT).show();
+    }
+    //2번째 백버튼 클릭 (종료)
+    else{
+      AppFinish();
+    }
+  }
+
+  //앱종료
+  public void AppFinish(){
+    finish();
+    System.exit(0);
+    android.os.Process.killProcess(android.os.Process.myPid());
+  }
+
 
   @SuppressLint("ClickableViewAccessibility")
   @Override
@@ -103,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       @Override
       public void onSuccessTask(Plane _plane) {
         runOnUiThread(() -> {
-          Toast.makeText(MainActivity.this,"I got it",Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -112,8 +130,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       @Override
       public void onFailTask() {
         runOnUiThread(() -> {
-
-          Toast.makeText(MainActivity.this,"I can't got it",Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this,"평면을 못 찾았습니다. 다시 시도하여 주세요.",Toast.LENGTH_SHORT).show();
         });
         state = State.PointCollected;
       }
@@ -344,10 +361,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               for (Contour contour: contours
               ) {
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
+                Log.i("dots",""+contour.points.length);
               }
               for (Contour contour: localcontours)
               {
-                boundingboxs.add(Myutil.findSVD(contour));
+                boundingboxs.add(Myutil.findBoundingBox(contour));
               }
 
               image.close();
@@ -394,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background.draw();
     switch(state){
       case FoundSurface:
-        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
+//        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
 //        for (Cube cube : cubes) {
 //          cube.update(dt, findPlane.plane);
 //          cube.draw(viewMX, projMX);
@@ -415,6 +433,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       case FindingSurface:
         // 선택한 점 그리기.
         pointCloudRenderer.draw(viewMX, projMX);
+        // TODO seed point 제거 해야할 지 정해야함.
         forDebugging.draw(findPlaneTask.seedPointArr, GLES20.GL_POINTS, 4, 1f, 0f, 0f, viewMX, projMX);
         break;
       case PointCollected:
