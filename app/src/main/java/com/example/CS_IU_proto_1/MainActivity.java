@@ -392,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
                   }
 
-                  drawText.setTexture(boundingboxs,glView.getHeight(),glView.getWidth());
+                  drawText.setTexture(boundingboxs,height,width);
 
 //                  for (Contour localContor: localcontours
 //                  )
