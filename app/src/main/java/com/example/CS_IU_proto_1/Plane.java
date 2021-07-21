@@ -16,8 +16,8 @@ public class Plane {
   public float[] planeVertex;
   private float[][] transformworldtolocal;
   private float[][] transformlocaltoworld;
-  private float[] xvec;
-  private float[] yvec;
+  public float[] xvec;
+  public float[] yvec;
   private float[] neworigin;
 
   public Plane(ResponseForm.PlaneParam param, float[] z_dir){

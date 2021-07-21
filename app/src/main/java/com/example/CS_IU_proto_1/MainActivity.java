@@ -69,7 +69,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
+  DrawText drawText;
   ArrayList<ContourForDraw> contourForDraws;
+  ArrayList<DrawEllipse> drawEllipses;
   ArrayList<Contour> contours;
   OpenCVJNI jni;
 
@@ -171,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         }
         plane = null;
         contourForDraws.clear();
+        drawEllipses.clear();
         pointCollector = new PointCollector();
       }
     });
@@ -301,8 +304,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     pointCollector = new PointCollector();
     pointCloudRenderer = new PointCloudRenderer();
     background = new Background();
+    drawText = new DrawText();
     circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
+    drawEllipses = new ArrayList<>();
     contours = new ArrayList<>();
     //TODO Method 이름을 적확하게 해두기
   }
@@ -338,9 +343,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if (!isBusy) {
         try {
           image = frame.acquireCameraImage();
+
           // viewMX, ProjMax 훔침
           // SnapShot 과정..
-
 
           worker.execute(() -> {
               if (image == null) {
@@ -356,35 +361,46 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
               contours =  jni.findTimberContours(image);
               ArrayList<Contour> localcontours = new ArrayList<>();
-              ArrayList<Contour> boundingboxs = new ArrayList<>();
+              ArrayList<Ellipse> boundingboxs = new ArrayList<>();
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours
               ) {
+                if(contour.points.length <=10){
+                  continue;
+                }
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
                 Log.i("dots",""+contour.points.length);
               }
               for (Contour contour: localcontours)
               {
-                boundingboxs.add(Myutil.findBoundingBox(contour));
+                Ellipse tempellipse = Myutil.findBoundingBox(contour);
+                tempellipse.setRottation(plane);
+                boundingboxs.add(tempellipse);
               }
 
               image.close();
               glView.queueEvent(() -> {
                   contourForDraws.clear();
+                  drawEllipses.clear();
 
-                  for (Contour localContor: boundingboxs)
+                  for (Ellipse boxes: boundingboxs)
                   {
-                    ContourForDraw contourForDraw = new ContourForDraw();
-                    contourForDraw.setContour(plane, localContor);
-                    contourForDraws.add(contourForDraw);
+                      boxes.pivot_to_local(projMX,viewMX);
+                      DrawEllipse drawEllipse = new DrawEllipse();
+                      drawEllipse.setContour(plane,boxes);
+                      drawEllipses.add(drawEllipse);
+
                   }
-                  for (Contour localContor: localcontours
-                  )
-                  {
-                    ContourForDraw contourForDraw = new ContourForDraw();
-                    contourForDraw.setContour(plane, localContor);
-                    contourForDraws.add(contourForDraw);
-                  }
+
+                  drawText.setTexture(boundingboxs,glView.getHeight(),glView.getWidth());
+
+//                  for (Contour localContor: localcontours
+//                  )
+//                  {
+//                    ContourForDraw contourForDraw = new ContourForDraw();
+//                    contourForDraw.setContour(plane, localContor);
+//                    contourForDraws.add(contourForDraw);
+//                  }
               });
               isBusy = false;
           });
@@ -410,6 +426,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     background.draw();
+
     switch(state){
       case FoundSurface:
 //        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
@@ -423,6 +440,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         for (ContourForDraw contourForDraw : contourForDraws){
           contourForDraw.draw(viewMX,projMX);
         }
+
+        for (DrawEllipse drawEllipse : drawEllipses){
+          drawEllipse.draw(viewMX,projMX);
+        }
+        drawText.draw();
         break;
       case PointCollecting:
         // 일이 분리가 안된것 같긴한데 frame을 얻고 해야하므로 어쩔 수 없음.
