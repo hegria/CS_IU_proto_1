@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -44,7 +45,6 @@ import javax.microedition.khronos.opengles.GL10;
 public class MainActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
 
   private static final String TAG = "opencv";
-
 
   // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 Plane Find
 
@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   GLSurfaceView glView; // 띄우기 위한 View
   Button recordButton; // 레코딩~
+  TextView txtCount;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -147,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
     glView.setWillNotDraw(false);
 
+    txtCount = findViewById(R.id.txtCount);
     recordButton = (Button) findViewById(R.id.recordButton);
     recordButton.setOnClickListener(l -> {
       if (state == State.PointCollecting) {
@@ -377,6 +379,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 tempellipse.setRottation(plane);
                 boundingboxs.add(tempellipse);
               }
+
+              runOnUiThread(() -> {
+                txtCount.setText("개수: "+localcontours.size());
+              });
+
 
               image.close();
               glView.queueEvent(() -> {
