@@ -48,13 +48,13 @@ public class DrawText {
 
     public DrawText(){
         float[] vertex = {
-                1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
                 -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-                -1.0f, -1.0f, 0.0f, 1.0f, 1.0f,
+                -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
 
                 -1.0f, -1.0f, 0.0f, 1.0f, 1.0f,
                 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-                1.0f, 1.0f, 0.0f, 0.0f, 0.0f
+                1.0f, 1.0f, 0.0f, 1.0f, 1.0f
         };
         ByteBuffer bb = ByteBuffer.allocateDirect(vertex.length * 4);
         bb.order(ByteOrder.nativeOrder());
