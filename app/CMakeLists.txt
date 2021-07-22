@@ -11,7 +11,7 @@ set( CMAKE_VERBOSE_MAKEFILE on )
 
 include_directories( ${pathOPENCV}/native/jni/include )
 
-add_library( native-lib SHARED ${pathCPP}/native-lib.cpp )
+add_library( native-lib SHARED ${pathCPP}/native-lib.cpp ${pathCPP}/TimberDetector.cpp ${pathCPP}/utils.cpp )
 add_library( lib-opencv SHARED IMPORTED )
 set_target_properties( lib-opencv PROPERTIES IMPORTED_LOCATION ${pathLIBOPENCV_JAVA} )
 
