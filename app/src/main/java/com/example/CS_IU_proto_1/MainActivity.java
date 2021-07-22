@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Image image;
 
   boolean mode_contour = false;
-  boolean mode_ellipse = false;
+  boolean mode_ellipse = true;
 
   ExecutorService worker;
   ExecutorService findPlaneworker;
@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         state = State.Idle;
         circles.clear();
         mode_contour = false;
-        mode_ellipse = false;
+        mode_ellipse = true;
         try {
           worker.awaitTermination(200, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -324,6 +324,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     pointCloudRenderer = new PointCloudRenderer();
     background = new Background();
     drawText = new DrawText();
+    drawText.setTexture(width,height);
     circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
     drawEllipses = new ArrayList<>();
@@ -344,7 +345,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onDrawFrame(GL10 gl) {
     if (session == null) return;
     Frame frame = null;
-    Log.i("point",""+width+height);
     // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
     session.setCameraTextureName(background.texID);
     // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
@@ -379,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
               contours =  jni.findTimberContours(image);
               ArrayList<Contour> localcontours = new ArrayList<>();
-              ArrayList<Ellipse> boundingboxs = new ArrayList<>();
+              ArrayList<Ellipse> ellipses = new ArrayList<>();
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours
               ) {
@@ -392,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               {
                 Ellipse tempellipse = Myutil.findBoundingBox(contour);
                 tempellipse.setRottation(plane);
-                boundingboxs.add(tempellipse);
+                ellipses.add(tempellipse);
               }
 
               runOnUiThread(() -> {
@@ -404,23 +404,25 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               glView.queueEvent(() -> {
                   contourForDraws.clear();
                   drawEllipses.clear();
+                  drawText.clearEllipses();
 
-                  for (Ellipse boxes: boundingboxs)
+                  for (Ellipse ellipse: ellipses)
                   {
-                      boxes.pivot_to_local(projMX,viewMX);
+                      ellipse.pivot_to_local(projMX,viewMX);
                       DrawEllipse drawEllipse = new DrawEllipse();
-                      drawEllipse.setContour(plane,boxes);
+                      drawEllipse.setContour(plane,ellipse);
+                      drawText.setEllipses(ellipse);
                       drawEllipses.add(drawEllipse);
                   }
 
-                  drawText.setTexture(boundingboxs,width,height);
 
-                  for (Contour localContor: localcontours)
-                  {
-                    ContourForDraw contourForDraw = new ContourForDraw();
-                    contourForDraw.setContour(plane, localContor);
-                    contourForDraws.add(contourForDraw);
-                  }
+//                  for (Contour localContor: localcontours)
+//                  {
+//                    ContourForDraw contourForDraw = new ContourForDraw();
+//                    contourForDraw.setContour(plane, localContor);
+//                    contourForDraws.add(contourForDraw);
+//                  }
+                  drawText.setTexture(width,height);
               });
               isBusy = false;
           });
@@ -457,18 +459,17 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //        for (Circle circle : circles) {
 //          circle.draw(viewMX, projMX);
 //        }
-        if(mode_contour) {
-          for (ContourForDraw contourForDraw : contourForDraws) {
-            contourForDraw.draw(viewMX, projMX);
-          }
-        }
+//        if(mode_contour) {
+//          for (ContourForDraw contourForDraw : contourForDraws) {
+//            contourForDraw.draw(viewMX, projMX);
+//          }
+//        }
 
         if(mode_ellipse) {
           for (DrawEllipse drawEllipse : drawEllipses) {
             drawEllipse.draw(viewMX, projMX);
           }
         }
-
         drawText.draw();
         break;
       case PointCollecting:

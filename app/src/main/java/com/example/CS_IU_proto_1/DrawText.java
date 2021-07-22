@@ -25,6 +25,8 @@ public class DrawText {
 
     final int textSize = 32;
 
+    ArrayList<Ellipseinfo> ellipses;
+
     private final String vscode = "" +
             "attribute vec3 vPosition;" +
             "attribute vec2 vTexcoord;" +
@@ -94,10 +96,18 @@ public class DrawText {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+        ellipses = new ArrayList<>();
     }
-    public void setTexture(ArrayList<Ellipse> ellipses, int width, int height){
+
+    public void setEllipses(Ellipse ellipse){
+        ellipses.add(new Ellipseinfo(ellipse.resultprivot,ellipse.size));
+    }
+    public void clearEllipses(){
+        ellipses.clear();
+    }
 
 
+    public void setTexture(int width,int height){
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         // get a canvas to paint over the bitmap
         bitmap.eraseColor(Color.TRANSPARENT);
@@ -112,10 +122,8 @@ public class DrawText {
         textPaint.setColor(Color.GREEN);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
-        for (Ellipse ellipse : ellipses
-             ) {
-            Log.i("point",""+ (ellipse.resultprivot[0]+1.0f)/2.0f*width+(1.0f-ellipse.resultprivot[1])/2.0f*height);
-            canvas.drawText(""+ellipse.size,(ellipse.resultprivot[0]+1.0f)/2.0f*width ,(1.0f-ellipse.resultprivot[1])/2.0f*height + textSize/4f,
+        for (Ellipseinfo ellipse : ellipses) {
+            canvas.drawText(""+ellipse.size,(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1])/2.0f*height + textSize/4f,
                     textPaint);
         }
 
@@ -127,6 +135,9 @@ public class DrawText {
 
 
     public void draw() {
+
+
+
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -152,5 +163,13 @@ public class DrawText {
         GLES20.glDisableVertexAttribArray(vpos);
         GLES20.glDisableVertexAttribArray(tpos);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+    }
+}
+class Ellipseinfo{
+    float[] center;
+    int size;
+    public Ellipseinfo(float[] _center, int _size){
+        center = _center;
+        size = _size;
     }
 }

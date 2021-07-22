@@ -185,7 +185,6 @@ public class Myutil {
         }
         COM[0] /= contour.points.length/2f;
         COM[1] /= contour.points.length/2f;
-        System.out.println(""+COM[0]+COM[1]);
 
         float xx = 0;
         float xy = 0;
