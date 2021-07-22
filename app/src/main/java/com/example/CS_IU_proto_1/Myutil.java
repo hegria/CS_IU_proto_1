@@ -119,7 +119,7 @@ public class Myutil {
         return contours;
     }
 
-    public static RectEllipseSize elliToRect (EllipseSize elli){
+    public static RectEllipseSize elliToRect (Ellipse elli){
 
         float[] temp = new float[2];
         float[] rect_ll = new float[2];
@@ -127,17 +127,17 @@ public class Myutil {
         float[] rect_ul = new float[2];
         float[] rect_ur = new float[2];
 
-        temp[0] = elli.longvertex[0] - elli.cp[0];
-        temp[1] = elli.longvertex[1] - elli.cp[1];
-
-        rect_ur[0] = elli.shortvertex[0] + temp[0];
-        rect_ur[1] = elli.shortvertex[1] + temp[1];
-
-        rect_ul[0] = elli.shortvertex[0] - temp[0];
-        rect_ul[1] = elli.shortvertex[1] - temp[1];
-
-        temp[0] = elli.shortvertex[0] - elli.cp[0];
-        temp[1] = elli.shortvertex[1] - elli.cp[1];
+//        temp[0] = elli.longvertex[0] - elli.cp[0];
+//        temp[1] = elli.longvertex[1] - elli.cp[1];
+//
+//        rect_ur[0] = elli.shortvertex[0] + temp[0];
+//        rect_ur[1] = elli.shortvertex[1] + temp[1];
+//
+//        rect_ul[0] = elli.shortvertex[0] - temp[0];
+//        rect_ul[1] = elli.shortvertex[1] - temp[1];
+//
+//        temp[0] = elli.shortvertex[0] - elli.cp[0];
+//        temp[1] = elli.shortvertex[1] - elli.cp[1];
 
         rect_lr[0] = rect_ur[0] - temp[0]*2;
         rect_lr[1] = rect_ur[1] - temp[1]*2;
@@ -148,7 +148,7 @@ public class Myutil {
         return new RectEllipseSize(rect_ll, rect_lr, rect_ul, rect_ur);
     }
 
-    public static EllipseSize rectToElli (RectEllipseSize rect) {
+    public static Ellipse rectToElli (RectEllipseSize rect) {
         float elli_r1, elli_r2;
         float[] elli_cp = new float[2];
         float[] elli_p1 = new float[2];
@@ -168,12 +168,13 @@ public class Myutil {
         elli_r2 = (float) Math.sqrt(Math.pow(elli_cp[0] - elli_p2[0], 2) + Math.pow(elli_cp[1] - elli_p2[1], 2));
 
         if (elli_r1 > elli_r2)
-            return new EllipseSize(elli_r1, elli_r2, elli_cp, elli_p1, elli_p2);
+            return new Ellipse(elli_r1, elli_r2, elli_cp, elli_p1, elli_p2);
         else
-            return new EllipseSize(elli_r2, elli_r1, elli_cp, elli_p2, elli_p1);
+            return new Ellipse(elli_r2, elli_r1, elli_cp, elli_p2, elli_p1);
     }
+
     //TODO Contour를 RectEllipseSize로 변환할 필요는 있어보임?
-    public static Contour findBoundingBox(Contour contour){
+    public static Ellipse findBoundingBox(Contour contour){
 
         // FIND CENTER OF MASS
 
@@ -299,15 +300,25 @@ public class Myutil {
             else if(tempp[1]<ymin)
                 ymin = tempp[1];
         }
+        float dx = (xmax-xmin)/2;
+        float dy = (ymax-ymin)/2;
+        float px = (xmax+xmin)/2;
+        float py = (ymax+ymin)/2;
+
+        float[] pivot = new float[]{COM[0]+px*M_axisx[0]+py*M_axisy[0],COM[1]+px*M_axisx[1]+py*M_axisy[1],0};
+
+
+
 
         // LOCAL Bounding BOX
 
-        float[] LL = new float[]{COM[0]+xmin*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymin*M_axisy[1]};
-        float[] LR = new float[]{COM[0]+xmax*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymin*M_axisy[1]};
-        float[] UL = new float[]{COM[0]+xmin*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymax*M_axisy[1]};
-        float[] UR = new float[]{COM[0]+xmax*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymax*M_axisy[1]};
-
-        return new Contour(new float[]{LL[0],LL[1],LR[0],LR[1],UR[0],UR[1],UL[0],UL[1]});
+//        float[] LL = new float[]{COM[0]+xmin*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymin*M_axisy[1]};
+//        float[] LR = new float[]{COM[0]+xmax*M_axisx[0]+ymin*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymin*M_axisy[1]};
+//        float[] UL = new float[]{COM[0]+xmin*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmin*M_axisx[1]+ymax*M_axisy[1]};
+//        float[] UR = new float[]{COM[0]+xmax*M_axisx[0]+ymax*M_axisy[0],COM[1]+xmax*M_axisx[1]+ymax*M_axisy[1]};
+//
+//        return new Contour(new float[]{LL[0],LL[1],LR[0],LR[1],UR[0],UR[1],UL[0],UL[1]});
+        return new Ellipse(dx,dy,pivot,M_axisx,M_axisy);
     }
     
 //    public static EllipseSize findElipses ( Contour localContour){

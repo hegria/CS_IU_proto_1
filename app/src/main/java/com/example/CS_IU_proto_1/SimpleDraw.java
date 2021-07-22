@@ -13,7 +13,7 @@ public class SimpleDraw {
   private int program;
 
   private final String vscode =
-          "attribute vec4 vPosition;\n" +
+                  "attribute vec4 vPosition;\n" +
 
                   "uniform mat4 projMX;\n" +
                   "uniform mat4 viewMX;\n" +
@@ -24,7 +24,7 @@ public class SimpleDraw {
                   "}\n";
 
   private final String fscode =
-          "precision mediump float;\n" +
+                  "precision mediump float;\n" +
                   "uniform vec3 color;\n" +
 
                   "void main() {\n" +
