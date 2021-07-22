@@ -18,7 +18,15 @@
         android:layout_centerHorizontal="true"
         android:text="record" />
 
-
+    <Button
+        android:id="@+id/btnContour"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="5dp"
+        android:text="contour" />
 
     <TextView
         android:id="@+id/txtCount"
@@ -31,5 +39,15 @@
         android:background="#CD302A2A"
         android:textColor="#FFEA2F"
         android:textSize="20sp" />
+
+    <Button
+        android:id="@+id/btnEllipse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnContour"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="5dp"
+        android:text="Ellipse" />
 
 </RelativeLayout>

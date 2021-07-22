@@ -19,6 +19,7 @@ import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.CameraConfig;
 import com.google.ar.core.CameraConfigFilter;
+import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -63,6 +64,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   boolean isBusy = false;
   Image image;
 
+  boolean mode_contour = false;
+  boolean mode_ellipse = false;
+
   ExecutorService worker;
   ExecutorService findPlaneworker;
   FindPlaneTask findPlaneTask;
@@ -81,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Plane plane;
 
   GLSurfaceView glView; // 띄우기 위한 View
-  Button recordButton; // 레코딩~
+  Button recordButton, contourButton, ellipseButton; // 레코딩~
   TextView txtCount;
 
   int width = 1, height = 1;
@@ -149,7 +153,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.setWillNotDraw(false);
 
     txtCount = findViewById(R.id.txtCount);
-    recordButton = (Button) findViewById(R.id.recordButton);
+    contourButton = findViewById(R.id.btnContour);
+    ellipseButton = findViewById(R.id.btnEllipse);
+    recordButton = findViewById(R.id.recordButton);
+
+    contourButton.setOnClickListener(l -> mode_contour = !mode_contour);
+    ellipseButton.setOnClickListener(l -> mode_ellipse = !mode_ellipse);
+
     recordButton.setOnClickListener(l -> {
       if (state == State.PointCollecting) {
         // collecting 끝내기 위해 버튼 누름
@@ -168,8 +178,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         recordButton.setText("Record");
         state = State.Idle;
         circles.clear();
+        mode_contour = false;
+        mode_ellipse = false;
         try {
-          worker.awaitTermination(100, TimeUnit.MILLISECONDS);
+          worker.awaitTermination(200, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -263,6 +275,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         session = new Session(/* context= */ this);
         obtainCameraConfigs();
         session.setCameraConfig(cameraConfig);
+
+        // 초점 자동으로 맞춰주기
+        Config config = new Config(session);
+        config.setFocusMode(Config.FocusMode.AUTO);
+        session.configure(config);
 
       } catch (UnavailableArcoreNotInstalledException
               | UnavailableUserDeclinedInstallationException e) {
@@ -394,13 +411,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                       DrawEllipse drawEllipse = new DrawEllipse();
                       drawEllipse.setContour(plane,boxes);
                       drawEllipses.add(drawEllipse);
-
                   }
 
                   drawText.setTexture(boundingboxs,width,height);
 
-                  for (Contour localContor: localcontours
-                  )
+                  for (Contour localContor: localcontours)
                   {
                     ContourForDraw contourForDraw = new ContourForDraw();
                     contourForDraw.setContour(plane, localContor);
@@ -439,16 +454,21 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //          cube.update(dt, findPlane.plane);
 //          cube.draw(viewMX, projMX);
 //        }
-        for (Circle circle : circles) {
-          circle.draw(viewMX, projMX);
-        }
-        for (ContourForDraw contourForDraw : contourForDraws){
-          contourForDraw.draw(viewMX,projMX);
+//        for (Circle circle : circles) {
+//          circle.draw(viewMX, projMX);
+//        }
+        if(mode_contour) {
+          for (ContourForDraw contourForDraw : contourForDraws) {
+            contourForDraw.draw(viewMX, projMX);
+          }
         }
 
-        for (DrawEllipse drawEllipse : drawEllipses){
-          drawEllipse.draw(viewMX,projMX);
+        if(mode_ellipse) {
+          for (DrawEllipse drawEllipse : drawEllipses) {
+            drawEllipse.draw(viewMX, projMX);
+          }
         }
+
         drawText.draw();
         break;
       case PointCollecting:
