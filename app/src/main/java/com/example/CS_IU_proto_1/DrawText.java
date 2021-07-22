@@ -21,8 +21,9 @@ import java.util.ArrayList;
 public class DrawText {
     int buffer;
     int program;
-
     int texID;
+
+    final int textSize = 32;
 
     private final String vscode = "" +
             "attribute vec3 vPosition;" +
@@ -104,15 +105,17 @@ public class DrawText {
         Canvas canvas = new Canvas(bitmap);
         // Draw the text
         Paint textPaint = new Paint();
-        textPaint.setTextSize(32);
+        textPaint.setTextSize(textSize);
         textPaint.setAntiAlias(true);
         textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         textPaint.setStyle(Paint.Style.FILL);
         textPaint.setColor(Color.GREEN);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+
         for (Ellipse ellipse : ellipses
              ) {
             Log.i("point",""+ (ellipse.resultprivot[0]+1.0f)/2.0f*width+(1.0f-ellipse.resultprivot[1])/2.0f*height);
-            canvas.drawText(""+ellipse.size,(ellipse.resultprivot[0]+1.0f)/2.0f*width ,(1.0f-ellipse.resultprivot[1])/2.0f*height,
+            canvas.drawText(""+ellipse.size,(ellipse.resultprivot[0]+1.0f)/2.0f*width ,(1.0f-ellipse.resultprivot[1])/2.0f*height + textSize/4f,
                     textPaint);
         }
 
