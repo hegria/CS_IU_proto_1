@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onDrawFrame(GL10 gl) {
     if (session == null) return;
     Frame frame = null;
-
+    Log.i("point",""+width+height);
     // 배경으로 카메라 화면 입히려면 어디다 정보 넣으면 되는지 알려줄 텍스쳐 번호
     session.setCameraTextureName(background.texID);
     // 화면 크기와 텍스쳐 크기를 맞춰주기 위한 그런.. ->
@@ -354,7 +354,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 return;
               }
               isBusy = true;
-
               float[] snapprojMX = projMX.clone();
               float[] snapviewMX = viewMX.clone(); // 복사가 되나???
               float[] snapcameratrans = camera.getPose().getTranslation();
@@ -371,7 +370,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   continue;
                 }
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
-                Log.i("dots",""+contour.points.length);
               }
               for (Contour contour: localcontours)
               {
@@ -399,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
                   }
 
-                  drawText.setTexture(boundingboxs,height,width);
+                  drawText.setTexture(boundingboxs,width,height);
 
                   for (Contour localContor: localcontours
                   )
