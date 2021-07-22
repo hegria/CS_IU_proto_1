@@ -117,7 +117,6 @@ public class DrawText {
         }
 
         // draw the text centered
-        canvas.drawText("Hello World", 500,112, textPaint);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texID);
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);

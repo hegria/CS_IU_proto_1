@@ -15,6 +15,8 @@ public class DrawEllipse {
 
     int numpoints;
 
+    int size;
+
     static float[] circle = new float[72];
 
 
@@ -31,10 +33,11 @@ public class DrawEllipse {
 
     private final String fscode = "" +
             "precision mediump float;" +
+            "uniform vec3 color;\n" +
 
-            "void main() {" +
-            "  gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);" +
-            "}";
+            "void main() {\n" +
+            "  gl_FragColor = vec4(color, 1.0);\n" +
+            "}\n";
 
     public DrawEllipse() {
         for(int i =0; i<36;i++){
@@ -63,6 +66,7 @@ public class DrawEllipse {
     // 2차원 Local 좌표를 받습니다!!
     // TODO float array보다는 Contour 자료형을 받는 걸로 생각하기.
     public void setContour(Plane plane, Ellipse ellipse){
+        size = ellipse.size;
         numpoints = 36;
         FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
@@ -97,6 +101,16 @@ public class DrawEllipse {
 
         pos = GLES20.glGetUniformLocation(program, "projMX");
         GLES20.glUniformMatrix4fv(pos, 1, false, projMX, 0);
+
+        pos = GLES20.glGetUniformLocation(program, "color");
+        float r = 0, g = 1.0f, b = 0;
+        if(size<15){
+            r = 1.0f;
+            } else if(size>=30){
+            b = 1.0f;
+        }
+        GLES20.glUniform3f(pos, r, g, b);
+
         GLES20.glLineWidth(5.0f);
         GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numpoints+1);
         GLES20.glDisableVertexAttribArray(vPos);
