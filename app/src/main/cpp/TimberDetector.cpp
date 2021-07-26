@@ -7,9 +7,9 @@
 
 #define PI 3.14159
 
-TimberDetector::TimberDetector(cv::Mat& img_bgr) : WIDTH(img_bgr.cols), HEIGHT(img_bgr.rows)
+TimberDetector::TimberDetector()
 {
-    cv::cvtColor(img_bgr, img_hsv, cv::COLOR_BGR2HSV);
+
 }
 
 TimberDetector::~TimberDetector()
@@ -17,8 +17,10 @@ TimberDetector::~TimberDetector()
 
 }
 
-std::vector<Contour> TimberDetector::grabContours()
+std::vector<Contour> TimberDetector::grabContours(const cv::Mat& img_bgr) const
 {
+    cv::Mat img_hsv; cv::cvtColor(img_bgr, img_hsv, cv::COLOR_BGR2HSV);
+
     std::vector<Contour> contours;
     std::vector<Contour> result;
 
@@ -61,6 +63,9 @@ void TimberDetector::filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_
 
 int TimberDetector::segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) const
 {
+    const int HEIGHT = src_hsv.rows;
+    const int WIDTH  = src_hsv.cols;
+
     cv::Mat timber_candidate;
     filterTimberCandidate(timber_candidate, src_hsv);
 

@@ -75,9 +75,9 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)
     float x_factor = 2.0f / static_cast<float>(w);
     float y_factor = 2.0f / static_cast<float>(h);
 
-    TimberDetector detector(img_bgr);
+    TimberDetector detector;
 
-    auto contours = detector.grabContours();
+    auto contours = detector.grabContours(img_bgr);
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
 

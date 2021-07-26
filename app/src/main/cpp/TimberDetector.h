@@ -13,17 +13,12 @@ using Contour = std::vector<cv::Point>;
 class TimberDetector
 {
 public:
-    const int WIDTH;
-    const int HEIGHT;
-
-    TimberDetector(cv::Mat& img_bgr);
+    TimberDetector();
     ~TimberDetector();
 
-    std::vector<Contour> grabContours();
+    std::vector<Contour> grabContours(const cv::Mat& img_bgr) const;
 
 private:
-    cv::Mat img_hsv;
-
     struct param {
         int norm_lvl = 5;				// 0 ~ 255 (lower value -> more aggressive threshold)
 
