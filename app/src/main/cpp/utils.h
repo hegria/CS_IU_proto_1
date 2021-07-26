@@ -14,6 +14,14 @@
 #include <opencv2/opencv.hpp>
 
 namespace utils {
+
+    template <typename Ty>
+    Ty ensureBounds(Ty x, Ty a, Ty b) {
+        if (x < a) return a;
+        if (x > b) return b;
+        return x;
+    }
+
     template <typename Ty, class FuncType>
     std::vector<Ty> filter(const std::vector<Ty>& src, FuncType callback) {
         std::vector<Ty> res;
@@ -31,7 +39,6 @@ namespace utils {
     double calcStdDev(const cv::Mat& src);
 
     void localMax(std::vector<cv::Point>& dst, const cv::Mat& src, uint8_t threshold, int param_1);
-
 }
 
 #endif //CS_IU_PROTO_1_UTILS_H
