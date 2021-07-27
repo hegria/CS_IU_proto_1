@@ -7,8 +7,10 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -89,7 +91,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Plane plane;
 
   GLSurfaceView glView; // 띄우기 위한 View
-  Button recordButton, contourButton, ellipseButton; // 레코딩~
+  ImageButton recordButton;
+  Button contourButton, ellipseButton; // 레코딩~
   TextView txtCount;
 
   int width = 1, height = 1;
@@ -102,6 +105,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   @Override
   public void onBackPressed() {
     //1번째 백버튼 클릭
+    //초기화
+    state = State.Idle;
+    initAll();
+    recordButton.setVisibility(View.VISIBLE);
+
     if(System.currentTimeMillis()>backKeyPressedTime+2000){
       backKeyPressedTime = System.currentTimeMillis();
       Toast.makeText(this, "한번 더 눌러 앱 종료", Toast.LENGTH_SHORT).show();
@@ -133,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       public void onSuccessTask(Plane _plane) {
         runOnUiThread(() -> {
           Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
+          recordButton.setVisibility(View.GONE);
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -165,34 +174,24 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     ellipseButton.setOnClickListener(l -> mode_ellipse = !mode_ellipse);
 
     recordButton.setOnClickListener(l -> {
-      if (state == State.PointCollecting) {
-        // collecting 끝내기 위해 버튼 누름
+      // collecting 시작하기 위해 버튼 누름 (앱 실행하고 맨 처음 한번만 실행)
+      if(state == State.Idle) {
+        recordButton.setImageResource(R.drawable.for_stop_button);
+        state = State.PointCollecting;
+      }
+      // collecting 끝내기 위해 버튼 누름
+      else if (state == State.PointCollecting) {
+        recordButton.setImageResource(R.drawable.for_record_button);
         glView.queueEvent(() -> {
           pointCloudRenderer.fix(pointCollector.getPointBuffer());
         });
-
         state = State.PointCollected;
-        recordButton.setText("Reset");
-      } else if(state == State.Idle) {
-        recordButton.setText("Fix");
-        // collecting 시작하기 위해 버튼 누름
+      }
+      //초기화하고 다시 시작
+      else{
+        initAll();
+        recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
-      }else{
-        // TODO  Reset 있는거 싹다 치워야함!!!!!! (왠지 모르겠는데 오버해드 발생) 아직 잘모르겠음
-        recordButton.setText("Record");
-        state = State.Idle;
-        circles.clear();
-        mode_contour = false;
-        mode_ellipse = true;
-        try {
-          worker.awaitTermination(200, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        plane = null;
-        contourForDraws.clear();
-        drawEllipses.clear();
-        pointCollector = new PointCollector();
       }
     });
 
@@ -572,5 +571,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       }
       finish();
     }
+  }
+
+  private void initAll(){
+    circles.clear();
+    mode_contour = false;
+    mode_ellipse = true;
+    try {
+      worker.awaitTermination(200, TimeUnit.MILLISECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    plane = null;
+    contourForDraws.clear();
+    drawEllipses.clear();
+    pointCollector = new PointCollector();
   }
 }
