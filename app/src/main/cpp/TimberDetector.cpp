@@ -155,6 +155,8 @@ void TimberDetector::setCandidateThresh(double x) {
 
 void TimberDetector::setMorphologyParam(int x, int y) {
     // nothing here yet
+    param.morph_close = x;
+    param.morph_open = y;
 }
 
 void TimberDetector::setBackgroundRange(int beg, int end) {

@@ -218,6 +218,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         markerTHBar.setVisibility(View.VISIBLE);
     });
 
+
+
     recordButton.setOnClickListener(l -> {
       if (state == State.PointCollecting) {
         // collecting 끝내기 위해 버튼 누름
