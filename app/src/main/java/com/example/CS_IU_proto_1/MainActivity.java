@@ -79,6 +79,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   ArrayList<Contour> contours;
   OpenCVJNI jni;
 
+  //변경 코드
+  //----------------------------------------------------------
+//  ArrayList<Ellipse> ellipses;
+  //----------------------------------------------------------
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
@@ -329,6 +333,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     contourForDraws = new ArrayList<>();
     drawEllipses = new ArrayList<>();
     contours = new ArrayList<>();
+    //변경 코드
+    //----------------------------------------------------------
+//    ellipses = new ArrayList<>();
+    //----------------------------------------------------------
     //TODO Method 이름을 적확하게 해두기
   }
 
@@ -451,7 +459,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //                  }
                   drawText.setTexture(width,height);
                   //변경 코드
-                  // 위에 있는거를 바꾸고 isBusy가 queueEvent 바깥에 있으면 왠지 모르겠지만 오류 뜸
+                  // 여기다 쓰면 원리는 정확히 모르겠지만 메모리 증가 속도가 늦춰짐 (queue에 따로 쌓이지 않아서?)
                   //----------------------------------------------------------
 //                  isBusy = false;
                   //----------------------------------------------------------
