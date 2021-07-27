@@ -18,17 +18,14 @@ public class OpenCVJNI {
         System.loadLibrary("native-lib");
     }
 
-    //Y버퍼 + UV버퍼 limit 값 출력했을 때는 3110399 이였음
-    public OpenCVJNI() {
-        bufferYUV = ByteBuffer.allocateDirect(3120000);
-    }
-
     public ArrayList<Contour> findTimberContours(Image imgYUV_N12) {
         Image.Plane[] planes = imgYUV_N12.getPlanes();
         ByteBuffer bufferY   = planes[0].getBuffer();
         ByteBuffer bufferUV  = planes[1].getBuffer();
         bufferYUV.clear();
         bufferYUV.put( bufferY ).put( bufferUV );
+        bufferYUV = ByteBuffer.allocateDirect(bufferY.limit() + bufferUV.limit());
+
 
         return _findTimberContours(bufferYUV, imgYUV_N12.getWidth(), imgYUV_N12.getHeight());
     }
