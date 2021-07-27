@@ -81,10 +81,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   ArrayList<Contour> contours;
   OpenCVJNI jni;
 
-  //변경 코드
-  //----------------------------------------------------------
-//  ArrayList<Ellipse> ellipses;
-  //----------------------------------------------------------
+  ArrayList<Ellipse> ellipses;
   ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
@@ -332,10 +329,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     contourForDraws = new ArrayList<>();
     drawEllipses = new ArrayList<>();
     contours = new ArrayList<>();
-    //변경 코드
-    //----------------------------------------------------------
-//    ellipses = new ArrayList<>();
-    //----------------------------------------------------------
+    ellipses = new ArrayList<>();
     //TODO Method 이름을 적확하게 해두기
   }
 
@@ -379,61 +373,29 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               }
               isBusy = true;
               float[] snapprojMX = projMX.clone();
-              float[] snapviewMX = viewMX.clone(); // 복사가 되나???
+              float[] snapviewMX = viewMX.clone();
               float[] snapcameratrans = camera.getPose().getTranslation();
-              // ADDED BY OPENCV TEAM
               contours.clear();
 
               contours =  jni.findTimberContours(image);
 
-              //원래 코드
-              //----------------------------------------------------------
-              ArrayList<Contour> localcontours = new ArrayList<>();
-              ArrayList<Ellipse> ellipses = new ArrayList<>();
+              ellipses.clear();
 
-              // ADDED BY OPENCV TEAM
-              for (Contour contour: contours
-              ) {
-                if(contour.points.length <=10){
+              //Contour 들을 ellipse로 변환
+              for(Contour contour: contours){
+                if(contour.points.length <= 10)
                   continue;
-                }
-                localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
-              }
-              for (Contour contour: localcontours)
-              {
-                Ellipse tempellipse = Myutil.findBoundingBox(contour);
+
+                Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane);
+                Ellipse tempellipse = Myutil.findBoundingBox(localContour);
                 tempellipse.setRottation(plane);
                 ellipses.add(tempellipse);
               }
 
+              //개수 표시
               runOnUiThread(() -> {
-                txtCount.setText("개수: "+localcontours.size());
+                txtCount.setText("개수: "+ ellipses.size());
               });
-              //----------------------------------------------------------
-
-              //변경 코드
-              // 1. ellipses를 클래스 변수로 만들어서 new를 한번만 해줌
-              // 2. for문 2번으로 나뉜걸 1번으로 합침
-              //----------------------------------------------------------
-//              ellipses.clear();
-//
-//              //Contour 들을 ellipse로 변환
-//              for(Contour contour: contours){
-//                if(contour.points.length <= 10)
-//                  continue;
-//
-//                Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane);
-//                Ellipse tempellipse = Myutil.findBoundingBox(localContour);
-//                tempellipse.setRottation(plane);
-//                ellipses.add(tempellipse);
-//              }
-//
-//              //개수 표시
-//              runOnUiThread(() -> {
-//                txtCount.setText("개수: "+ ellipses.size());
-//              });
-            //----------------------------------------------------------
-
               image.close();
               glView.queueEvent(() -> {
                   contourForDraws.clear();
@@ -460,7 +422,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   //변경 코드
                   // 여기다 쓰면 원리는 정확히 모르겠지만 메모리 증가 속도가 늦춰짐 (queue에 따로 쌓이지 않아서?)
                   //----------------------------------------------------------
-//                  isBusy = false;
+                  //isBusy = false;
                   //----------------------------------------------------------
               });
               //원래 코드
@@ -493,25 +455,19 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     switch(state){
       case FoundSurface:
+          // 평면 출력.
 //        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
-//        for (Cube cube : cubes) {
-//          cube.update(dt, findPlane.plane);
-//          cube.draw(viewMX, projMX);
-//        }
-//        for (Circle circle : circles) {
-//          circle.draw(viewMX, projMX);
-//        }
 //        if(mode_contour) {
 //          for (ContourForDraw contourForDraw : contourForDraws) {
 //            contourForDraw.draw(viewMX, projMX);
 //          }
 //        }
 
-        if(mode_ellipse) {
-          for (DrawEllipse drawEllipse : drawEllipses) {
-            drawEllipse.draw(viewMX, projMX);
-          }
+//        if(mode_ellipse) {
+        for (DrawEllipse drawEllipse : drawEllipses) {
+          drawEllipse.draw(viewMX, projMX);
         }
+//        }
         drawText.draw();
         break;
       case PointCollecting:
