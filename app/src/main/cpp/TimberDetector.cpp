@@ -7,9 +7,9 @@
 
 #define PI 3.14159
 
-TimberDetector::TimberDetector(cv::Mat& img_bgr) : WIDTH(img_bgr.cols), HEIGHT(img_bgr.rows)
+TimberDetector::TimberDetector()
 {
-    cv::cvtColor(img_bgr, img_hsv, cv::COLOR_BGR2HSV);
+
 }
 
 TimberDetector::~TimberDetector()
@@ -17,8 +17,10 @@ TimberDetector::~TimberDetector()
 
 }
 
-std::vector<Contour> TimberDetector::grabContours()
+std::vector<Contour> TimberDetector::grabContours(const cv::Mat& img_bgr) const
 {
+    cv::Mat img_hsv; cv::cvtColor(img_bgr, img_hsv, cv::COLOR_BGR2HSV);
+
     std::vector<Contour> contours;
     std::vector<Contour> result;
 
@@ -46,14 +48,25 @@ void TimberDetector::filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_
     // remove shadows with V channel
     cv::normalize(hsv[2], hsv[2], 0.0, param.norm_lvl, cv::NORM_MINMAX, CV_8UC1);
     cv::threshold(hsv[2], hsv[2], 1.0, 255.0, cv::THRESH_BINARY);
+#ifdef DEBUG_TIMBER_DETECTOR
+    img_proc.candidate_V = hsv[2].clone();
+#endif
     cv::morphologyEx(hsv[2], hsv[2], cv::MORPH_CLOSE, kernel3, nopoint, param.morph_close);
     cv::morphologyEx(hsv[2], hsv[2], cv::MORPH_OPEN,  kernel3, nopoint, param.morph_open);
 
     // remove sky areas with H channel
     cv::Mat background;
-    cv::inRange(hsv[0], cv::Scalar(param.bg_beg), cv::Scalar(param.bg_end), background);
-    cv::morphologyEx(background, background, cv::MORPH_OPEN, kernel7, cv::Point(-1, -1), 4);
-    background = ~background;
+    if (param.bg_beg <= param.bg_end) {
+        cv::inRange(hsv[0], cv::Scalar(param.bg_beg), cv::Scalar(param.bg_end), background);
+        background = ~background;
+    }
+    else {
+        cv::inRange(hsv[0], cv::Scalar(param.bg_end), cv::Scalar(param.bg_beg), background);
+    }
+#ifdef DEBUG_TIMBER_DETECTOR
+    img_proc.candidate_H = background.clone();
+#endif
+    cv::morphologyEx(background, background, cv::MORPH_OPEN, kernel7, nopoint, 4);
     hsv[2] &= background;
 
     dst_bin = hsv[2];
@@ -61,8 +74,14 @@ void TimberDetector::filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_
 
 int TimberDetector::segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) const
 {
+    const int HEIGHT = src_hsv.rows;
+    const int WIDTH  = src_hsv.cols;
+
     cv::Mat timber_candidate;
     filterTimberCandidate(timber_candidate, src_hsv);
+#ifdef DEBUG_TIMBER_DETECTOR
+    img_proc.candidate_merged = timber_candidate.clone();
+#endif
 
     cv::Mat dt;
     cv::distanceTransform(timber_candidate, dt, cv::DIST_L2, 3);
@@ -70,6 +89,9 @@ int TimberDetector::segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) con
     cv::minMaxIdx(dt, &min, &max, nullptr, nullptr);
     double scale_factor = (max - min) / 256.0;
     cv::normalize(dt, dt, 0.0, 255.0, cv::NORM_MINMAX, CV_8UC1);
+#ifdef DEBUG_TIMBER_DETECTOR
+    img_proc.distance_transform = dt.clone();
+#endif
 
     // get the "center" points
     std::vector<cv::Point> centers;
@@ -96,6 +118,9 @@ int TimberDetector::segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) con
             }
         }
     }
+#ifdef DEBUG_TIMBER_DETECTOR
+    markers.convertTo(img_proc.markers, CV_8UC1);
+#endif
 
     // get segmented labels from watershed
     cv::Mat hsv[3]; cv::Mat processed;
@@ -122,4 +147,21 @@ void TimberDetector::filterContours(std::vector<Contour>& dst, const std::vector
         double value = arclen * arclen / (area * 4 * PI);
         return low < value && value < high;
     });
+}
+
+void TimberDetector::setCandidateThresh(double x) {
+    param.norm_lvl = utils::ensureBounds(static_cast<int>(x * 255), 1, 255);
+}
+
+void TimberDetector::setMorphologyParam(int x, int y) {
+    // nothing here yet
+}
+
+void TimberDetector::setBackgroundRange(int beg, int end) {
+    param.bg_beg = (beg % 256 + 256) % 256;
+    param.bg_end = (end % 256 + 256) % 256;
+}
+
+void TimberDetector::setSegmentationSensitivity(double x) {
+    param.marker_th = utils::ensureBounds(static_cast<int>(255 * (1.0 - x)), 1, 255);
 }
