@@ -76,13 +76,14 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   SimpleDraw forDebugging; // 선택한 점 그리는거
   Background background; // background
   DrawText drawText;
-  ArrayList<ContourForDraw> contourForDraws;
-  ArrayList<DrawEllipse> drawEllipses;
-  ArrayList<Contour> contours;
+
   OpenCVJNI jni;
 
+  ArrayList<ContourForDraw> contourForDraws;
+  ArrayList<DrawEllipse> drawEllipses;
+
+  ArrayList<Contour> contours;
   ArrayList<Ellipse> ellipses;
-  ArrayList<Circle> circles; // 클릭하면 cubes가 만들어질거임
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
   Plane plane;
@@ -109,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     if(System.currentTimeMillis()>backKeyPressedTime+2000){
       backKeyPressedTime = System.currentTimeMillis();
-      Toast.makeText(this, "한번 더 눌러 앱 종료", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, "초기화 되었습니다.\n한번 더 눌러 앱 종료", Toast.LENGTH_SHORT).show();
     }
     //2번째 백버튼 클릭 (종료)
     else{
@@ -196,12 +197,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
 
       if (state == State.FoundSurface) {
-        float[] point = Myutil.pickSurfacePoints(plane,ray);
-        glView.queueEvent(() -> {
-          Circle circle = new Circle();
-          circle.setCircle(plane, point);
-          circles.add(circle);
-        });
+
         return false;
       } else if (state == State.PointCollected) {
         state = State.FindingSurface;
@@ -325,7 +321,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background = new Background();
     drawText = new DrawText();
     drawText.setTexture(width,height);
-    circles = new ArrayList<>();
     contourForDraws = new ArrayList<>();
     drawEllipses = new ArrayList<>();
     contours = new ArrayList<>();
@@ -376,10 +371,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               float[] snapviewMX = viewMX.clone();
               float[] snapcameratrans = camera.getPose().getTranslation();
               contours.clear();
+              ellipses.clear();
 
               contours =  jni.findTimberContours(image);
 
-              ellipses.clear();
 
               //Contour 들을 ellipse로 변환
               for(Contour contour: contours){
@@ -394,11 +389,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
               //개수 표시
               runOnUiThread(() -> {
-                txtCount.setText("개수: "+ ellipses.size());
+                txtCount.setText(String.format("개수: %d", ellipses.size()));
               });
               image.close();
+
               glView.queueEvent(() -> {
-                  contourForDraws.clear();
                   drawEllipses.clear();
                   drawText.clearEllipses();
 
@@ -407,27 +402,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                       ellipse.pivot_to_local(projMX,viewMX);
                       DrawEllipse drawEllipse = new DrawEllipse();
                       drawEllipse.setContour(plane,ellipse);
-                      drawText.setEllipses(ellipse);
                       drawEllipses.add(drawEllipse);
+                      drawText.setEllipses(ellipse);
                   }
 
-
-//                  for (Contour localContor: localcontours)
-//                  {
-//                    ContourForDraw contourForDraw = new ContourForDraw();
-//                    contourForDraw.setContour(plane, localContor);
-//                    contourForDraws.add(contourForDraw);
-//                  }
                   drawText.setTexture(width,height);
                   //변경 코드
                   // 여기다 쓰면 원리는 정확히 모르겠지만 메모리 증가 속도가 늦춰짐 (queue에 따로 쌓이지 않아서?)
                   //----------------------------------------------------------
-                  //isBusy = false;
+                  isBusy = false;
                   //----------------------------------------------------------
               });
               //원래 코드
               //----------------------------------------------------------
-              isBusy = false;
+
               //----------------------------------------------------------
           });
 
@@ -455,19 +443,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     switch(state){
       case FoundSurface:
-          // 평면 출력.
-//        forDebugging.draw(plane.planeVertex, GLES20.GL_TRIANGLES, 3, 0.5f, 0.5f, 0f, viewMX, projMX);
+        // 컨투어 그리기
 //        if(mode_contour) {
 //          for (ContourForDraw contourForDraw : contourForDraws) {
 //            contourForDraw.draw(viewMX, projMX);
 //          }
 //        }
 
-//        if(mode_ellipse) {
         for (DrawEllipse drawEllipse : drawEllipses) {
           drawEllipse.draw(viewMX, projMX);
         }
-//        }
         drawText.draw();
         break;
       case PointCollecting:
@@ -530,7 +515,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   }
 
   private void initAll(){
-    circles.clear();
     mode_contour = false;
     mode_ellipse = true;
     try {
