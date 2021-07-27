@@ -65,7 +65,7 @@ void resizeImage(cv::Mat& src, int a);
 
 jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)  {
     cv::Mat img_bgr = getMatrixFromYUV420N12(
-            reinterpret_cast<byte*>(env->GetDirectBufferAddress(data_juv420_n12)),
+            reinterpret_cast<byte*>( env->GetDirectBufferAddress(data_juv420_n12) ),
             width, height
     );
 
@@ -75,9 +75,8 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)
     float x_factor = 2.0f / static_cast<float>(w);
     float y_factor = 2.0f / static_cast<float>(h);
 
-    TimberDetector detector(img_bgr);
-
-    auto contours = detector.grabContours();
+    TimberDetector detector;
+    auto contours = detector.grabContours(img_bgr);
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
 
@@ -101,6 +100,7 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)
 
 cv::Mat getMatrixFromYUV420N12(const byte* buffer, int width, int height) {
     const size_t buffer_size = width * height * 3 / 2 * sizeof(byte);
+    constexpr int FLIP_ALL = -1;
 
     cv::Mat img_in = cv::Mat(height * 3 / 2, width, CV_8UC1);
     std::copy(buffer, buffer + buffer_size, img_in.data);
@@ -110,7 +110,7 @@ cv::Mat getMatrixFromYUV420N12(const byte* buffer, int width, int height) {
 
     // for some reason, arcore input image is flipped, and transposed, so correct that (?)
     cv::transpose(img_out, img_out);
-    cv::flip(img_out, img_out, -1);
+    cv::flip(img_out, img_out, FLIP_ALL);
     // for some reason, arcore input image is flipped, and transposed, so correct that (?)
 
     return img_out;

@@ -13,18 +13,31 @@ using Contour = std::vector<cv::Point>;
 class TimberDetector
 {
 public:
-    const int WIDTH;
-    const int HEIGHT;
-
-    TimberDetector(cv::Mat& img_bgr);
+    TimberDetector();
     ~TimberDetector();
 
-    std::vector<Contour> grabContours();
+    std::vector<Contour> grabContours(const cv::Mat& img_bgr) const;
+
+    void setCandidateThresh(double x); // x -> 0.0 ~ 1.0
+    void setMorphologyParam(int x, int y); // does nothing at the moment
+    void setBackgroundRange(int beg, int end); // hue value
+    void setSegmentationSensitivity(double x); // x -> 0.0 ~ 1.0
+
+#ifdef DEBUG_TIMBER_DETECTOR
+    // for observing / debugging purposes
+    // modifying the matrices will have no effect on image processing
+    // all matrices are in gray scale (single channel)
+    mutable struct {
+        cv::Mat candidate_V;
+        cv::Mat candidate_H;
+        cv::Mat candidate_merged;
+        cv::Mat distance_transform;
+        cv::Mat markers;
+    } img_proc;
+#endif
 
 private:
-    cv::Mat img_hsv;
-
-    struct param {
+    struct {
         int norm_lvl = 5;				// 0 ~ 255 (lower value -> more aggressive threshold)
 
         int morph_close = 1;			// not bounded (crack removal)
@@ -42,7 +55,6 @@ private:
         double cnt_filter_th1 = 1.0;	// not bounded
         double cnt_filter_th2 = 3.0;	// not bounded
     } param;
-
 
     void filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_hsv) const;
     int segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) const;
