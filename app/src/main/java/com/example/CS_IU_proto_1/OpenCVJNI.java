@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class OpenCVJNI {
@@ -23,7 +24,11 @@ public class OpenCVJNI {
         System.loadLibrary("native-lib");
     }
 
-    public boolean isCapture = false;
+    //private final int[] imgProcessMatIDs;
+
+    public OpenCVJNI() {
+        //imgProcessMatIDs = new int[5];
+    }
 
     public ArrayList<Contour> findTimberContours(Image imgYUV_N12) {
         Image.Plane[] planes = imgYUV_N12.getPlanes();
@@ -32,30 +37,6 @@ public class OpenCVJNI {
         ByteBuffer bufferYUV = ByteBuffer.allocateDirect( bufferY.remaining() + bufferUV.remaining() );
         bufferYUV.put( bufferY ).put( bufferUV );
         bufferYUV.rewind();
-
-        if ( isCapture ) {
-            isCapture = false;
-            byte[] bytesYUV = new byte[ bufferYUV.remaining() ];
-            bufferYUV.get(bytesYUV);
-            bufferYUV.rewind();
-
-            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault());
-            String currentDateAndTime = sdf.format(new Date());
-
-            File dst  = new File(path, "image_yuv420 " + currentDateAndTime + ".raw");
-            Log.i("CaptureImage", dst.getAbsolutePath() );
-
-            try {
-                OutputStream os = new FileOutputStream(dst);
-                os.write(bytesYUV);
-                os.close();
-            } catch (IOException e) {
-                // Unable to create file, likely because external storage is
-                // not currently mounted.
-                Log.w("ExternalStorage", "Error writing " + dst, e);
-            }
-        }
 
         return _findTimberContours(bufferYUV, imgYUV_N12.getWidth(), imgYUV_N12.getHeight());
     }

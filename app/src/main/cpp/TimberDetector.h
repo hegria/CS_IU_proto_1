@@ -21,6 +21,7 @@ public:
 
     void setCandidateThresh(double x); // x -> 0.0 ~ 1.0
     void setMorphologyParam(int x, int y); // does nothing at the moment
+    void enableBackgroundFiltering(bool x);
     void setBackgroundRange(int beg, int end); // hue value
     void setSegmentationSensitivity(double x); // x -> 0.0 ~ 1.0
 
@@ -45,6 +46,7 @@ private:
         int morph_open = 2;				// not bounded (separate timbers)
 
         // {param-bg} color in this range will be considered a background
+        bool bg_enable_filtering = false;
         int bg_beg = 25;				// 0 ~ 255 (Hue)
         int bg_end = 210;				// 0 ~ 255 (Hue)
 

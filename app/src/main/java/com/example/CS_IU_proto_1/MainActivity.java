@@ -502,11 +502,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             ArrayList<Contour> localcontours = new ArrayList<>();
               ArrayList<Ellipse> ellipses = new ArrayList<>();
               // ADDED BY OPENCV TEAM
-              for (Contour contour: contours
-              ) {
-                if(contour.points.length <=10){
-                  continue;
-                }
+              for (Contour contour: contours) {
                 localcontours.add(contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane));
               }
               for (Contour contour: localcontours)

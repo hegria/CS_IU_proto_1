@@ -56,12 +56,17 @@ void TimberDetector::filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_
 
     // remove sky areas with H channel
     cv::Mat background;
-    if (param.bg_beg <= param.bg_end) {
-        cv::inRange(hsv[0], cv::Scalar(param.bg_beg), cv::Scalar(param.bg_end), background);
-        background = ~background;
+    if (param.bg_enable_filtering) {
+        if (param.bg_beg <= param.bg_end) {
+            cv::inRange(hsv[0], cv::Scalar(param.bg_beg), cv::Scalar(param.bg_end), background);
+            background = ~background;
+        }
+        else {
+            cv::inRange(hsv[0], cv::Scalar(param.bg_end), cv::Scalar(param.bg_beg), background);
+        }
     }
     else {
-        cv::inRange(hsv[0], cv::Scalar(param.bg_end), cv::Scalar(param.bg_beg), background);
+        background = cv::Mat::ones(src_hsv.rows, src_hsv.cols, CV_8UC1);
     }
 #ifdef DEBUG_TIMBER_DETECTOR
     img_proc.candidate_H = background.clone();
@@ -157,6 +162,10 @@ void TimberDetector::setMorphologyParam(int x, int y) {
     // nothing here yet
     param.morph_close = x;
     param.morph_open = y;
+}
+
+void TimberDetector::enableBackgroundFiltering(bool x) {
+    param.bg_enable_filtering = x;
 }
 
 void TimberDetector::setBackgroundRange(int beg, int end) {
