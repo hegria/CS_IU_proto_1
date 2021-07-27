@@ -399,7 +399,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
                   for (Ellipse ellipse: ellipses)
                   {
-                      ellipse.pivot_to_local(projMX,viewMX);
+                      ellipse.pivot_to_local(snapprojMX,snapviewMX);
                       DrawEllipse drawEllipse = new DrawEllipse();
                       drawEllipse.setContour(plane,ellipse);
                       drawEllipses.add(drawEllipse);
