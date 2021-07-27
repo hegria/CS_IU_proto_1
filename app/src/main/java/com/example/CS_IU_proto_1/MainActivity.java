@@ -378,8 +378,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               contours.clear();
 
               contours =  jni.findTimberContours(image);
+
+              //원래 코드
+              //----------------------------------------------------------
               ArrayList<Contour> localcontours = new ArrayList<>();
               ArrayList<Ellipse> ellipses = new ArrayList<>();
+
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours
               ) {
@@ -398,7 +402,30 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               runOnUiThread(() -> {
                 txtCount.setText("개수: "+localcontours.size());
               });
+              //----------------------------------------------------------
 
+              //변경 코드
+              // 1. ellipses를 클래스 변수로 만들어서 new를 한번만 해줌
+              // 2. for문 2번으로 나뉜걸 1번으로 합침
+              //----------------------------------------------------------
+//              ellipses.clear();
+//
+//              //Contour 들을 ellipse로 변환
+//              for(Contour contour: contours){
+//                if(contour.points.length <= 10)
+//                  continue;
+//
+//                Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane);
+//                Ellipse tempellipse = Myutil.findBoundingBox(localContour);
+//                tempellipse.setRottation(plane);
+//                ellipses.add(tempellipse);
+//              }
+//
+//              //개수 표시
+//              runOnUiThread(() -> {
+//                txtCount.setText("개수: "+ ellipses.size());
+//              });
+            //----------------------------------------------------------
 
               image.close();
               glView.queueEvent(() -> {
@@ -423,8 +450,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //                    contourForDraws.add(contourForDraw);
 //                  }
                   drawText.setTexture(width,height);
+                  //변경 코드
+                  // 위에 있는거를 바꾸고 isBusy가 queueEvent 바깥에 있으면 왠지 모르겠지만 오류 뜸
+                  //----------------------------------------------------------
+//                  isBusy = false;
+                  //----------------------------------------------------------
               });
+              //원래 코드
+              //----------------------------------------------------------
               isBusy = false;
+              //----------------------------------------------------------
           });
 
 
