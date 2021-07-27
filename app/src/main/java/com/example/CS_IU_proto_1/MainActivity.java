@@ -7,14 +7,18 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 
+import com.google.android.material.tabs.TabLayout;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.CameraConfig;
@@ -85,8 +89,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Plane plane;
 
   GLSurfaceView glView; // 띄우기 위한 View
-  Button recordButton, contourButton, ellipseButton; // 레코딩~
-  TextView txtCount;
+  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton; // 레코딩~
+  SwitchCompat bgSwitch;
+  TabLayout resizeTab;
+  TextView txtCount, txtClose, txtOpen;
+  SeekBar normBar, morphCloseBar,morphOpenBar, markerTHBar;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -153,12 +160,63 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.setWillNotDraw(false);
 
     txtCount = findViewById(R.id.txtCount);
+    txtClose = findViewById(R.id.txtMorphClose2);
+    txtOpen = findViewById(R.id.txtMorphOpen);
     contourButton = findViewById(R.id.btnContour);
     ellipseButton = findViewById(R.id.btnEllipse);
     recordButton = findViewById(R.id.recordButton);
+    resizeButton = findViewById(R.id.btnResize);
+    normButton = findViewById(R.id.btnNorm);
+    morphButton = findViewById(R.id.btnMorph);
+    markerButton = findViewById(R.id.btnMarker);
+    bgrangeButton = findViewById(R.id.btnBackgroundRange);
+    bgSwitch = findViewById(R.id.switchBG);
+    resizeTab = findViewById(R.id.tabResize);
+    normBar = findViewById(R.id.barNorm);
+    morphCloseBar = findViewById(R.id.barClose);
+    morphOpenBar = findViewById(R.id.barOpen);
+    markerTHBar = findViewById(R.id.barMarkerth);
+
 
     contourButton.setOnClickListener(l -> mode_contour = !mode_contour);
     ellipseButton.setOnClickListener(l -> mode_ellipse = !mode_ellipse);
+    resizeButton.setOnClickListener(l-> {
+      if(resizeTab.getVisibility() == View.VISIBLE)
+        resizeTab.setVisibility(View.INVISIBLE);
+      else
+        resizeTab.setVisibility(View.VISIBLE);
+    });
+
+    normButton.setOnClickListener(l-> {
+      if(normBar.getVisibility() == View.VISIBLE)
+        normBar.setVisibility(View.INVISIBLE);
+      else
+        normBar.setVisibility(View.VISIBLE);
+    });
+
+    morphButton.setOnClickListener(l-> {
+      if(morphCloseBar.getVisibility() == View.VISIBLE) {
+        morphCloseBar.setVisibility(View.INVISIBLE);
+        morphOpenBar.setVisibility(View.INVISIBLE);
+        txtOpen.setVisibility(View.INVISIBLE);
+        txtClose.setVisibility(View.INVISIBLE);
+
+      }
+      else
+      {
+        morphCloseBar.setVisibility(View.VISIBLE);
+        morphOpenBar.setVisibility(View.VISIBLE);
+        txtOpen.setVisibility(View.VISIBLE);
+        txtClose.setVisibility(View.VISIBLE);
+      }
+    });
+
+    markerButton.setOnClickListener(l-> {
+      if(markerTHBar.getVisibility() == View.VISIBLE)
+        markerTHBar.setVisibility(View.INVISIBLE);
+      else
+        markerTHBar.setVisibility(View.VISIBLE);
+    });
 
     recordButton.setOnClickListener(l -> {
       if (state == State.PointCollecting) {
@@ -416,12 +474,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   }
 
 
-//                  for (Contour localContor: localcontours)
-//                  {
-//                    ContourForDraw contourForDraw = new ContourForDraw();
-//                    contourForDraw.setContour(plane, localContor);
-//                    contourForDraws.add(contourForDraw);
-//                  }
+                  for (Contour localContor: localcontours)
+                  {
+                    ContourForDraw contourForDraw = new ContourForDraw();
+                    contourForDraw.setContour(plane, localContor);
+                    contourForDraws.add(contourForDraw);
+                  }
                   drawText.setTexture(width,height);
               });
               isBusy = false;
@@ -459,11 +517,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //        for (Circle circle : circles) {
 //          circle.draw(viewMX, projMX);
 //        }
-//        if(mode_contour) {
-//          for (ContourForDraw contourForDraw : contourForDraws) {
-//            contourForDraw.draw(viewMX, projMX);
-//          }
-//        }
+        if(mode_contour) {
+          for (ContourForDraw contourForDraw : contourForDraws) {
+            contourForDraw.draw(viewMX, projMX);
+          }
+        }
 
         if(mode_ellipse) {
           for (DrawEllipse drawEllipse : drawEllipses) {

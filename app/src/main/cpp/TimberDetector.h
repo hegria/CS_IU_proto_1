@@ -18,6 +18,7 @@ public:
 
     std::vector<Contour> grabContours(const cv::Mat& img_bgr) const;
 
+
     void setCandidateThresh(double x); // x -> 0.0 ~ 1.0
     void setMorphologyParam(int x, int y); // does nothing at the moment
     void setBackgroundRange(int beg, int end); // hue value
@@ -59,6 +60,7 @@ private:
     void filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_hsv) const;
     int segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) const;
     void filterContours(std::vector<Contour>& dst, const std::vector<Contour>& src_bin, double low, double high) const;
+
 };
 
 #endif //CS_IU_PROTO_1_TIMBERDETECTOR_H

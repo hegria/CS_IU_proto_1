@@ -8,7 +8,9 @@
     <android.opengl.GLSurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" />
 
     <Button
         android:id="@+id/recordButton"
@@ -24,21 +26,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="2dp"
-        android:layout_marginEnd="5dp"
+        android:layout_marginTop="17dp"
+        android:layout_marginEnd="13dp"
         android:text="contour" />
-
-    <TextView
-        android:id="@+id/txtCount"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="25dp"
-        android:layout_marginTop="25dp"
-        android:background="#CD302A2A"
-        android:textColor="#FFEA2F"
-        android:textSize="20sp" />
 
     <Button
         android:id="@+id/btnEllipse"
@@ -46,8 +36,195 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/btnContour"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="2dp"
-        android:layout_marginEnd="5dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="13dp"
         android:text="Ellipse" />
+
+    <Button
+        android:id="@+id/btnResize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtCount"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:text="Resize" />
+
+    <Button
+        android:id="@+id/btnNorm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnResize"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:text="Norm" />
+
+    <Button
+        android:id="@+id/btnMorph"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnNorm"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:text="Morph" />
+
+    <Button
+        android:id="@+id/btnMarker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnMorph"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:text="Markerth" />
+
+    <Button
+        android:id="@+id/btnBackgroundRange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnMarker"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:text="BGRange" />
+
+    <TextView
+        android:id="@+id/txtCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="25dp"
+        android:background="#CD302A2A"
+        android:textColor="#FFEA2F"
+        android:textSize="20sp" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switchBG"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="10dp"
+        android:text="RemoveBG"
+        android:visibility="visible"
+        />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabResize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/btnResize"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/btnResize"
+
+        android:visibility="invisible">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="500" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="600" />
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabItem4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="700" />
+
+        <com.google.android.material.tabs.TabItem
+            android:id="@+id/tabItem3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="800" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="900" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <SeekBar
+        android:id="@+id/barNorm"
+        style="@style/Widget.AppCompat.SeekBar"
+        android:layout_width="240dp"
+        android:layout_height="47dp"
+        android:layout_alignBottom="@+id/btnNorm"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/btnNorm"
+        android:max="100"
+        android:progress="50"
+        android:visibility="invisible" />
+
+    <SeekBar
+        android:id="@+id/barClose"
+        android:layout_width="240dp"
+        android:layout_height="47dp"
+        android:layout_alignBottom="@+id/btnMorph"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/btnNorm"
+        android:max="10"
+        android:progress="5"
+        android:visibility="invisible" />
+
+    <SeekBar
+        android:id="@+id/barMarkerth"
+        android:layout_width="240dp"
+        android:layout_height="47dp"
+        android:layout_alignBottom="@+id/btnMarker"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/btnMarker"
+        android:max="100"
+        android:progress="50"
+        android:visibility="invisible" />
+
+    <SeekBar
+        android:id="@+id/barOpen"
+        android:layout_width="240dp"
+        android:layout_height="47dp"
+        android:layout_alignBottom="@+id/barClose"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/barClose"
+        android:max="10"
+        android:progress="5"
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/txtMorphOpen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignStart="@+id/barOpen"
+        android:layout_alignBottom="@+id/barOpen"
+        android:layout_marginStart="102dp"
+        android:layout_marginBottom="33dp"
+        android:text="Open"
+        android:visibility="invisible"/>
+
+    <TextView
+        android:id="@+id/txtMorphClose2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:layout_alignStart="@+id/barClose"
+        android:layout_alignBottom="@+id/barClose"
+        android:layout_marginStart="102dp"
+        android:layout_marginBottom="33dp"
+        android:text="Close"
+        android:visibility="invisible"/>
+
 
 </RelativeLayout>
