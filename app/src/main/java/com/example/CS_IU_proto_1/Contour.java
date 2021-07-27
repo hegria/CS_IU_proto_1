@@ -55,4 +55,45 @@ public class Contour {
     }
 
 
+    public Contour cliptoWorld(float[] projMX, float[] viewMX, float[] camera, Plane plane){
+        int len = points.length/2;
+
+        float[] worldpoints = new float[len*3];
+
+        float[] ray_clip;
+        float[] ray_eye;
+        float[] ray_wor;
+        float[] out;
+        float[] inverseProjMX = new float[16];
+        Matrix.invertM(inverseProjMX, 0, projMX, 0);
+
+        float[] inverseViewMX = new float[16];
+        Matrix.invertM(inverseViewMX, 0, viewMX, 0);
+        Ray ray;
+
+        float[] surpoints;
+        for( int i = 0; i<len;i++){
+            // points가 문제일수 있음???????????
+            ray_clip = new float[]{-points[2*i+1], points[2*i], -1f, 1f};
+            ray_eye = new float[4];
+            Matrix.multiplyMV(ray_eye, 0, inverseProjMX, 0, ray_clip, 0);
+            ray_eye = new float[]{ray_eye[0], ray_eye[1], -1.0f, 0.0f};
+
+            ray_wor = new float[4];
+            Matrix.multiplyMV(ray_wor, 0, inverseViewMX, 0, ray_eye, 0);
+            float ray_wor_length = (float) Math.sqrt(ray_wor[0] * ray_wor[0] + ray_wor[1] * ray_wor[1] + ray_wor[2] * ray_wor[2]);
+            out = new float[]{ray_wor[0]/ray_wor_length, ray_wor[1]/ray_wor_length ,ray_wor[2]/ray_wor_length};
+            ray = new Ray(camera,out);
+
+            surpoints = Myutil.pickSurfacePoints(plane,ray);
+            // OK!!!
+
+            worldpoints[3*i] = surpoints[0];
+            worldpoints[3*i+1] = surpoints[1];
+            worldpoints[3*i+2] = surpoints[2];
+        }
+        Contour worldContor = new Contour(worldpoints);
+
+        return worldContor;
+    }
 }

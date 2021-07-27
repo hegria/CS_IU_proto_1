@@ -58,7 +58,6 @@ public class ContourForDraw {
         numpoints = contour.points.length/2;
         FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
         for(int i =0; i<numpoints;i++){
-
             float[] temppoint = {contour.points[i*2],contour.points[i*2+1],0};
             float[] newtemp = plane.transintoworld(temppoint);
             pointsBuffer.put(newtemp);
@@ -73,6 +72,27 @@ public class ContourForDraw {
         GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, pointsBuffer.remaining() * 4, pointsBuffer, GLES20.GL_DYNAMIC_DRAW);
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
     }
+
+    // TODO float array보다는 Contour 자료형을 받는 걸로 생각하기.
+    public void setRawContour(Plane plane, Contour contour){
+        numpoints = contour.points.length/3;
+        FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        for(int i =0; i<numpoints;i++){
+            float[] temppoint = {contour.points[i*3],contour.points[i*3+1],contour.points[i*3+2]};
+//            float[] newtemp = plane.transintoworld(temppoint);
+            pointsBuffer.put(temppoint);
+        }
+        float[] temppoint = {contour.points[0],contour.points[1],contour.points[2]};
+        //float[] newtemp = plane.transintoworld(temppoint);
+        pointsBuffer.put(temppoint);
+
+        pointsBuffer.position(0);
+
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
+        GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, pointsBuffer.remaining() * 4, pointsBuffer, GLES20.GL_DYNAMIC_DRAW);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+    }
+
     public void draw(float[] viewMX, float[] projMX) {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glUseProgram(program);
