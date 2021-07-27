@@ -6,6 +6,7 @@ import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -36,10 +37,18 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 
 import org.opencv.android.OpenCVLoader;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -71,6 +80,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   boolean mode_contour = false;
   boolean mode_ellipse = true;
 
+  boolean isCapture = false;
+
   ExecutorService worker;
   ExecutorService findPlaneworker;
   FindPlaneTask findPlaneTask;
@@ -89,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Plane plane;
 
   GLSurfaceView glView; // 띄우기 위한 View
-  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton; // 레코딩~
+  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton, captureButton;; // 레코딩~
   SwitchCompat bgSwitch;
   TabLayout resizeTab;
   TextView txtCount, txtClose, txtOpen;
@@ -170,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     morphButton = findViewById(R.id.btnMorph);
     markerButton = findViewById(R.id.btnMarker);
     bgrangeButton = findViewById(R.id.btnBackgroundRange);
+    captureButton = findViewById(R.id.btnCapture);
     bgSwitch = findViewById(R.id.switchBG);
     resizeTab = findViewById(R.id.tabResize);
     normBar = findViewById(R.id.barNorm);
@@ -216,6 +228,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         markerTHBar.setVisibility(View.INVISIBLE);
       else
         markerTHBar.setVisibility(View.VISIBLE);
+    });
+
+    captureButton.setOnClickListener(l -> {
+      this.isCapture = true;
+      captureButton.setEnabled(false);
     });
 
 
@@ -437,8 +454,52 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               // ADDED BY OPENCV TEAM
               contours.clear();
 
-              contours =  jni.findTimberContours(image);
-              ArrayList<Contour> localcontours = new ArrayList<>();
+              Image.Plane[] planes = image.getPlanes();
+              ByteBuffer bufferY   = planes[0].getBuffer();
+              ByteBuffer bufferUV  = planes[1].getBuffer();
+              ByteBuffer bufferYUV = ByteBuffer.allocateDirect( bufferY.remaining() + bufferUV.remaining() );
+              bufferYUV.put( bufferY ).put( bufferUV );
+              bufferYUV.rewind();
+
+            contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight());
+
+              if ( this.isCapture ) {
+                this.isCapture = false;
+                bufferYUV.rewind();
+                byte[] bytesYUV = new byte[ bufferYUV.remaining() ];
+                bufferYUV.get(bytesYUV);
+                bufferYUV.rewind();
+
+                File path = this.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.getDefault());
+                String currentDateAndTime = sdf.format(new Date());
+
+                File dst  = new File(path, "image_yuv420 " + currentDateAndTime + ".raw");
+                Log.i("CaptureImage", dst.getAbsolutePath() );
+                try {
+                  OutputStream os = new FileOutputStream(dst);
+                  os.write( bytesYUV );
+                  os.close();
+
+                  runOnUiThread(() -> {
+                    Toast.makeText(this, "Save: " + dst.getAbsolutePath(), Toast.LENGTH_SHORT ).show();
+
+                    captureButton.setEnabled(true);
+                  });
+
+                } catch (IOException e) {
+                  Log.w("ExternalStorage", "Error writing " + dst, e);
+
+                  runOnUiThread(() -> {
+                    // Enable Button
+                    captureButton.setEnabled(true);
+                  });
+                }
+
+              }
+
+            ArrayList<Contour> localcontours = new ArrayList<>();
               ArrayList<Ellipse> ellipses = new ArrayList<>();
               // ADDED BY OPENCV TEAM
               for (Contour contour: contours

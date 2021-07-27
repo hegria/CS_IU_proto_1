@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.google.ar.core.Coordinates2d;
 import com.google.ar.core.Frame;
@@ -14,6 +15,7 @@ import org.opencv.core.Mat;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.concurrent.Future;
 
 public class Background {
@@ -85,8 +87,7 @@ public class Background {
     quadCoords.put(vertices);
     quadCoords.position(0);
 
-    ByteBuffer bbTexCoords =
-            ByteBuffer.allocateDirect(numVertice * 2 * 4);
+    ByteBuffer bbTexCoords = ByteBuffer.allocateDirect(numVertice * 2 * 4);
     bbTexCoords.order(ByteOrder.nativeOrder());
     quadTexCoords = bbTexCoords.asFloatBuffer();
 
@@ -126,6 +127,12 @@ public class Background {
             Coordinates2d.OPENGL_NORMALIZED_DEVICE_COORDINATES, quadCoords,
             Coordinates2d.TEXTURE_NORMALIZED, quadTexCoords);
     quadTexCoords.position(0);
+
+    float[] transformedTxCoord = new float[4 * 2];
+    for (int i = 0; i < 8; i++) {
+      transformedTxCoord[i] = quadTexCoords.get(i);
+    }
+    Log.d("TXCOORD", Arrays.toString(transformedTxCoord));
 
   }
 
