@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -103,8 +104,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton, captureButton;; // 레코딩~
   SwitchCompat bgSwitch;
   TabLayout resizeTab;
-  TextView txtCount, txtClose, txtOpen;
+  TextView txtCount, txtClose, txtOpen, txtNormLvl, txtOpenLvl, txtCloseLvL, txtMarkerLvL;
   SeekBar normBar, morphCloseBar,morphOpenBar, markerTHBar;
+  FrameLayout normLayout;
+  int normLvL = 2, markerLvL = 10 , openLvL = 2, closeLvL = 1, resizelvl = 600;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -113,6 +116,49 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   long backKeyPressedTime;    //앱종료 위한 백버튼 누른시간
 
   //뒤로가기 2번하면 앱종료
+
+  public void setVisibility(View view)
+  {
+    if(view.getVisibility() == View.VISIBLE)
+      view.setVisibility(View.INVISIBLE);
+    else
+      view.setVisibility(View.VISIBLE);
+  }
+
+  public void setBarLvL(SeekBar bar, int progress)
+  {
+    if(bar.equals(normBar))
+      normLvL = progress;
+    else if(bar.equals(morphOpenBar))
+      openLvL = progress;
+    else if(bar.equals(morphCloseBar))
+      closeLvL = progress;
+    else if(bar.equals(markerTHBar))
+      markerLvL = progress;
+  }
+
+  public void setSeekBarListener(SeekBar bar, TextView txt){
+    bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+      @Override
+      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        // onProgressChange - Seekbar 값 변경될때마다 호출
+        txt.setText(String.valueOf(seekBar.getProgress()));
+        //나중에 수정하기 (local variable 사용 못함)
+        setBarLvL(bar, progress);
+      }
+      @Override
+      public void onStartTrackingTouch(SeekBar seekBar) {
+        // onStartTeackingTouch - SeekBar 값 변경위해 첫 눌림에 호출
+        txt.setText(String.valueOf(seekBar.getProgress()));
+        setBarLvL(bar, seekBar.getProgress());
+      }
+      @Override
+      public void onStopTrackingTouch(SeekBar seekBar) {
+        // onStopTrackingTouch - SeekBar 값 변경 끝나고 드래그 떼면 호출
+        txt.setText(String.valueOf(seekBar.getProgress()));
+        setBarLvL(bar, seekBar.getProgress());
+    }});
+  }
   @Override
   public void onBackPressed() {
     //1번째 백버튼 클릭
@@ -171,63 +217,87 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.setWillNotDraw(false);
 
     txtCount = findViewById(R.id.txtCount);
-    txtClose = findViewById(R.id.txtMorphClose2);
+    txtClose = findViewById(R.id.txtMorphClose);
     txtOpen = findViewById(R.id.txtMorphOpen);
     contourButton = findViewById(R.id.btnContour);
     ellipseButton = findViewById(R.id.btnEllipse);
     recordButton = findViewById(R.id.recordButton);
+
     resizeButton = findViewById(R.id.btnResize);
+
     normButton = findViewById(R.id.btnNorm);
     morphButton = findViewById(R.id.btnMorph);
     markerButton = findViewById(R.id.btnMarker);
     bgrangeButton = findViewById(R.id.btnBackgroundRange);
     captureButton = findViewById(R.id.btnCapture);
     bgSwitch = findViewById(R.id.switchBG);
+
     resizeTab = findViewById(R.id.tabResize);
+    resizeTab.selectTab(resizeTab.getTabAt((resizelvl-500)/100));
+
+    normLayout = findViewById(R.id.normLayout);
+    normButton = findViewById(R.id.btnNorm);
     normBar = findViewById(R.id.barNorm);
+    txtNormLvl = findViewById(R.id.txtNormLvL);
+    normBar.setProgress(normLvL);
+    txtNormLvl.setText(String.valueOf(normLvL));
+
+    morphButton = findViewById(R.id.btnMorph);
     morphCloseBar = findViewById(R.id.barClose);
     morphOpenBar = findViewById(R.id.barOpen);
+    txtCloseLvL = findViewById(R.id.txtCloseLvL);
+    txtOpenLvl = findViewById(R.id.txtOpenLvL);
+    morphCloseBar.setProgress(closeLvL);
+    txtCloseLvL.setText(String.valueOf(closeLvL));
+    morphOpenBar.setProgress(openLvL);
+    txtOpenLvl.setText(String.valueOf(openLvL));
+
+
+    markerButton = findViewById(R.id.btnMarker);
     markerTHBar = findViewById(R.id.barMarkerth);
+    txtMarkerLvL = findViewById(R.id.txtMarkerLvL);
+    markerTHBar.setProgress(markerLvL);
+    txtMarkerLvL.setText(String.valueOf(markerLvL));
+
+    bgrangeButton = findViewById(R.id.btnBackgroundRange);
+
+    bgSwitch = findViewById(R.id.switchBG);
 
 
     contourButton.setOnClickListener(l -> mode_contour = !mode_contour);
     ellipseButton.setOnClickListener(l -> mode_ellipse = !mode_ellipse);
+
     resizeButton.setOnClickListener(l-> {
-      if(resizeTab.getVisibility() == View.VISIBLE)
-        resizeTab.setVisibility(View.INVISIBLE);
-      else
-        resizeTab.setVisibility(View.VISIBLE);
+      setVisibility(resizeTab);
     });
 
     normButton.setOnClickListener(l-> {
-      if(normBar.getVisibility() == View.VISIBLE)
-        normBar.setVisibility(View.INVISIBLE);
-      else
-        normBar.setVisibility(View.VISIBLE);
+      setVisibility(normLayout);
+     // setVisibility(normBar);
+      //setVisibility(txtNormLvl);
+//      txtOpenLvl.setVisibility(View.VISIBLE);
+
     });
 
     morphButton.setOnClickListener(l-> {
-      if(morphCloseBar.getVisibility() == View.VISIBLE) {
-        morphCloseBar.setVisibility(View.INVISIBLE);
-        morphOpenBar.setVisibility(View.INVISIBLE);
-        txtOpen.setVisibility(View.INVISIBLE);
-        txtClose.setVisibility(View.INVISIBLE);
-
-      }
-      else
-      {
-        morphCloseBar.setVisibility(View.VISIBLE);
-        morphOpenBar.setVisibility(View.VISIBLE);
-        txtOpen.setVisibility(View.VISIBLE);
-        txtClose.setVisibility(View.VISIBLE);
-      }
+      //프레임으로 묶기
+      setVisibility(morphCloseBar);
+      setVisibility(morphOpenBar);
+      setVisibility(txtOpen);
+      setVisibility(txtClose);
+      setVisibility(txtOpenLvl);
+      setVisibility(txtCloseLvL);
+      //값 바뀌는지 테스트
+      Log.d(TAG, "normlvl : " + normLvL);
+      Log.d(TAG, "resizelvl : " + resizelvl);
+      Log.d(TAG, "closelvl : " + closeLvL);
+      Log.d(TAG, "openlvl : " + openLvL);
+      Log.d(TAG, "marlvl : " + markerLvL);
     });
 
     markerButton.setOnClickListener(l-> {
-      if(markerTHBar.getVisibility() == View.VISIBLE)
-        markerTHBar.setVisibility(View.INVISIBLE);
-      else
-        markerTHBar.setVisibility(View.VISIBLE);
+      setVisibility(markerTHBar);
+      setVisibility(txtMarkerLvL);
     });
 
     captureButton.setOnClickListener(l -> {
@@ -235,7 +305,31 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       captureButton.setEnabled(false);
     });
 
+    setSeekBarListener(normBar, txtNormLvl);
+    setSeekBarListener(morphCloseBar, txtCloseLvL);
+    setSeekBarListener(morphOpenBar, txtOpenLvl);
+    setSeekBarListener(markerTHBar, txtMarkerLvL);
 
+    resizeTab.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+      @Override
+      public void onTabSelected(TabLayout.Tab tab) {
+        resizelvl = tab.getPosition()*100 + 500;
+      }
+      @Override
+      public void onTabUnselected(TabLayout.Tab tab) {
+        // do nothing
+      }
+
+      @Override
+      public void onTabReselected(TabLayout.Tab tab) {
+        // do nothing
+      }
+    }) ;
+
+
+
+
+    출처: https://bitsoul.tistory.com/29 [Happy Programmer~]
 
     recordButton.setOnClickListener(l -> {
       if (state == State.PointCollecting) {
@@ -330,6 +424,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     } else {
       Log.d(TAG, "onResum :: OpenCV library found inside package. Using it!");
     }
+
     if (session == null) {
       String message = null;
       try {
