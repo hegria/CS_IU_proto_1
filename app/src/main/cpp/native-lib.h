@@ -20,7 +20,7 @@
 extern "C" {
 
     JNIEXPORT jobject JNICALL
-    J_FIND_TIMBER_CONTOURS(jobject data_yuv_n12, jint width, jint height);
+    J_FIND_TIMBER_CONTOURS(jobject data_yuv_n12, jint width, jint height, jint resizelvl, jdouble normlvl, jint closelvl, jint openlvl, jdouble markerlvl, jboolean bg_enable_filtering);
 
 }
 

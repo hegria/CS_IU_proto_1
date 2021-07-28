@@ -11,8 +11,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.SeekBar;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -101,13 +103,14 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Plane plane;
 
   GLSurfaceView glView; // 띄우기 위한 View
-  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton, captureButton;; // 레코딩~
+  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton, captureButton, optionButton;; // 레코딩~
   SwitchCompat bgSwitch;
   TabLayout resizeTab;
   TextView txtCount, txtClose, txtOpen, txtNormLvl, txtOpenLvl, txtCloseLvL, txtMarkerLvL;
   SeekBar normBar, morphCloseBar,morphOpenBar, markerTHBar;
-  FrameLayout normLayout;
+  View normLayout, morphLayout, markerLayout, optionLayout;
   int normLvL = 2, markerLvL = 10 , openLvL = 2, closeLvL = 1, resizelvl = 600;
+  boolean bg_enable_filtering = false;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -242,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     normBar.setProgress(normLvL);
     txtNormLvl.setText(String.valueOf(normLvL));
 
+    morphLayout = findViewById(R.id.morphLayout);
     morphButton = findViewById(R.id.btnMorph);
     morphCloseBar = findViewById(R.id.barClose);
     morphOpenBar = findViewById(R.id.barOpen);
@@ -252,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     morphOpenBar.setProgress(openLvL);
     txtOpenLvl.setText(String.valueOf(openLvL));
 
-
+    markerLayout = findViewById(R.id.markerLayout);
     markerButton = findViewById(R.id.btnMarker);
     markerTHBar = findViewById(R.id.barMarkerth);
     txtMarkerLvL = findViewById(R.id.txtMarkerLvL);
@@ -262,6 +266,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     bgrangeButton = findViewById(R.id.btnBackgroundRange);
 
     bgSwitch = findViewById(R.id.switchBG);
+
+    optionLayout = findViewById(R.id.optionLayout);
+    optionButton = findViewById(R.id.btnOption);
 
 
     contourButton.setOnClickListener(l -> mode_contour = !mode_contour);
@@ -273,36 +280,37 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     normButton.setOnClickListener(l-> {
       setVisibility(normLayout);
-     // setVisibility(normBar);
-      //setVisibility(txtNormLvl);
-//      txtOpenLvl.setVisibility(View.VISIBLE);
-
     });
 
     morphButton.setOnClickListener(l-> {
-      //프레임으로 묶기
-      setVisibility(morphCloseBar);
-      setVisibility(morphOpenBar);
-      setVisibility(txtOpen);
-      setVisibility(txtClose);
-      setVisibility(txtOpenLvl);
-      setVisibility(txtCloseLvL);
-      //값 바뀌는지 테스트
-      Log.d(TAG, "normlvl : " + normLvL);
-      Log.d(TAG, "resizelvl : " + resizelvl);
-      Log.d(TAG, "closelvl : " + closeLvL);
-      Log.d(TAG, "openlvl : " + openLvL);
-      Log.d(TAG, "marlvl : " + markerLvL);
+      setVisibility(morphLayout);
     });
 
     markerButton.setOnClickListener(l-> {
-      setVisibility(markerTHBar);
-      setVisibility(txtMarkerLvL);
+      setVisibility(markerLayout);
     });
 
     captureButton.setOnClickListener(l -> {
       this.isCapture = true;
       captureButton.setEnabled(false);
+    });
+
+    bgSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      @Override
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        if (isChecked)
+          bg_enable_filtering = true;
+        else
+          bg_enable_filtering = false;
+      }
+    });
+
+    optionButton.setOnClickListener(l->{
+      setVisibility(optionLayout);
+      setVisibility(bgSwitch);
+      setVisibility(contourButton);
+      setVisibility(ellipseButton);
+      setVisibility(captureButton);
     });
 
     setSeekBarListener(normBar, txtNormLvl);
@@ -556,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               bufferYUV.put( bufferY ).put( bufferUV );
               bufferYUV.rewind();
 
-            contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight());
+            contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight(), resizelvl, (double)(normLvL)/100.0, closeLvL, openLvL, (double)(markerLvL)/100.0, bg_enable_filtering);
 
               if ( this.isCapture ) {
                 this.isCapture = false;

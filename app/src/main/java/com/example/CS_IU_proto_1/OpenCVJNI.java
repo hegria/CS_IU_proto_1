@@ -30,7 +30,7 @@ public class OpenCVJNI {
         //imgProcessMatIDs = new int[5];
     }
 
-    public ArrayList<Contour> findTimberContours(Image imgYUV_N12) {
+    public ArrayList<Contour> findTimberContours(Image imgYUV_N12, int resizelvl, double normlvl, int closelvl, int openlvl, double markerlvl, boolean bg_enable_filtering) {
         Image.Plane[] planes = imgYUV_N12.getPlanes();
         ByteBuffer bufferY   = planes[0].getBuffer();
         ByteBuffer bufferUV  = planes[1].getBuffer();
@@ -38,13 +38,13 @@ public class OpenCVJNI {
         bufferYUV.put( bufferY ).put( bufferUV );
         bufferYUV.rewind();
 
-        return _findTimberContours(bufferYUV, imgYUV_N12.getWidth(), imgYUV_N12.getHeight());
+        return _findTimberContours(bufferYUV, imgYUV_N12.getWidth(), imgYUV_N12.getHeight(), resizelvl, normlvl, closelvl, openlvl, markerlvl, bg_enable_filtering);
     }
 
-    public ArrayList<Contour> findTimberContours(ByteBuffer bufferYUV_N12, int width, int height) {
-        return _findTimberContours(bufferYUV_N12, width, height);
+    public ArrayList<Contour> findTimberContours(ByteBuffer bufferYUV_N12, int width, int height, int resizelvl, double normlvl, int closelvl, int openlvl, double markerlvl, boolean bg_enable_filtering) {
+        return _findTimberContours(bufferYUV_N12, width, height, resizelvl, normlvl, closelvl, openlvl, markerlvl, bg_enable_filtering);
     }
 
-    private native ArrayList<Contour> _findTimberContours(ByteBuffer data_yuv_n12, int width, int height);
+    private native ArrayList<Contour> _findTimberContours(ByteBuffer data_yuv_n12, int width, int height, int resizelvl, double normlvl, int closelvl, int openlvl, double markerlvl, boolean bg_enable_filtering);
 
 }

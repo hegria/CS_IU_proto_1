@@ -11,8 +11,8 @@
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="-4dp"
-        android:layout_marginTop="4dp" />
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="0dp" />
 
     <Button
         android:id="@+id/recordButton"
@@ -30,7 +30,8 @@
         android:layout_alignParentEnd="true"
         android:layout_marginTop="17dp"
         android:layout_marginEnd="13dp"
-        android:text="contour" />
+        android:text="contour"
+        android:visibility="invisible" />
 
     <Button
         android:id="@+id/btnEllipse"
@@ -40,66 +41,19 @@
         android:layout_alignParentEnd="true"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="13dp"
-        android:text="Ellipse" />
-
-    <Button
-        android:id="@+id/btnResize"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/txtCount"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:text="Resize" />
-
-    <Button
-        android:id="@+id/btnNorm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnResize"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginStart="10dp"
-        android:text="Norm" />
-
-    <Button
-        android:id="@+id/btnMorph"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnNorm"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginStart="10dp"
-        android:text="Morph" />
-
-    <Button
-        android:id="@+id/btnMarker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnMorph"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:text="Markerth" />
-
-    <Button
-        android:id="@+id/btnBackgroundRange"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnMarker"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:text="BGRange" />
+        android:text="Ellipse"
+        android:visibility="invisible" />
 
     <Button
         android:id="@+id/btnCapture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="23dp"
-        android:layout_toEndOf="@+id/btnBackgroundRange"
-        android:layout_alignBottom="@+id/btnBackgroundRange"
-        android:text="CAPTURE" />
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginBottom="0dp"
+        android:layout_toEndOf="@+id/switchBG"
+        android:text="CAPTURE"
+        android:visibility="invisible" />
 
     <TextView
         android:id="@+id/txtCount"
@@ -121,170 +75,286 @@
         android:layout_marginStart="10dp"
         android:layout_marginBottom="10dp"
         android:text="RemoveBG"
-        android:visibility="visible" />
+        android:visibility="invisible" />
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabResize"
+
+    <Button
+        android:id="@+id/btnOption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/btnResize"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="0dp"
-        android:layout_toEndOf="@+id/btnResize"
+        android:layout_below="@+id/btnEllipse"
+        android:layout_alignEnd="@+id/btnEllipse"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="0dp"
+        android:text="Option" />
 
-        android:visibility="visible">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="500" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="600" />
-
-        <com.google.android.material.tabs.TabItem
-            android:id="@+id/tabItem4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="700" />
-
-        <com.google.android.material.tabs.TabItem
-            android:id="@+id/tabItem3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="800" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="900" />
-
-    </com.google.android.material.tabs.TabLayout>
-
-    <SeekBar
-        android:id="@+id/barClose"
-        style="@style/Widget.AppCompat.SeekBar.Discrete"
-        android:layout_width="240dp"
-        android:layout_height="47dp"
-        android:layout_alignBottom="@+id/btnMorph"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="0dp"
-        android:layout_toEndOf="@+id/btnNorm"
-        android:max="5"
-        android:progress="3"
-        android:visibility="visible" />
-
-    <SeekBar
-        android:id="@+id/barMarkerth"
-        android:layout_width="240dp"
-        android:layout_height="47dp"
-        android:layout_alignBottom="@+id/btnMarker"
-        android:layout_marginStart="10dp"
-        android:layout_marginBottom="0dp"
-        android:layout_toEndOf="@+id/btnMarker"
-        android:max="100"
-        android:progress="50"
-        android:visibility="visible" />
-
-    <SeekBar
-        android:id="@+id/barOpen"
-        style="@style/Widget.AppCompat.SeekBar.Discrete"
-        android:layout_width="240dp"
-        android:layout_height="47dp"
-        android:layout_alignBottom="@+id/barClose"
-        android:layout_marginStart="30dp"
-        android:layout_marginBottom="0dp"
-        android:layout_toEndOf="@+id/barClose"
-        android:max="5"
-        android:progress="3"
-        android:visibility="visible" />
-
-    <TextView
-        android:id="@+id/txtMorphOpen"
+    <TableLayout
+        android:id="@+id/optionLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-
-        android:layout_alignStart="@+id/barOpen"
-        android:layout_alignBottom="@+id/barOpen"
-        android:layout_marginStart="102dp"
-        android:layout_marginBottom="33dp"
-        android:text="Open"
-        android:visibility="visible" />
-
-    <TextView
-        android:id="@+id/txtMorphClose"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-
-        android:layout_alignStart="@+id/barClose"
-        android:layout_alignBottom="@+id/barClose"
-        android:layout_marginStart="102dp"
-        android:layout_marginBottom="33dp"
-        android:text="Close"
-        android:visibility="visible" />
-
-    <TextView
-        android:id="@+id/txtCloseLvL"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/barClose"
+        android:layout_below="@+id/txtCount"
         android:layout_marginStart="0dp"
-        android:layout_marginBottom="15dp"
-        android:layout_toEndOf="@+id/barClose"
-        android:visibility="visible" />
+        android:layout_marginTop="0dp"
+        android:visibility="invisible">
 
-    <TextView
-        android:id="@+id/txtOpenLvL"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/barOpen"
-        android:layout_marginStart="0dp"
-        android:layout_marginBottom="15dp"
-        android:layout_toEndOf="@+id/barOpen"
-        android:visibility="visible" />
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/txtMarkerLvL"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/barMarkerth"
-        android:layout_marginStart="0dp"
-        android:layout_marginBottom="15dp"
-        android:layout_toEndOf="@+id/barMarkerth"
-        android:visibility="visible" />
+            <Button
+                android:id="@+id/btnResize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Resize"
+                android:visibility="visible" />
 
-    <FrameLayout
-        android:id="@+id/normLayout"
-        android:layout_width="293dp"
-        android:layout_height="44dp"
-        android:layout_alignBottom="@+id/btnNorm"
-        android:layout_marginStart="0dp"
-        android:layout_marginBottom="0dp"
-        android:layout_toEndOf="@+id/btnNorm"
-        android:visibility="visible">
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabResize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:layout_marginBottom="0dp"
 
-        <TextView
-            android:id="@+id/txtNormLvL"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|center_vertical"
-            android:layout_margin="0dp"
-            android:layout_marginStart="240dp"
-            android:visibility="visible" />
+                android:visibility="invisible">
 
-        <SeekBar
-            android:id="@+id/barNorm"
-            style="@style/Widget.AppCompat.SeekBar.Discrete"
-            android:layout_width="258dp"
-            android:layout_height="47dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginBottom="0dp"
-            android:max="10"
-            android:progress="5"
-            android:visibility="visible" />
-    </FrameLayout>
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="500" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="600" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/tabItem4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="700" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/tabItem3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="800" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="900" />
+
+            </com.google.android.material.tabs.TabLayout>
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/btnNorm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Norm"
+                android:visibility="visible" />
+
+            <TableRow
+                android:id="@+id/normLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:layout_marginBottom="0dp"
+                android:visibility="invisible">
+
+                <SeekBar
+                    android:id="@+id/barNorm"
+
+                    style="@style/Widget.AppCompat.SeekBar.Discrete"
+                    android:layout_width="258dp"
+                    android:layout_height="47dp"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:max="10"
+                    android:progress="5"
+                    android:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/txtNormLvL"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_margin="0dp"
+                    android:layout_marginStart="0dp"
+                    android:visibility="visible" />
+            </TableRow>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/btnMorph"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Morph"
+                android:visibility="visible" />
+
+            <TableLayout
+                android:id="@+id/morphLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:layout_marginBottom="0dp"
+                android:visibility="invisible">
+
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TextView
+                        android:id="@+id/txtMorphClose"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+
+                        android:layout_marginStart="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:text="Close"
+                        android:visibility="visible" />
+
+                    <Space
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/txtMorphOpen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+
+                        android:layout_marginStart="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:text="Open"
+                        android:visibility="visible" />
+
+
+                </TableRow>
+
+                <TableRow
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginBottom="0dp"
+
+
+                    >
+
+                    <SeekBar
+                        android:id="@+id/barClose"
+                        style="@style/Widget.AppCompat.SeekBar.Discrete"
+                        android:layout_width="240dp"
+                        android:layout_height="25dp"
+                        android:layout_marginStart="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:max="5"
+                        android:progress="3"
+                        android:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/txtCloseLvL"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="0dp"
+                        android:visibility="visible" />
+
+                    <SeekBar
+                        android:id="@+id/barOpen"
+                        style="@style/Widget.AppCompat.SeekBar.Discrete"
+                        android:layout_width="240dp"
+                        android:layout_height="25dp"
+                        android:layout_marginStart="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:max="5"
+                        android:progress="3"
+                        android:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/txtOpenLvL"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="right|center_vertical"
+                        android:layout_marginStart="0dp"
+                        android:layout_marginBottom="0dp"
+                        android:visibility="visible" />
+                </TableRow>
+            </TableLayout>
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/btnMarker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:text="Markerth"
+                android:visibility="visible" />
+
+            <TableRow
+                android:id="@+id/markerLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="0dp"
+                android:layout_marginBottom="0dp"
+                android:visibility="invisible">
+
+                <SeekBar
+                    android:id="@+id/barMarkerth"
+                    android:layout_width="240dp"
+                    android:layout_height="47dp"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:max="100"
+                    android:progress="50"
+                    android:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/txtMarkerLvL"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:layout_marginStart="0dp"
+                    android:layout_marginBottom="0dp"
+                    android:visibility="visible" />
+            </TableRow>
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <Button
+                android:id="@+id/btnBackgroundRange"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:text="BGRange"
+                android:visibility="visible" />
+        </TableRow>
+    </TableLayout>
 
 
 </RelativeLayout>
