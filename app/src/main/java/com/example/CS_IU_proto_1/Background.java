@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.google.ar.core.Coordinates2d;
 import com.google.ar.core.Frame;
@@ -14,6 +15,7 @@ import org.opencv.core.Mat;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.concurrent.Future;
 
 public class Background {
@@ -118,6 +120,14 @@ public class Background {
     vpos = GLES20.glGetAttribLocation(program, "vPosition");
     tpos = GLES20.glGetAttribLocation(program, "vTexcoord");
 
+  }
+
+  public float[] getTexCoord(){
+
+    float[] arr = new float[quadTexCoords.remaining()];
+    quadTexCoords.get(arr);
+    quadTexCoords.rewind();
+    return arr;
   }
 
   public void transformCoordinate(Frame frame){

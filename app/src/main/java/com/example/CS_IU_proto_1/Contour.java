@@ -3,6 +3,8 @@ package com.example.CS_IU_proto_1;
 import android.opengl.Matrix;
 import android.util.Log;
 
+import java.util.Arrays;
+
 // OpenCV팀에서 아웃풋으로 뱉을 거
 public class Contour {
 
@@ -15,7 +17,7 @@ public class Contour {
 
     // Contour의 points 좌표를 Local 좌표로 바꾸는.....일을 하였음.
     // TODO 최적화 더 할 수 있음.
-    public Contour cliptolocal(float[] projMX, float[] viewMX, float[] camera, Plane plane){
+    public Contour cliptolocal(float[] projMX, float[] viewMX, float[] camera, Plane plane, float[] framecoddinate){
         int len = points.length/2;
 
         float[] localpoints = new float[points.length];
@@ -33,8 +35,10 @@ public class Contour {
 
         float[] surpoints;
         float[] localpoint;
+        float frameoffset = (framecoddinate[1]-framecoddinate[5]);
+        Log.i("offset",""+ Arrays.toString(framecoddinate));
         for( int i = 0; i<len;i++){
-            ray_clip = new float[]{-points[2*i+1], points[2*i], -1f, 1f};
+            ray_clip = new float[]{-points[2*i+1], points[2*i]/frameoffset, -1f, 1f};
             ray_eye = new float[4];
             Matrix.multiplyMV(ray_eye, 0, inverseProjMX, 0, ray_clip, 0);
             ray_eye = new float[]{ray_eye[0], ray_eye[1], -1.0f, 0.0f};

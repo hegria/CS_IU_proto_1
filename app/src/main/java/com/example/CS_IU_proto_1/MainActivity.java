@@ -1,6 +1,7 @@
 package com.example.CS_IU_proto_1;
 
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.content.Context;
 import android.media.Image;
 import android.opengl.GLES20;
@@ -8,14 +9,18 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
 
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
@@ -125,6 +130,14 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     android.os.Process.killProcess(android.os.Process.myPid());
   }
 
+  @Override
+  public void onAttachedToWindow() {
+    super.onAttachedToWindow();
+
+    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+            WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+  }
 
   @SuppressLint("ClickableViewAccessibility")
   @Override
@@ -373,6 +386,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               contours.clear();
               ellipses.clear();
 
+              ArrayList<Contour> localcontours = new ArrayList<>();
               contours =  jni.findTimberContours(image);
 
 
@@ -381,10 +395,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 if(contour.points.length <= 10)
                   continue;
 
-                Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane);
+                Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane,background.getTexCoord());
                 Ellipse tempellipse = Myutil.findBoundingBox(localContour);
                 tempellipse.setRottation(plane);
                 ellipses.add(tempellipse);
+                localcontours.add(localContour);
               }
 
               //개수 표시
@@ -396,6 +411,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               glView.queueEvent(() -> {
                   drawEllipses.clear();
                   drawText.clearEllipses();
+                  contourForDraws.clear();
 
                   for (Ellipse ellipse: ellipses)
                   {
@@ -407,6 +423,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                   }
 
                   drawText.setTexture(width,height);
+                  for (Contour localContor: localcontours)
+                  {
+                    ContourForDraw contourForDraw = new ContourForDraw();
+                    contourForDraw.setContour(plane, localContor);
+                    contourForDraws.add(contourForDraw);
+                  }
                   //변경 코드
                   // 여기다 쓰면 원리는 정확히 모르겠지만 메모리 증가 속도가 늦춰짐 (queue에 따로 쌓이지 않아서?)
                   //----------------------------------------------------------
@@ -425,7 +447,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         }
       }
-  }
+    }
+    //한번만해 ㅅㅂ
     if (frame.hasDisplayGeometryChanged()) {
       background.transformCoordinate(frame);
     }
@@ -445,9 +468,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       case FoundSurface:
         // 컨투어 그리기
 //        if(mode_contour) {
-//          for (ContourForDraw contourForDraw : contourForDraws) {
-//            contourForDraw.draw(viewMX, projMX);
-//          }
+          for (ContourForDraw contourForDraw : contourForDraws) {
+            contourForDraw.draw(viewMX, projMX);
+          }
 //        }
 
         for (DrawEllipse drawEllipse : drawEllipses) {
