@@ -20,16 +20,6 @@
         android:background="#00FFFFFF"
         android:src="@drawable/for_record_button" />
 
-    <Button
-        android:id="@+id/btnContour"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/txtCount"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="20dp"
-        android:text="contour(OFF)" />
-
     <TextView
         android:id="@+id/txtCount"
         android:layout_width="wrap_content"
@@ -40,20 +30,10 @@
         android:layout_marginTop="24dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="20dp"
-        android:background="#557288"
+        android:background="#C4626DAF"
         android:padding="5dp"
-        android:text="개수:         "
+        android:text="개수:"
         android:textColor="#EAD9CE"
         android:textSize="20sp" />
-
-    <Button
-        android:id="@+id/btnEllipse"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/btnContour"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="5dp"
-        android:text="Ellipse" />
 
 </RelativeLayout>

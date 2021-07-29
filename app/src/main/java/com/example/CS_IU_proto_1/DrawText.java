@@ -23,6 +23,9 @@ public class DrawText {
     int program;
     int texID;
 
+    Paint textPaint;
+    Canvas canvas;
+
     final int textSize = 32;
 
     ArrayList<Ellipseinfo> ellipses;
@@ -96,12 +99,23 @@ public class DrawText {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
+
         ellipses = new ArrayList<>();
+        canvas= new Canvas();
+        textPaint = new Paint();
+
+        textPaint.setTextSize(textSize);
+        textPaint.setAntiAlias(true);
+        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setStyle(Paint.Style.FILL);
+        textPaint.setColor(Color.GREEN);
+        textPaint.setTextAlign(Paint.Align.CENTER);
     }
 
     public void setEllipses(Ellipse ellipse){
         ellipses.add(new Ellipseinfo(ellipse.resultprivot,ellipse.size));
     }
+
     public void clearEllipses(){
         ellipses.clear();
     }
@@ -109,22 +123,12 @@ public class DrawText {
 
     public void setTexture(int width,int height){
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        // get a canvas to paint over the bitmap
         bitmap.eraseColor(Color.TRANSPARENT);
+        canvas.setBitmap(bitmap);
 
-        Canvas canvas = new Canvas(bitmap);
         // Draw the text
-        Paint textPaint = new Paint();
-        textPaint.setTextSize(textSize);
-        textPaint.setAntiAlias(true);
-        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        textPaint.setStyle(Paint.Style.FILL);
-        textPaint.setColor(Color.GREEN);
-        textPaint.setTextAlign(Paint.Align.CENTER);
-
         for (Ellipseinfo ellipse : ellipses) {
-            canvas.drawText(""+ellipse.size,(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1])/2.0f*height + textSize/4f,
-                    textPaint);
+            canvas.drawText(""+ellipse.size,(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1])/2.0f*height + textSize/4f, textPaint);
         }
 
         // draw the text centered
@@ -135,8 +139,6 @@ public class DrawText {
 
 
     public void draw() {
-
-
 
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glEnable(GLES20.GL_BLEND);
@@ -165,6 +167,7 @@ public class DrawText {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
     }
 }
+
 class Ellipseinfo{
     float[] center;
     int size;

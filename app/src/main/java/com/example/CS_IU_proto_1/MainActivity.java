@@ -64,15 +64,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   // ARCORE 관련
 
   boolean installRequested = false;
+  boolean isBusy = false;
+  GLSurfaceView glView; // 띄우기 위한 View
   Session session; // ??
   Camera camera; // 그냥 카메라
   CameraConfig cameraConfig;
-
-  boolean isBusy = false;
   Image image;
+  Plane plane;
 
-  boolean mode_contour = false;
-  boolean mode_ellipse = true;
+  PointCloudRenderer pointCloudRenderer; // PointCloud그림
+  PointCollector pointCollector; // 모을거임
 
   ExecutorService worker;
   ExecutorService findPlaneworker;
@@ -84,23 +85,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   OpenCVJNI jni;
 
-  ArrayList<ContourForDraw> contourForDraws;
-  EllipsePool ellipsePool;
+  // 컨투어 그리기 위한거(디버그용)
+//  ArrayList<ContourForDraw> contourForDraws;
 
+  EllipsePool ellipsePool;
   ArrayList<Contour> contours;
   ArrayList<Ellipse> ellipses;
-  PointCloudRenderer pointCloudRenderer; // PointCloud그림
-  PointCollector pointCollector; // 모을거임
-  Plane plane;
 
-  GLSurfaceView glView; // 띄우기 위한 View
   ImageButton recordButton;
-  Button contourButton, ellipseButton; // 레코딩~
   TextView txtCount;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
   float[] viewMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
+
   //앱종료시간체크
   long backKeyPressedTime;    //앱종료 위한 백버튼 누른시간
 
@@ -109,8 +107,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   public void onBackPressed() {
     //1번째 백버튼 클릭
     //초기화
-    state = State.Idle;
     initAll();
+    recordButton.setImageResource(R.drawable.for_record_button);
     recordButton.setVisibility(View.VISIBLE);
 
     if(System.currentTimeMillis()>backKeyPressedTime+2000){
@@ -133,10 +131,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   @Override
   public void onAttachedToWindow() {
     super.onAttachedToWindow();
-
     getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
   }
 
   @SuppressLint("ClickableViewAccessibility")
@@ -150,6 +146,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
+        if(state != State.FindingSurface)
+          return;
         runOnUiThread(() -> {
           Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
           recordButton.setVisibility(View.GONE);
@@ -160,9 +158,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
       @Override
       public void onFailTask() {
-        runOnUiThread(() -> {
-          Toast.makeText(MainActivity.this,"평면을 못 찾았습니다. 다시 시도하여 주세요.",Toast.LENGTH_SHORT).show();
-        });
+        if(state != State.FindingSurface)
+          return;
+        runOnUiThread(() -> Toast.makeText(MainActivity.this,"평면을 못 찾았습니다. 다시 시도하여 주세요.",Toast.LENGTH_SHORT).show());
         state = State.PointCollected;
       }
     });
@@ -177,15 +175,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     glView.setWillNotDraw(false);
 
     txtCount = findViewById(R.id.txtCount);
-    contourButton = findViewById(R.id.btnContour);
-    ellipseButton = findViewById(R.id.btnEllipse);
     recordButton = findViewById(R.id.recordButton);
 
-    contourButton.setOnClickListener(l -> mode_contour = !mode_contour);
-    ellipseButton.setOnClickListener(l -> mode_ellipse = !mode_ellipse);
-
     recordButton.setOnClickListener(l -> {
-      // collecting 시작하기 위해 버튼 누름 (앱 실행하고 맨 처음 한번만 실행)
+      // collecting 시작하기 위해 버튼 누름
       if(state == State.Idle) {
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
@@ -193,9 +186,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // collecting 끝내기 위해 버튼 누름
       else if (state == State.PointCollecting) {
         recordButton.setImageResource(R.drawable.for_record_button);
-        glView.queueEvent(() -> {
-          pointCloudRenderer.fix(pointCollector.getPointBuffer());
-        });
+        glView.queueEvent(() -> pointCloudRenderer.fix(pointCollector.getPointBuffer()));
         state = State.PointCollected;
       }
       //초기화하고 다시 시작
@@ -208,16 +199,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     glView.setOnTouchListener((view, event) -> {
       Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
-
-      if (state == State.FoundSurface) {
-
-        return false;
-      } else if (state == State.PointCollected) {
+      if (state == State.PointCollected) {
         state = State.FindingSurface;
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
         findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
         findPlaneworker.execute(findPlaneTask);
-        return false;
       }
       return false;
     });
@@ -231,16 +217,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   @Override
   protected void onDestroy() {
     if (session != null) {
-      // Explicitly close ARCore Session to release native resources.
-      // Review the API reference for important considerations before calling close() in apps with
-      // more complicated lifecycle requirements:
-      // https://developers.google.com/ar/reference/java/arcore/reference/com/google/ar/core/Session#close()
       session.close();
       session = null;
     }
     worker.shutdown();
     findPlaneworker.shutdown();
-
     super.onDestroy();
   }
 
@@ -273,8 +254,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
             break;
         }
 
-        // ARCore requires camera permissions to operate. If we did not yet obtain runtime
-        // permission on Android M and above, now is a good time to ask the user for it.
         if (!CameraPermissionHelper.hasCameraPermission(this)) {
           CameraPermissionHelper.requestCameraPermission(this);
           return;
@@ -334,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     background = new Background();
     drawText = new DrawText();
     drawText.setTexture(width,height);
-    contourForDraws = new ArrayList<>();
+//    contourForDraws = new ArrayList<>();
     ellipsePool = new EllipsePool(100);
     contours = new ArrayList<>();
     ellipses = new ArrayList<>();
@@ -348,7 +327,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     this.height = height;
     GLES20.glViewport(0, 0, width, height);
   }
-
 
   @Override
   public void onDrawFrame(GL10 gl) {
@@ -366,90 +344,85 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
 
     //평면을 찾은 뒤에 이미지를 옮길것임.
-    if (state == State.FoundSurface) {
+    if (state == State.FoundSurface && !isBusy) {
+      try {
+        image = frame.acquireCameraImage();
 
-      if (!isBusy) {
-        try {
-          image = frame.acquireCameraImage();
+        worker.execute(() -> {
+          if (image == null)
+            return;
+
+          isBusy = true;
 
           // viewMX, ProjMax 훔침
           // SnapShot 과정..
+          float[] snapprojMX = projMX.clone();
+          float[] snapviewMX = viewMX.clone();
+          float[] snapcameratrans = camera.getPose().getTranslation();
 
-          worker.execute(() -> {
-              if (image == null) {
-                return;
-              }
-              isBusy = true;
-              float[] snapprojMX = projMX.clone();
-              float[] snapviewMX = viewMX.clone();
-              float[] snapcameratrans = camera.getPose().getTranslation();
-              contours.clear();
-              ellipses.clear();
+          contours.clear();
+          ellipses.clear();
 
-              ArrayList<Contour> localcontours = new ArrayList<>();
-              contours =  jni.findTimberContours(image);
+          // 컨투어 그리기 위한거(디버그용)
+//          ArrayList<Contour> localcontours = new ArrayList<>();
 
+          contours =  jni.findTimberContours(image);
+          image.close();
 
-              //Contour 들을 ellipse로 변환
-              for(Contour contour: contours){
-                if(contour.points.length <= 10)
-                  continue;
+          //Contour 들을 ellipse로 변환
+          for(Contour contour: contours){
+            if(contour.points.length <= 10)
+              continue;
+            Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane,background.getTexCoord());
+            Ellipse tempellipse = Myutil.findBoundingBox(localContour);
+            tempellipse.setRottation(plane);
+            ellipses.add(tempellipse);
 
-                Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane,background.getTexCoord());
-                Ellipse tempellipse = Myutil.findBoundingBox(localContour);
-                tempellipse.setRottation(plane);
-                ellipses.add(tempellipse);
-                localcontours.add(localContour);
-              }
+            // 컨투어 그리기 위한거(디버그용)
+//            localcontours.add(localContour);
+          }
 
-              //개수 표시
-              runOnUiThread(() -> {
-                txtCount.setText(String.format("개수: %d", ellipses.size()));
-              });
-              image.close();
-
-              glView.queueEvent(() -> {
-                  ellipsePool.clear();
-                  drawText.clearEllipses();
-                  contourForDraws.clear();
-
-                  for (Ellipse ellipse: ellipses)
-                  {
-                      ellipse.pivot_to_local(snapprojMX,snapviewMX);
-                      if(ellipsePool.isFull()) {
-                        //아예 new로 하나 새로 할당
-                        ellipsePool.addEllipse(ellipse);
-                      } else {
-                        //기존에 있는거에서 데이터만 바꿈
-                        ellipsePool.setEllipse(ellipse);
-                      }
-                      drawText.setEllipses(ellipse);
-                  }
-
-                  drawText.setTexture(width,height);
-                  for (Contour localContor: localcontours)
-                  {
-                    ContourForDraw contourForDraw = new ContourForDraw();
-                    contourForDraw.setContour(plane, localContor);
-                    contourForDraws.add(contourForDraw);
-                  }
-                  //변경 코드
-                  // 여기다 쓰면 원리는 정확히 모르겠지만 메모리 증가 속도가 늦춰짐 (queue에 따로 쌓이지 않아서?)
-                  //----------------------------------------------------------
-                  isBusy = false;
-                  //----------------------------------------------------------
-              });
-              //원래 코드
-              //----------------------------------------------------------
-
-              //----------------------------------------------------------
+          //개수 표시
+          runOnUiThread(() -> {
+            if(state != State.Idle)
+              txtCount.setText(String.format("개수: %d", ellipses.size()));
           });
 
+          glView.queueEvent(() -> {
+            ellipsePool.clear();
+            drawText.clearEllipses();
 
-        } catch (NotYetAvailableException e) {
-          // Fail to access raw image...
+            // 컨투어 그리기 위한거(디버그용)
+//              contourForDraws.clear();
 
-        }
+            for (Ellipse ellipse: ellipses)
+            {
+              ellipse.pivot_to_local(snapprojMX,snapviewMX);
+              if(ellipsePool.isFull()) {
+                //아예 new로 하나 새로 할당
+                ellipsePool.addEllipse(ellipse);
+              } else {
+                //기존에 있는거에서 데이터만 바꿈
+                ellipsePool.setEllipse(ellipse);
+              }
+              drawText.setEllipses(ellipse);
+            }
+
+            drawText.setTexture(width,height);
+
+            // 컨투어 그리기 위한거(디버그용)
+//            for (Contour localContor: localcontours)
+//            {
+//              ContourForDraw contourForDraw = new ContourForDraw();
+//              contourForDraw.setContour(plane, localContor);
+//              contourForDraws.add(contourForDraw);
+//            }
+
+            isBusy = false;
+          });
+        });
+      } catch (NotYetAvailableException e) {
+        // Fail to access raw image...
       }
     }
     //한번만해 ㅅㅂ
@@ -464,21 +437,22 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     // 그리기 전에 버퍼 초기화
     // drawing phase
-
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
     background.draw();
 
     switch(state){
       case FoundSurface:
-        // 컨투어 그리기
+
+//        // 컨투어 그리기 (디버그용)
 //        if(mode_contour) {
-          for (ContourForDraw contourForDraw : contourForDraws) {
-            contourForDraw.draw(viewMX, projMX);
-          }
+//          for (ContourForDraw contourForDraw : contourForDraws) {
+//            contourForDraw.draw(viewMX, projMX);
+//          }
 //        }
 
-        for(int i = 0; i < ellipsePool.useCount; i++)
+        for(int i = 0; i < ellipsePool.useCount; i++) {
           ellipsePool.drawEllipses.get(i).draw(viewMX, projMX);
+        }
         drawText.draw();
         break;
       case PointCollecting:
@@ -526,12 +500,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
   }
 
-  @Override // FragmentAcitvity.onRequestPermissionsResult()
+  @Override
+  //카메라 권한 확인
   public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     if (!CameraPermissionHelper.hasCameraPermission(this)) {
-      Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
-              .show();
+      Toast.makeText(this, "카메라 권한이 필요합니다.", Toast.LENGTH_LONG).show();
       if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
         // Permission denied with checking "Do not ask again".
         CameraPermissionHelper.launchPermissionSettings(this);
@@ -540,17 +514,22 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
   }
 
+  //초기화
   private void initAll(){
-    mode_contour = false;
-    mode_ellipse = true;
+    state = State.Idle;
+
     try {
-      worker.awaitTermination(200, TimeUnit.MILLISECONDS);
+      findPlaneworker.awaitTermination(100, TimeUnit.MILLISECONDS);
+      worker.awaitTermination(100, TimeUnit.MILLISECONDS);
+      Thread.sleep(100);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+
     plane = null;
-    contourForDraws.clear();
     ellipsePool.clear();
+//    contourForDraws.clear();
     pointCollector = new PointCollector();
+    txtCount.setText("개수:");
   }
 }
