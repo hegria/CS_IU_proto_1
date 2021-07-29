@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   OpenCVJNI jni;
 
   ArrayList<ContourForDraw> contourForDraws;
-  ArrayList<DrawEllipse> drawEllipses;
+  EllipsePool ellipsePool;
 
   ArrayList<Contour> contours;
   ArrayList<Ellipse> ellipses;
@@ -335,7 +335,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     drawText = new DrawText();
     drawText.setTexture(width,height);
     contourForDraws = new ArrayList<>();
-    drawEllipses = new ArrayList<>();
+    ellipsePool = new EllipsePool(100);
     contours = new ArrayList<>();
     ellipses = new ArrayList<>();
     //TODO Method 이름을 적확하게 해두기
@@ -409,16 +409,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               image.close();
 
               glView.queueEvent(() -> {
-                  drawEllipses.clear();
+                  ellipsePool.clear();
                   drawText.clearEllipses();
                   contourForDraws.clear();
 
                   for (Ellipse ellipse: ellipses)
                   {
                       ellipse.pivot_to_local(snapprojMX,snapviewMX);
-                      DrawEllipse drawEllipse = new DrawEllipse();
-                      drawEllipse.setContour(plane,ellipse);
-                      drawEllipses.add(drawEllipse);
+                      if(ellipsePool.isFull()) {
+                        //아예 new로 하나 새로 할당
+                        ellipsePool.addEllipse(ellipse);
+                      } else {
+                        //기존에 있는거에서 데이터만 바꿈
+                        ellipsePool.setEllipse(ellipse);
+                      }
                       drawText.setEllipses(ellipse);
                   }
 
@@ -473,9 +477,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           }
 //        }
 
-        for (DrawEllipse drawEllipse : drawEllipses) {
-          drawEllipse.draw(viewMX, projMX);
-        }
+        for(int i = 0; i < ellipsePool.useCount; i++)
+          ellipsePool.drawEllipses.get(i).draw(viewMX, projMX);
         drawText.draw();
         break;
       case PointCollecting:
@@ -547,7 +550,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
     plane = null;
     contourForDraws.clear();
-    drawEllipses.clear();
+    ellipsePool.clear();
     pointCollector = new PointCollector();
   }
 }
