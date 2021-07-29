@@ -65,7 +65,7 @@ public class DrawEllipse {
 
     // 2차원 Local 좌표를 받습니다!!
     // TODO float array보다는 Contour 자료형을 받는 걸로 생각하기.
-    public void setContour(Plane plane, Ellipse ellipse){
+    public void setContour(Ellipse ellipse){
         size = ellipse.size;
         numpoints = 36;
         FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
