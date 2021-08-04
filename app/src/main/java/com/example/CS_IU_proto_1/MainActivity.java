@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   // state 1 => 제일 처음, 2 => pointcollection 시작, 3=> pointcolleted 끝(findsurface 시작) => 4 findsurface 진행중 5 Plane Find
 
   private enum State {
-    Idle, PointCollecting, PointCollected, FindingSurface, FoundSurface
+    Idle, PointCollecting, PointCollected, FindingSurface, FoundSurface, Capture
   }
   State state = State.Idle;
 
@@ -417,6 +417,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //              contourForDraw.setContour(plane, localContor);
 //              contourForDraws.add(contourForDraw);
 //            }
+            if(state== State.Capture){
+
+            }
 
             isBusy = false;
           });
