@@ -50,4 +50,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'com.google.ar:core:1.25.0'
     implementation files('libs/FSReq.jar')
+    implementation 'org.florescu.android.rangeseekbar:rangeseekbar-library:0.4.0'
 }
