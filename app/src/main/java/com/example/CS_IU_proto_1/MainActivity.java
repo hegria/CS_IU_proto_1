@@ -3,6 +3,7 @@ package com.example.CS_IU_proto_1;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.content.Context;
+import android.content.Intent;
 import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -150,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           return;
         runOnUiThread(() -> {
           Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
-          recordButton.setVisibility(View.GONE);
+          recordButton.setImageResource(R.drawable.for_capture_button);
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -418,6 +419,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //              contourForDraws.add(contourForDraw);
 //            }
             if(state== State.Capture){
+              //Ellipse와 Image파일을 넘겨야함.
+
+              Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+              intent.putParcelableArrayListExtra("Ellipse",ellipses);
+              intent.putExtra("projMat",snapprojMX);
+              intent.putExtra("viewMat",snapviewMX);
 
             }
 

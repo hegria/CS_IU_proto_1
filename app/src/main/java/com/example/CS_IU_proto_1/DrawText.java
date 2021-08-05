@@ -167,7 +167,7 @@ public class DrawText {
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
     }
 }
-
+// 이걸 강화해 볼까라는생각도 드는데..
 class Ellipseinfo{
     float[] center;
     int size;
