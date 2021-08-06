@@ -154,8 +154,8 @@ void TimberDetector::filterContours(std::vector<Contour>& dst, const std::vector
     });
 }
 
-void TimberDetector::setCandidateThresh(double x) {
-    param.norm_lvl = utils::ensureBounds(static_cast<int>(x * 255), 1, 255);
+void TimberDetector::setCandidateThresh(int x) {
+    param.norm_lvl = x;
 }
 
 void TimberDetector::setMorphologyParam(int x, int y) {
@@ -176,3 +176,9 @@ void TimberDetector::setBackgroundRange(int beg, int end) {
 void TimberDetector::setSegmentationSensitivity(double x) {
     param.marker_th = utils::ensureBounds(static_cast<int>(255 * (1.0 - x)), 1, 255);
 }
+
+void TimberDetector::setFilterThresh(double x)
+{
+    param.cnt_filter_th2 = x;
+}
+

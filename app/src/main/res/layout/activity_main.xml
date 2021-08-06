@@ -48,12 +48,12 @@
         android:id="@+id/btnCapture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="0dp"
+        android:layout_marginEnd="10dp"
         android:layout_marginBottom="0dp"
-        android:layout_toEndOf="@+id/switchBG"
         android:text="CAPTURE"
-        android:visibility="invisible" />
+        android:visibility="visible" />
 
     <TextView
         android:id="@+id/txtCount"
@@ -325,8 +325,8 @@
                     android:layout_height="47dp"
                     android:layout_marginStart="0dp"
                     android:layout_marginBottom="0dp"
-                    android:max="100"
-                    android:progress="50"
+                    android:max="50"
+                    android:progress="25"
                     android:visibility="visible" />
 
                 <TextView
@@ -346,13 +346,33 @@
             android:layout_height="match_parent">
 
             <Button
-                android:id="@+id/btnBackgroundRange"
+                android:id="@+id/btnFilter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:layout_marginTop="10dp"
-                android:text="BGRange"
+                android:text="Filter"
                 android:visibility="visible" />
+
+            <TableRow
+                android:id="@+id/filterLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible">
+
+                <SeekBar
+                    android:id="@+id/barFilter"
+                    android:layout_width="240dp"
+                    android:layout_height="47dp"
+                    android:max="50" />
+
+                <TextView
+                    android:id="@+id/txtFilter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical" />
+            </TableRow>
+
         </TableRow>
     </TableLayout>
 

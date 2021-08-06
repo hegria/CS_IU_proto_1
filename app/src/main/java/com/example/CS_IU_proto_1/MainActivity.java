@@ -12,9 +12,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.FrameLayout;
 import android.widget.SeekBar;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,6 +57,12 @@ import java.util.concurrent.TimeUnit;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
+
+
 public class MainActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
 
   private static final String TAG = "opencv";
@@ -71,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   State state = State.Idle;
 
   // ARCORE 관련
+  VideoCapture capture;
+  VideoWriter writer;
 
   boolean installRequested = false;
   Session session; // ??
@@ -103,13 +109,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Plane plane;
 
   GLSurfaceView glView; // 띄우기 위한 View
-  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, bgrangeButton, captureButton, optionButton;; // 레코딩~
+  Button recordButton, contourButton, ellipseButton, resizeButton, normButton, morphButton, markerButton, filterButton, captureButton, optionButton;; // 레코딩~
   SwitchCompat bgSwitch;
   TabLayout resizeTab;
-  TextView txtCount, txtClose, txtOpen, txtNormLvl, txtOpenLvl, txtCloseLvL, txtMarkerLvL;
-  SeekBar normBar, morphCloseBar,morphOpenBar, markerTHBar;
-  View normLayout, morphLayout, markerLayout, optionLayout;
-  int normLvL = 2, markerLvL = 10 , openLvL = 2, closeLvL = 1, resizelvl = 600;
+  TextView txtCount, txtClose, txtOpen, txtNormLvl, txtOpenLvl, txtCloseLvL, txtMarkerLvL, txtFilterLvl;
+  SeekBar normBar, morphCloseBar,morphOpenBar, markerTHBar, filterBar;
+  View normLayout, morphLayout, markerLayout, optionLayout, filterLayout;
+  int normLvL = 5, markerLvL = 10 , openLvL = 2, closeLvL = 1, resizelvl = 600, filterLvL = 30;
   boolean bg_enable_filtering = false;
 
   int width = 1, height = 1;
@@ -227,14 +233,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     recordButton = findViewById(R.id.recordButton);
 
     resizeButton = findViewById(R.id.btnResize);
-
-    normButton = findViewById(R.id.btnNorm);
-    morphButton = findViewById(R.id.btnMorph);
-    markerButton = findViewById(R.id.btnMarker);
-    bgrangeButton = findViewById(R.id.btnBackgroundRange);
-    captureButton = findViewById(R.id.btnCapture);
-    bgSwitch = findViewById(R.id.switchBG);
-
     resizeTab = findViewById(R.id.tabResize);
     resizeTab.selectTab(resizeTab.getTabAt((resizelvl-500)/100));
 
@@ -263,9 +261,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     markerTHBar.setProgress(markerLvL);
     txtMarkerLvL.setText(String.valueOf(markerLvL));
 
-    bgrangeButton = findViewById(R.id.btnBackgroundRange);
+    filterLayout = findViewById(R.id.filterLayout);
+    filterButton = findViewById(R.id.btnFilter);
+    filterBar = findViewById(R.id.barFilter);
+    txtFilterLvl = findViewById(R.id.txtFilter);
+    filterBar.setProgress(filterLvL);
+    txtFilterLvl.setText(String.valueOf((double)(filterLvL)/10));
 
     bgSwitch = findViewById(R.id.switchBG);
+
+    captureButton = findViewById(R.id.btnCapture);
 
     optionLayout = findViewById(R.id.optionLayout);
     optionButton = findViewById(R.id.btnOption);
@@ -290,6 +295,31 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       setVisibility(markerLayout);
     });
 
+    filterButton.setOnClickListener(l->{
+      setVisibility(filterLayout);
+    });
+
+    filterBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+      @Override
+      public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        // onProgressChange - Seekbar 값 변경될때마다 호출
+        txtFilterLvl.setText(String.valueOf((double)(seekBar.getProgress())/10.0));
+        //나중에 수정하기 (local variable 사용 못함)
+        filterLvL = progress;
+      }
+      @Override
+      public void onStartTrackingTouch(SeekBar seekBar) {
+        // onStartTeackingTouch - SeekBar 값 변경위해 첫 눌림에 호출
+        txtFilterLvl.setText(String.valueOf((double)(seekBar.getProgress())/10.0));
+        filterLvL = seekBar.getProgress();
+      }
+      @Override
+      public void onStopTrackingTouch(SeekBar seekBar) {
+        txtFilterLvl.setText(String.valueOf((double)(seekBar.getProgress())/10.0));
+        filterLvL = seekBar.getProgress();
+      }});
+
+
     captureButton.setOnClickListener(l -> {
       this.isCapture = true;
       captureButton.setEnabled(false);
@@ -310,7 +340,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       setVisibility(bgSwitch);
       setVisibility(contourButton);
       setVisibility(ellipseButton);
-      setVisibility(captureButton);
     });
 
     setSeekBarListener(normBar, txtNormLvl);
@@ -564,7 +593,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               bufferYUV.put( bufferY ).put( bufferUV );
               bufferYUV.rewind();
 
-            contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight(), resizelvl, (double)(normLvL)/100.0, closeLvL, openLvL, (double)(markerLvL)/100.0, bg_enable_filtering);
+              int t = image.getWidth();//1920
+
+
+              contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight(), resizelvl, normLvL, closeLvL, openLvL, (double)(markerLvL)/100.0, bg_enable_filtering, (double)(filterLvL)/10);
+
 
               if ( this.isCapture ) {
                 this.isCapture = false;
