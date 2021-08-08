@@ -6,6 +6,7 @@ import android.opengl.Matrix;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -92,7 +93,14 @@ public class Myutil {
         inImg.put(0,0, bufferYUV.array());
 
 
-        return inImg;
+
+        Mat outImg = new Mat( image.getHeight(), image.getWidth(), CvType.CV_8UC4 );
+
+
+        // // YUV to RGB -> cvCvtColor();
+        Imgproc.cvtColor( inImg, outImg, Imgproc.COLOR_YUV2RGB_NV12 );
+
+        return outImg;
     }
 
     public static ArrayList<Contour> findCircle(Image image){

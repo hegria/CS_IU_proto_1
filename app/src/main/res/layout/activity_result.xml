@@ -148,8 +148,8 @@
 
     <android.opengl.GLSurfaceView
         android:id="@+id/subsurface"
-        android:layout_width="1024px"
-        android:layout_height="576px"
+        android:layout_width="1280px"
+        android:layout_height="720px"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/linearLayout"

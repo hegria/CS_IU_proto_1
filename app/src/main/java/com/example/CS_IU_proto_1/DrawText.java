@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -28,6 +28,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ResultActivity"
+            android:configChanges="screenSize|orientation"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:screenOrientation="landscape">
+        </activity>
         <meta-data
             android:name="com.google.ar.core"
             android:value="required" />

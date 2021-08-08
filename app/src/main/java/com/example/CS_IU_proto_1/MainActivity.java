@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -39,7 +40,10 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.Mat;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -71,7 +75,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   Camera camera; // 그냥 카메라
   CameraConfig cameraConfig;
   Image image;
+  Mat img;
   Plane plane;
+
 
   PointCloudRenderer pointCloudRenderer; // PointCloud그림
   PointCollector pointCollector; // 모을거임
@@ -189,6 +195,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         recordButton.setImageResource(R.drawable.for_record_button);
         glView.queueEvent(() -> pointCloudRenderer.fix(pointCollector.getPointBuffer()));
         state = State.PointCollected;
+      }else if(state == State.FoundSurface){
+        state = State.Capture;
       }
       //초기화하고 다시 시작
       else{
@@ -345,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     }
 
     //평면을 찾은 뒤에 이미지를 옮길것임.
-    if (state == State.FoundSurface && !isBusy) {
+    if ((state == State.FoundSurface||state == State.Capture) && !isBusy) {
       try {
         image = frame.acquireCameraImage();
 
@@ -368,8 +376,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //          ArrayList<Contour> localcontours = new ArrayList<>();
 
           contours =  jni.findTimberContours(image);
+          if(state == State.Capture){
+            img = new Mat();
+            img = Myutil.ArImg2CVImg(image);
+          }
           image.close();
-
           //Contour 들을 ellipse로 변환
           for(Contour contour: contours){
             if(contour.points.length <= 10)
@@ -418,13 +429,21 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 //              contourForDraw.setContour(plane, localContor);
 //              contourForDraws.add(contourForDraw);
 //            }
-            if(state== State.Capture){
+            if(state== State.Capture&&img!=null){
               //Ellipse와 Image파일을 넘겨야함.
 
               Intent intent = new Intent(MainActivity.this, ResultActivity.class);
               intent.putParcelableArrayListExtra("Ellipse",ellipses);
               intent.putExtra("projMat",snapprojMX);
               intent.putExtra("viewMat",snapviewMX);
+              Bitmap bmp = null;
+              bmp = Bitmap.createBitmap(img.cols(), img.rows(), Bitmap.Config.ARGB_8888);
+              Utils.matToBitmap(img, bmp);
+              ByteArrayOutputStream stream = new ByteArrayOutputStream();
+              bmp.compress(Bitmap.CompressFormat.JPEG, 50, stream);
+              byte[] byteArray = stream.toByteArray();
+              intent.putExtra("image", byteArray);
+              startActivity(intent);
 
             }
 
