@@ -11,9 +11,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.florescu.android.rangeseekbar.RangeSeekBar;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -41,11 +45,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     int count;
     float dia;
 
-
     boolean isBusy = false;
 
     TextView textCont;
     TextView textAvgdia;
+    Switch switch1, switch2, switch3;
+    RangeSeekBar<Integer> seekBar;
 
     BackgroundImage backgroundImage;
 
@@ -74,8 +79,14 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         glView.setRenderer(this);
         glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         glView.setWillNotDraw(false);
+
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
+        switch1 = findViewById(R.id.switch1);
+        switch2 = findViewById(R.id.switch2);
+        switch3 = findViewById(R.id.switch3);
+        seekBar = findViewById(R.id.seekBar);
+
 
         glView.setOnTouchListener((View view, MotionEvent event) -> {
             float xPx, yPx;
@@ -110,6 +121,58 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
             return false;
         });
+//        glView.setOnTouchListener((View view, MotionEvent event) -> {
+//            //Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
+//
+//            return false;
+//        });
+
+        switch1.setOnClickListener(l -> {
+            if(switch1.isChecked()){
+
+            }else{
+
+            }
+        });
+
+        switch2.setOnClickListener(l -> {
+            if(switch1.isChecked()){
+
+            }else{
+
+            }
+        });
+
+        switch3.setOnClickListener(l -> {
+            if(switch1.isChecked()){
+
+            }else{
+
+            }
+        });
+
+        int maxVal = 0;
+        int minVal = 100;
+
+        for(Ellipse ellipse : ellipses){
+            if(ellipse.size < minVal)
+                minVal = ellipse.size;
+            if(ellipse.size > maxVal)
+                maxVal = ellipse.size;
+        }
+
+        seekBar.setRangeValues(minVal, maxVal);
+
+        seekBar.setOnRangeSeekBarChangeListener((bar, minValue, maxValue) -> {
+            int selectedMinVal = (int)(bar.getSelectedMinValue());
+            int selectedMaxVal = (int)(bar.getSelectedMaxValue());
+
+            for(Ellipse ellipse : ellipses){
+                ellipse.istoggled =
+                        (ellipse.size >= selectedMinVal) && (ellipse.size <= selectedMaxVal);
+            }
+        });
+
     }
 
     @Override
@@ -148,11 +211,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         if(!isBusy) {
             isBusy =true;
             glView.queueEvent(() -> {
-
-                drawEllipses.clear();
                 count = 0;
                 dia = 0;
-
                 for (Ellipse ellipse : ellipses) {
                     DrawEllipse drawEllipse = new DrawEllipse();
                     drawEllipse.setContour(ellipse);
