@@ -26,6 +26,8 @@ public class Ellipse implements Parcelable {
     float[] modelmat3;
     public float[] worldpivot;
     public int size;
+
+    // local pivot
     public float[] resultprivot;
 
     public Ellipse(float _r1, float _r2, float[] _pivot, float[] _xaxis, float[] _yaxis) {

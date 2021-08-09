@@ -41,6 +41,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     int count;
     float dia;
 
+
     boolean isBusy = false;
 
     TextView textCont;
@@ -76,11 +77,39 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
 
-//        glView.setOnTouchListener((View view, MotionEvent event) -> {
-//            //Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
-//
-//            return false;
-//        });
+        glView.setOnTouchListener((View view, MotionEvent event) -> {
+            float xPx, yPx;
+            int screenWidth, screenHeight;
+            xPx = event.getX();
+            yPx = event.getY();
+            screenWidth = glView.getMeasuredWidth();
+            screenHeight = glView.getMeasuredHeight();
+
+
+            float x = 2.0f * xPx / screenWidth - 1.0f;
+            float y = 1.0f - 2.0f * yPx / screenHeight;
+            worker.execute(()->{
+                float minDistanceSq = Float.MAX_VALUE;
+                int idx = -1;
+                int i = 0;
+                float[] point;
+                for(Ellipse ellipse : ellipses){
+                    point = new float[]{ellipse.resultprivot[0], ellipse.resultprivot[1]};
+                    float distanceSq = (x-point[0])*(x-point[0]) + (y-point[1])*(y-point[1]);
+                    Log.i("distance",""+distanceSq);
+                    if(distanceSq<0.01f&& distanceSq<minDistanceSq){
+                        idx = i;
+                        minDistanceSq = distanceSq;
+                    }
+                    i++;
+                }
+                if(idx != -1){
+                    ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
+                }
+            });
+
+            return false;
+        });
     }
 
     @Override
@@ -119,8 +148,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         if(!isBusy) {
             isBusy =true;
             glView.queueEvent(() -> {
+
+                drawEllipses.clear();
                 count = 0;
                 dia = 0;
+
                 for (Ellipse ellipse : ellipses) {
                     DrawEllipse drawEllipse = new DrawEllipse();
                     drawEllipse.setContour(ellipse);
