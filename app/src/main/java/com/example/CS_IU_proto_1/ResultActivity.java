@@ -186,8 +186,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         seekBar.setRangeValues(minVal, maxVal);
 
         seekBar.setOnRangeSeekBarChangeListener((bar, minValue, maxValue) -> {
-            int selectedMinVal = (int)(bar.getSelectedMinValue());
-            int selectedMaxVal = (int)(bar.getSelectedMaxValue());
+            int selectedMinVal = (Integer)(bar.getSelectedMinValue());
+            int selectedMaxVal = (Integer)(bar.getSelectedMaxValue());
 
             for(Ellipse ellipse : ellipses){
                 ellipse.istoggled =
