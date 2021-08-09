@@ -13,14 +13,23 @@
 #define J_PKG_CS_IU_proto_1 Java_com_example_CS_1IU_1proto_11
 #define J_CLASS_OpenCVJNI OpenCVJNI
 
-#define J_FIND_TIMBER_CONTOURS(...) \
-    J_DEF1(J_PKG_CS_IU_proto_1, J_CLASS_OpenCVJNI, _1findTimberContours) \
+#define J_OPENCV_FUNC(FUNC, ...) J_DEF1(J_PKG_CS_IU_proto_1, J_CLASS_OpenCVJNI, FUNC) \
     (JNIEnv* env, jobject thiz, ##__VA_ARGS__)
+
+#define J_FIND_TIMBER_CONTOURS _1findTimberContours
 
 extern "C" {
 
     JNIEXPORT jobject JNICALL
-    J_FIND_TIMBER_CONTOURS(jobject data_yuv_n12, jint width, jint height, jint resizelvl, jint normlvl, jint closelvl, jint openlvl, jdouble markerlvl, jboolean bg_enable_filtering, jdouble filterlvl);
+    J_OPENCV_FUNC(J_FIND_TIMBER_CONTOURS, jobject data_yuv_n12, jint width, jint height);
+
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(setTH, jint lvl);
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(setMORPHO, jint lvl);
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(setMORPHC, jint lvl);
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(enableBG, jboolean b);
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(setMARKTH, jint th);
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(setMARKP1, jint p1);
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(setCNTRTH, jdouble th);
 
 }
 

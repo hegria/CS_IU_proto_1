@@ -63,7 +63,34 @@ using byte = uint8_t;
 cv::Mat getMatrixFromYUV420N12(const byte* buffer, int width, int height);
 void resizeImage(cv::Mat& src, int a);
 
-jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height, jint resizelvl, jint normlvl, jint closelvl, jint openlvl, jdouble markerlvl, jboolean bg_enable_filtering, jdouble filterlvl)  {
+static DetectorParam global_param;
+
+void J_OPENCV_FUNC(setTH, jint lvl) {
+    global_param.norm_lvl = lvl;
+}
+void J_OPENCV_FUNC(setMORPHO, jint lvl) {
+    global_param.morph_open = lvl;
+}
+void J_OPENCV_FUNC(setMORPHC, jint lvl) {
+    global_param.morph_close = lvl;
+}
+void J_OPENCV_FUNC(enableBG, jboolean b) {
+    global_param.bg_enable_filtering = b;
+}
+void J_OPENCV_FUNC(setMARKTH, jint th) {
+    global_param.marker_th = th;
+}
+void J_OPENCV_FUNC(setMARKP1, jint p1) {
+    global_param.marker_p1 = p1;
+}
+void J_OPENCV_FUNC(setCNTRTH, jdouble th) {
+    global_param.cnt_filter_th = th;
+}
+
+jobject J_OPENCV_FUNC(J_FIND_TIMBER_CONTOURS, jobject data_juv420_n12, jint width, jint height) {
+
+    const int resizelvl = 900;
+
     cv::Mat img_bgr = getMatrixFromYUV420N12(
             reinterpret_cast<byte*>( env->GetDirectBufferAddress(data_juv420_n12) ),
             width, height
@@ -75,12 +102,7 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height,
     float x_factor = 2.0f / static_cast<float>(w);
     float y_factor = 2.0f / static_cast<float>(h);
 
-    TimberDetector detector;
-    detector.setCandidateThresh(normlvl);
-    detector.setMorphologyParam(closelvl, openlvl);
-    detector.setSegmentationSensitivity(1.0 - markerlvl);
-    detector.enableBackgroundFiltering(bg_enable_filtering);
-    detector.setFilterThresh(filterlvl);
+    TimberDetector detector(global_param);
     auto contours = detector.grabContours(img_bgr);
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);

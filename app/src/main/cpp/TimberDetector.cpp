@@ -7,7 +7,7 @@
 
 #define PI 3.14159
 
-TimberDetector::TimberDetector()
+TimberDetector::TimberDetector(const DetectorParam& param) : param(param)
 {
 
 }
@@ -30,7 +30,7 @@ std::vector<Contour> TimberDetector::grabContours(const cv::Mat& img_bgr) const
     cv::erode(segmented, segmented, cv::Mat::ones(3, 3, CV_8UC1));
 
     cv::findContours(segmented, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    filterContours(result, contours, param.cnt_filter_th1, param.cnt_filter_th2);
+    filterContours(result, contours, img_bgr.cols, img_bgr.rows, param.cnt_filter_th);
 
     return result;
 }
@@ -141,44 +141,28 @@ int TimberDetector::segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) con
     return num;
 }
 
-void TimberDetector::filterContours(std::vector<Contour>& dst, const std::vector<Contour>& src, double low, double high) const
+void TimberDetector::filterContours(std::vector<Contour>& dst, const std::vector<Contour>& src, int w, int h, double th) const
 {
-    utils::filter(dst, src, [low, high](const Contour& contour) {
+    int border_w = w / 10;
+    int border_h = h / 15;
+
+    int left = border_w;
+    int right = w - border_w;
+    int top = border_h;
+    int bottom = h - border_h;
+
+    utils::filter(dst, src, [=](const Contour& contour) {
         double arclen = cv::arcLength(contour, true);
         double area = cv::contourArea(contour, false);
 
         if (arclen == 0 || area == 0) return false;
 
+        for (const cv::Point& p : contour) {
+            if (p.x < left || p.x > right || p.y < top || p.y > bottom)
+                return false;
+        }
+
         double value = arclen * arclen / (area * 4 * PI);
-        return low < value && value < high;
+        return value < th;
     });
 }
-
-void TimberDetector::setCandidateThresh(int x) {
-    param.norm_lvl = x;
-}
-
-void TimberDetector::setMorphologyParam(int x, int y) {
-    // nothing here yet
-    param.morph_close = x;
-    param.morph_open = y;
-}
-
-void TimberDetector::enableBackgroundFiltering(bool x) {
-    param.bg_enable_filtering = x;
-}
-
-void TimberDetector::setBackgroundRange(int beg, int end) {
-    param.bg_beg = (beg % 256 + 256) % 256;
-    param.bg_end = (end % 256 + 256) % 256;
-}
-
-void TimberDetector::setSegmentationSensitivity(double x) {
-    param.marker_th = utils::ensureBounds(static_cast<int>(255 * (1.0 - x)), 1, 255);
-}
-
-void TimberDetector::setFilterThresh(double x)
-{
-    param.cnt_filter_th2 = x;
-}
-

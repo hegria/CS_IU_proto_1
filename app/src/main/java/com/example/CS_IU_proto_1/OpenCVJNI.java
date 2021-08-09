@@ -34,6 +34,14 @@ public class OpenCVJNI {
         return _findTimberContours(bufferYUV_N12, width, height);
     }
 
+    public native void setTH(int lvl);
+    public native void setMORPHO(int lvl);
+    public native void setMORPHC(int lvl);
+    public native void enableBG(boolean b);
+    public native void setMARKTH(int th);
+    public native void setMARKP1(int p1);
+    public native void setCNTRTH(double th);
+
     private native ArrayList<Contour> _findTimberContours(ByteBuffer data_yuv_n12, int width, int height);
 
 }
