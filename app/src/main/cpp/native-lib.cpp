@@ -63,19 +63,24 @@ using byte = uint8_t;
 cv::Mat getMatrixFromYUV420N12(const byte* buffer, int width, int height);
 void resizeImage(cv::Mat& src, int a);
 
-jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height)  {
+jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height, jint resizelvl, jint normlvl, jint closelvl, jint openlvl, jdouble markerlvl, jboolean bg_enable_filtering, jdouble filterlvl)  {
     cv::Mat img_bgr = getMatrixFromYUV420N12(
             reinterpret_cast<byte*>( env->GetDirectBufferAddress(data_juv420_n12) ),
             width, height
     );
 
-    resizeImage(img_bgr, 600);
+    resizeImage(img_bgr, resizelvl);
     int h = img_bgr.rows;
     int w = img_bgr.cols;
     float x_factor = 2.0f / static_cast<float>(w);
     float y_factor = 2.0f / static_cast<float>(h);
 
     TimberDetector detector;
+    detector.setCandidateThresh(normlvl);
+    detector.setMorphologyParam(closelvl, openlvl);
+    detector.setSegmentationSensitivity(1.0 - markerlvl);
+    detector.enableBackgroundFiltering(bg_enable_filtering);
+    detector.setFilterThresh(filterlvl);
     auto contours = detector.grabContours(img_bgr);
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);

@@ -4,6 +4,7 @@
 
 #ifndef CS_IU_PROTO_1_TIMBERDETECTOR_H
 #define CS_IU_PROTO_1_TIMBERDETECTOR_H
+#define DEBUG_TIMBER_DETECTOR
 
 #include <opencv2/opencv.hpp>
 #include <vector>
@@ -18,10 +19,13 @@ public:
 
     std::vector<Contour> grabContours(const cv::Mat& img_bgr) const;
 
-    void setCandidateThresh(double x); // x -> 0.0 ~ 1.0
+
+    void setCandidateThresh(int x); // x -> 0.0 ~ 1.0
     void setMorphologyParam(int x, int y); // does nothing at the moment
+    void enableBackgroundFiltering(bool x);
     void setBackgroundRange(int beg, int end); // hue value
     void setSegmentationSensitivity(double x); // x -> 0.0 ~ 1.0
+    void setFilterThresh(double x);
 
 #ifdef DEBUG_TIMBER_DETECTOR
     // for observing / debugging purposes
@@ -44,6 +48,7 @@ private:
         int morph_open = 2;				// not bounded (separate timbers)
 
         // {param-bg} color in this range will be considered a background
+        bool bg_enable_filtering = false;
         int bg_beg = 25;				// 0 ~ 255 (Hue)
         int bg_end = 210;				// 0 ~ 255 (Hue)
 
@@ -59,6 +64,7 @@ private:
     void filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_hsv) const;
     int segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) const;
     void filterContours(std::vector<Contour>& dst, const std::vector<Contour>& src_bin, double low, double high) const;
+
 };
 
 #endif //CS_IU_PROTO_1_TIMBERDETECTOR_H
