@@ -131,16 +131,10 @@ public class Background {
 
   public void transformCoordinate(Frame frame){
 
-    if (true) {
-      quadTexCoords.put(new float[] { 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f });
-      quadTexCoords.position(0);
-    } else { // 이것 때문에 contour 맵핑이 이상하게 됨 (화면 디스플레이는 quadTexCoords 변환이 이루어지는데, findTimberContours가 받는 이미지는 그 변환이 이루어지지 않은 이미지를 받음)
       frame.transformCoordinates2d(
               Coordinates2d.OPENGL_NORMALIZED_DEVICE_COORDINATES, quadCoords,
               Coordinates2d.TEXTURE_NORMALIZED, quadTexCoords);
       quadTexCoords.position(0);
-    }
-
 
   }
 
@@ -182,7 +176,7 @@ public class Background {
 
   public void updateCVImage(Mat img) {
 
-    Bitmap bmp = null;
+    Bitmap bmp;
 
     bmp = Bitmap.createBitmap(img.cols(), img.rows(), Bitmap.Config.ARGB_8888);
     Utils.matToBitmap(img, bmp);
