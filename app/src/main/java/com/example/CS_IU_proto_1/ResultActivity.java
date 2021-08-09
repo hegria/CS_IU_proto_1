@@ -121,11 +121,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
             return false;
         });
-//        glView.setOnTouchListener((View view, MotionEvent event) -> {
-//            //Ray ray = Myutil.GenerateRay(event.getX(), event.getY(), glView.getMeasuredWidth(), glView.getMeasuredHeight(), projMX,viewMX,camera.getPose().getTranslation());
-//
-//            return false;
-//        });
 
         switch1.setOnClickListener(l -> {
             if(switch1.isChecked()){

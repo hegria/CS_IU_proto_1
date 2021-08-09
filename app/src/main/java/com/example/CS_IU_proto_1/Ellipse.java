@@ -14,6 +14,7 @@ import java.util.Arrays;
 //Local
 public class Ellipse implements Parcelable {
     boolean istoggled = true;
+    boolean isranged = true;
     float yrad;
     float xrad;
     float[] pivot;
