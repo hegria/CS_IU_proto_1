@@ -32,7 +32,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Bitmap image;
 
     ArrayList<Ellipse> ellipses;
-    ArrayList<DrawEllipse> drawEllipses;
 
     DrawText drawText;
 
@@ -42,8 +41,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     int width = 1;
     int height = 1;
 
-    int count;
-    float dia;
+    int maxVal, minVal;
+
+    //경계 값 (원래라면 각각 15, 30)
+    final int b1 = 2;
+    final int b2 = 3;
 
     boolean isBusy = false;
 
@@ -53,8 +55,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     RangeSeekBar<Integer> seekBar;
 
     BackgroundImage backgroundImage;
-
     ExecutorService worker;
+    EllipsePool ellipsePool;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -118,36 +120,61 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
                 }
             });
-
+            setText();
             return false;
         });
 
         switch1.setOnClickListener(l -> {
-            if(switch1.isChecked()){
-
-            }else{
-
+            if (switch1.isChecked()) {
+                for(Ellipse ellipse : ellipses){
+                    seekBar.setSelectedMinValue(b1);
+                    if(ellipse.size < b1)
+                        ellipse.istoggled = true;
+                }
+            } else {
+                for(Ellipse ellipse : ellipses){
+                    if(ellipse.size < b1)
+                        ellipse.istoggled = false;
+                }
             }
+            setRange();
+            setText();
         });
 
         switch2.setOnClickListener(l -> {
-            if(switch1.isChecked()){
-
-            }else{
-
+            if (switch2.isChecked()) {
+                for(Ellipse ellipse : ellipses){
+                    if(ellipse.size >= b1 && ellipse.size < b2)
+                        ellipse.istoggled = true;
+                }
+            } else {
+                for(Ellipse ellipse : ellipses){
+                    if(ellipse.size >= b1 && ellipse.size < b2)
+                        ellipse.istoggled = false;
+                }
             }
+            setRange();
+            setText();
         });
 
         switch3.setOnClickListener(l -> {
-            if(switch1.isChecked()){
-
-            }else{
-
+            if (switch3.isChecked()) {
+                for(Ellipse ellipse : ellipses){
+                    if(ellipse.size >= b2)
+                        ellipse.istoggled = true;
+                }
+            } else {
+                for(Ellipse ellipse : ellipses){
+                    if(ellipse.size >= b2)
+                        ellipse.istoggled = false;
+                }
             }
+            setRange();
+            setText();
         });
 
-        int maxVal = 0;
-        int minVal = 100;
+        maxVal = 0;
+        minVal = 100;
 
         for(Ellipse ellipse : ellipses){
             if(ellipse.size < minVal)
@@ -166,6 +193,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 ellipse.istoggled =
                         (ellipse.size >= selectedMinVal) && (ellipse.size <= selectedMaxVal);
             }
+            setText();
         });
 
     }
@@ -187,9 +215,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         backgroundImage = new BackgroundImage();
         backgroundImage.updatImage(image);
-        drawEllipses = new ArrayList<>();
         drawText = new DrawText();
         drawText.setTexture(width,height);
+        ellipsePool = new EllipsePool(100);
+        setText();
     }
 
     @Override
@@ -202,38 +231,78 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     @Override
     public void onDrawFrame(GL10 gl) {
-
         if(!isBusy) {
             isBusy =true;
             glView.queueEvent(() -> {
-                count = 0;
-                dia = 0;
+                ellipsePool.clear();
+                drawText.clearEllipses();
                 for (Ellipse ellipse : ellipses) {
-                    DrawEllipse drawEllipse = new DrawEllipse();
-                    drawEllipse.setContour(ellipse);
-                    drawText.setEllipses(ellipse);
-                    drawEllipses.add(drawEllipse);
                     if (ellipse.istoggled) {
-                        count++;
-                        dia += ellipse.size;
+                        if(ellipsePool.isFull())
+                            ellipsePool.addEllipse(ellipse);
+                        else
+                            ellipsePool.setEllipse(ellipse);
+                        drawText.setEllipses(ellipse);
                     }
                 }
-                dia /= count;
                 drawText.setTexture(width, height);
-                runOnUiThread(() -> {
-                    textCont.setText(String.format("개수 : %d개", count));
-                    textAvgdia.setText(String.format("평균 직경 : %.1fcm", dia));
-                });
                 isBusy = false;
             });
-
         }
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         backgroundImage.draw();
 
-        for (DrawEllipse drawellipse: drawEllipses) {
-            drawellipse.draw(viewMX,projMX);
+        for(int i = 0; i < ellipsePool.useCount; i++) {
+            ellipsePool.drawEllipses.get(i).draw(viewMX, projMX);
         }
         drawText.draw();
+    }
+
+    void setRange(){
+        if(switch1.isChecked() && switch2.isChecked() && switch3.isChecked()) {
+            seekBar.setSelectedMinValue(minVal);
+            seekBar.setSelectedMaxValue(maxVal);
+        }else if(switch1.isChecked() && switch2.isChecked() && !switch3.isChecked()) {
+            seekBar.setSelectedMinValue(minVal);
+            seekBar.setSelectedMaxValue(b2-1);
+        }else if(switch1.isChecked() && !switch2.isChecked() && switch3.isChecked()) {
+            seekBar.setSelectedMinValue(minVal);
+            seekBar.setSelectedMaxValue(maxVal);
+        }else if(!switch1.isChecked() && switch2.isChecked() && switch3.isChecked()) {
+            seekBar.setSelectedMinValue(b1);
+            seekBar.setSelectedMaxValue(maxVal);
+        }else if(switch1.isChecked() && !switch2.isChecked() && !switch3.isChecked()) {
+            seekBar.setSelectedMinValue(minVal);
+            seekBar.setSelectedMaxValue(b1-1);
+        }else if(!switch1.isChecked() && switch2.isChecked() && !switch3.isChecked()) {
+            seekBar.setSelectedMinValue(b1);
+            seekBar.setSelectedMaxValue(b2-1);
+        }else if(!switch1.isChecked() && !switch2.isChecked() && switch3.isChecked()) {
+            seekBar.setSelectedMinValue(b2);
+            seekBar.setSelectedMaxValue(maxVal);
+        }else if(!switch1.isChecked() && !switch2.isChecked() && !switch3.isChecked()) {
+            seekBar.setSelectedMinValue(minVal);
+            seekBar.setSelectedMaxValue(minVal);
+        }
+    }
+
+    @SuppressLint("DefaultLocale")
+    void setText(){
+        int count = 0;
+        float dia = 0;
+        for (Ellipse ellipse : ellipses) {
+            if(ellipse.istoggled){
+                count++;
+                dia += ellipse.size;
+            }
+        }
+        if(count != 0)
+            dia /= count;
+        int finalCount = count;
+        float finalDia = dia;
+        runOnUiThread(() -> {
+            textCont.setText(String.format("개수 : %d개", finalCount));
+            textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
+        });
     }
 }
