@@ -247,6 +247,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   protected void onResume() {
     super.onResume();
     //OPENCV 쓰려면 꼭 써야함.
+    if(state == State.Capture)
+      state = State.FoundSurface;
     if (!OpenCVLoader.initDebug()) {
       Log.d(TAG, "onResume :: Internal OpenCV library not found.");
     } else {
