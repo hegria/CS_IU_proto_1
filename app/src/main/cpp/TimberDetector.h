@@ -9,19 +9,19 @@
 #include <vector>
 
 struct DetectorParam {
-    int norm_lvl = 5;				// 0 ~ 255 (lower value -> more aggressive threshold)
+    int norm_lvl = 9;				// 0 ~ 255 (lower value -> more aggressive threshold)
 
     int morph_close = 0;			// not bounded (crack removal)
-    int morph_open = 2;				// not bounded (separate timbers)
+    int morph_open = 5;				// not bounded (separate timbers)
 
     // {param-bg} color in this range will be considered a background
     bool bg_enable_filtering = false;
-    int bg_beg = 25;				// 0 ~ 255 (Hue)
+    int bg_beg = 20;				// 0 ~ 255 (Hue)
     int bg_end = 210;				// 0 ~ 255 (Hue)
 
     // {param-marker} parameters for setting markers
     int marker_th = 25;				// 0 ~ 255		(lower: oversegmentation / higher: undersegmentation)
-    int marker_p1 = 20;				// not bounded	(same as above)
+    int marker_p1 = 9;				// not bounded	(same as above)
 
     // {param-cnt} parameters for filtering contours
     double cnt_filter_th = 3.0;	// not bounded

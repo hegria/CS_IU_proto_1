@@ -143,8 +143,8 @@ int TimberDetector::segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) con
 
 void TimberDetector::filterContours(std::vector<Contour>& dst, const std::vector<Contour>& src, int w, int h, double th) const
 {
-    int border_w = w / 10;
-    int border_h = h / 15;
+    int border_w = w / 200;
+    int border_h = h / 100;
 
     int left = border_w;
     int right = w - border_w;
