@@ -16,6 +16,9 @@ public class DrawEllipse {
     int numpoints;
 
     int size;
+    float offset = 1.0f;
+
+    float[] imgMX;
 
     static float[] circle = new float[72];
 
@@ -25,9 +28,10 @@ public class DrawEllipse {
 
             "uniform mat4 viewMX;" +
             "uniform mat4 projMX;" +
+            "uniform mat4 imgMX;"+
 
             "void main() {" +
-            "  gl_Position = projMX * viewMX * vec4(vPosition, 1.0);" +
+            "  gl_Position = imgMX * projMX * viewMX * vec4(vPosition, 1.0);" +
             "  gl_PointSize = 10.0;" +
             "}";
 
@@ -93,6 +97,13 @@ public class DrawEllipse {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         GLES20.glUseProgram(program);
 
+        imgMX = new float[]{
+                1.0f,0,0,0,
+                0,offset,0,0,
+                0,0,1.0f,0,
+                0,0,0,1.0f
+        };
+
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
         int vPos = GLES20.glGetAttribLocation(program, "vPosition");
         GLES20.glEnableVertexAttribArray(vPos);
@@ -105,11 +116,55 @@ public class DrawEllipse {
         pos = GLES20.glGetUniformLocation(program, "projMX");
         GLES20.glUniformMatrix4fv(pos, 1, false, projMX, 0);
 
+        pos = GLES20.glGetUniformLocation(program, "imgMX");
+        GLES20.glUniformMatrix4fv(pos, 1, false, imgMX, 0);
+
         pos = GLES20.glGetUniformLocation(program, "color");
         float r = 0, g = 1.0f, b = 0;
         if(size<15){
             r = 1.0f;
             } else if(size>=30){
+            b = 1.0f;
+        }
+        GLES20.glUniform3f(pos, r, g, b);
+
+        GLES20.glLineWidth(5.0f);
+        GLES20.glDrawArrays(GLES20.GL_LINE_STRIP, 0, numpoints+1);
+        GLES20.glDisableVertexAttribArray(vPos);
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+    }
+    public void draw(float[] viewMX, float[] projMX, float _offset) {
+        offset = _offset;
+        GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+        GLES20.glUseProgram(program);
+
+        imgMX = new float[]{
+                1.0f,0,0,0,
+                0,offset,0,0,
+                0,0,1.0f,0,
+                0,0,0,1.0f
+        };
+
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
+        int vPos = GLES20.glGetAttribLocation(program, "vPosition");
+        GLES20.glEnableVertexAttribArray(vPos);
+        GLES20.glVertexAttribPointer(vPos, 3, GLES20.GL_FLOAT, false, 3 * 4, 0);
+        GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
+
+        int pos = GLES20.glGetUniformLocation(program, "viewMX");
+        GLES20.glUniformMatrix4fv(pos, 1, false, viewMX, 0);
+
+        pos = GLES20.glGetUniformLocation(program, "projMX");
+        GLES20.glUniformMatrix4fv(pos, 1, false, projMX, 0);
+
+        pos = GLES20.glGetUniformLocation(program, "imgMX");
+        GLES20.glUniformMatrix4fv(pos, 1, false, imgMX, 0);
+
+        pos = GLES20.glGetUniformLocation(program, "color");
+        float r = 0, g = 1.0f, b = 0;
+        if(size<15){
+            r = 1.0f;
+        } else if(size>=30){
             b = 1.0f;
         }
         GLES20.glUniform3f(pos, r, g, b);

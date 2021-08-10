@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     pointCollector = new PointCollector();
     pointCloudRenderer = new PointCloudRenderer();
     background = new Background();
-    drawText = new DrawText();
+    drawText = new DrawText(1.0f);
     drawText.setTexture(width,height);
 //    contourForDraws = new ArrayList<>();
     ellipsePool = new EllipsePool(100);
@@ -438,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               intent.putParcelableArrayListExtra("Ellipse",ellipses);
               intent.putExtra("projMat",snapprojMX);
               intent.putExtra("viewMat",snapviewMX);
+              intent.putExtra("offset",background.getTexCoord()[1]-background.getTexCoord()[5]);
 
               Bitmap bmp = null;
               bmp = Bitmap.createBitmap(img.cols(), img.rows(), Bitmap.Config.ARGB_8888);

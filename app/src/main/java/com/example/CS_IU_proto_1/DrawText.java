@@ -24,6 +24,8 @@ public class DrawText {
     int program;
     int texID;
 
+    float offset = 1.0f;
+
     Paint textPaint;
     Canvas canvas;
 
@@ -53,7 +55,8 @@ public class DrawText {
             "  gl_FragColor = texture2D(tex, tc);" +
             "}";
 
-    public DrawText(){
+    public DrawText(float _offset){
+        offset = _offset;
         float[] vertex = {
                 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
                 -1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
@@ -117,6 +120,7 @@ public class DrawText {
         ellipses.add(new Ellipseinfo(ellipse.resultprivot,ellipse.size,ellipse.size2));
     }
 
+
     public void clearEllipses(){
         ellipses.clear();
     }
@@ -129,7 +133,7 @@ public class DrawText {
 
         // Draw the text
         for (Ellipseinfo ellipse : ellipses) {
-            canvas.drawText(String.format("%.1f",ellipse.size2),(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1])/2.0f*height + textSize/4f, textPaint);
+            canvas.drawText(String.format("%.1f",ellipse.size2),(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1]*offset)/2.0f*height + textSize/4f, textPaint);
         }
 
         // draw the text centered

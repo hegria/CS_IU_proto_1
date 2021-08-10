@@ -43,6 +43,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     int maxVal, minVal;
 
+    float offset;
+
     //경계 값 (원래라면 각각 15, 30)
     final int b1 = 2;
     final int b2 = 3;
@@ -71,7 +73,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         ellipses = intent.getParcelableArrayListExtra("Ellipse");
         projMX = intent.getFloatArrayExtra("projMat");
         viewMX = intent.getFloatArrayExtra("viewMat");
-        byte[] byteArray = getIntent().getByteArrayExtra("image");
+        offset = intent.getFloatExtra("offset",0);
+        byte[] byteArray = intent.getByteArrayExtra("image");
+
         image = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
         Log.i("img",""+byteArray.length);
         glView = (GLSurfaceView) findViewById(R.id.subsurface);
@@ -215,7 +219,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         GLES20.glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         backgroundImage = new BackgroundImage();
         backgroundImage.updatImage(image);
-        drawText = new DrawText();
+        drawText = new DrawText(offset);
         drawText.setTexture(width,height);
         ellipsePool = new EllipsePool(100);
         setText();
@@ -253,7 +257,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         backgroundImage.draw();
 
         for(int i = 0; i < ellipsePool.useCount; i++) {
-            ellipsePool.drawEllipses.get(i).draw(viewMX, projMX);
+            ellipsePool.drawEllipses.get(i).draw(viewMX, projMX,offset);
         }
         drawText.draw();
     }
