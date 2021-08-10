@@ -114,7 +114,7 @@ public class DrawText {
     }
 
     public void setEllipses(Ellipse ellipse){
-        ellipses.add(new Ellipseinfo(ellipse.resultprivot,ellipse.size));
+        ellipses.add(new Ellipseinfo(ellipse.resultprivot,ellipse.size,ellipse.size2));
     }
 
     public void clearEllipses(){
@@ -129,7 +129,7 @@ public class DrawText {
 
         // Draw the text
         for (Ellipseinfo ellipse : ellipses) {
-            canvas.drawText(""+ellipse.size,(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1])/2.0f*height + textSize/4f, textPaint);
+            canvas.drawText(String.format("%.1f",ellipse.size2),(ellipse.center[0]+1.0f)/2.0f*width ,(1.0f-ellipse.center[1])/2.0f*height + textSize/4f, textPaint);
         }
 
         // draw the text centered
@@ -172,8 +172,10 @@ public class DrawText {
 class Ellipseinfo{
     float[] center;
     int size;
-    public Ellipseinfo(float[] _center, int _size){
+    float size2;
+    public Ellipseinfo(float[] _center, int _size, float _size2){
         center = _center;
         size = _size;
+        size2 = _size2;
     }
 }

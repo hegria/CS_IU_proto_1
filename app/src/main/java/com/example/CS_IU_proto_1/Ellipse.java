@@ -27,6 +27,7 @@ public class Ellipse implements Parcelable {
     float[] modelmat3;
     public float[] worldpivot;
     public int size;
+    public float size2;
 
     // local pivot
     public float[] resultprivot;
@@ -39,6 +40,7 @@ public class Ellipse implements Parcelable {
         yaxis = _yaxis;
 
         size = (int)( (yrad + xrad) *100);
+        size2 = (yrad + xrad) *100f;
     }
 
     protected Ellipse(Parcel in) {
@@ -48,6 +50,7 @@ public class Ellipse implements Parcelable {
         modelmat2 = in.createFloatArray();
         modelmat3 = in.createFloatArray();
         size = in.readInt();
+        size2 = in.readFloat();
         resultprivot = in.createFloatArray();
         modelmat = new float[][] {
                 modelmat0,modelmat1,modelmat2,modelmat3
@@ -62,6 +65,7 @@ public class Ellipse implements Parcelable {
         dest.writeFloatArray(modelmat2);
         dest.writeFloatArray(modelmat3);
         dest.writeInt(size);
+        dest.writeFloat(size2);
         dest.writeFloatArray(resultprivot);
     }
 

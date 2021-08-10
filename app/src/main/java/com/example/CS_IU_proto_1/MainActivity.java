@@ -438,6 +438,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               intent.putParcelableArrayListExtra("Ellipse",ellipses);
               intent.putExtra("projMat",snapprojMX);
               intent.putExtra("viewMat",snapviewMX);
+
               Bitmap bmp = null;
               bmp = Bitmap.createBitmap(img.cols(), img.rows(), Bitmap.Config.ARGB_8888);
               Utils.matToBitmap(img, bmp);

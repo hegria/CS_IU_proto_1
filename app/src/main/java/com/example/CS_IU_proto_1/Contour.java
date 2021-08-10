@@ -38,7 +38,13 @@ public class Contour {
         float frameoffset = (framecoddinate[1]-framecoddinate[5]);
         Log.i("offset",""+ Arrays.toString(framecoddinate));
         for( int i = 0; i<len;i++){
-            ray_clip = new float[]{-points[2*i+1], points[2*i]/frameoffset, -1f, 1f};
+            if(points[2*i]>=0){
+                ray_clip = new float[]{-points[2*i+1], points[2*i]/((0.5f-framecoddinate[5])*2f), -1f, 1f};
+            }else{
+                ray_clip = new float[]{-points[2*i+1], points[2*i]/((framecoddinate[1]-0.5f)*2f), -1f, 1f};
+            }
+
+
             ray_eye = new float[4];
             Matrix.multiplyMV(ray_eye, 0, inverseProjMX, 0, ray_clip, 0);
             ray_eye = new float[]{ray_eye[0], ray_eye[1], -1.0f, 0.0f};
