@@ -7,6 +7,7 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -115,8 +117,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   TextView txtCount, txtClose, txtOpen, txtNormLvl, txtOpenLvl, txtCloseLvL, txtMarkerLvL, txtFilterLvl;
   SeekBar normBar, morphCloseBar,morphOpenBar, markerTHBar, filterBar;
   View normLayout, morphLayout, markerLayout, optionLayout, filterLayout;
-  int normLvL = 5, markerLvL = 10 , openLvL = 2, closeLvL = 1, resizelvl = 600, filterLvL = 30;
+  int normLvL = 5, markerLvL = 20 , openLvL = 2, closeLvL = 1, resizelvl = 600, filterLvL = 30;
   boolean bg_enable_filtering = false;
+
+  long deltatime;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -200,8 +204,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
+        long nowtime = SystemClock.elapsedRealtime();
         runOnUiThread(() -> {
-          Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
+          Toast.makeText(MainActivity.this,"평면을 찾았습니다.\n경과시간 : "+String.format("%dms",nowtime-deltatime),Toast.LENGTH_SHORT).show();
+          deltatime = SystemClock.elapsedRealtime();
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -412,8 +418,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         });
         return false;
       } else if (state == State.PointCollected) {
+        deltatime = SystemClock.elapsedRealtime();
         state = State.FindingSurface;
-        // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
+        // �젅肄붾뱶踰꾪듉�쓣 �몢踰덉㎏ �닃�윭�꽌 �떎 �젏 �닔吏묒쓣 �걹�궦 �긽�깭�뿉�꽌 �솕硫댁쓣 �꽣移섑븯硫� �젅�씠瑜� 諛쒖궗�빐�꽌 �젏 �꽑�깮. 洹� �젏�쑝濡� 諛붾떏 李얘린
         findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
         findPlaneworker.execute(findPlaneTask);
         return false;
@@ -550,6 +557,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   }
 
 
+  public void writetxt(OutputStreamWriter out,  float[] data)
+  {
+    try {
+      for(int i=0;i<data.length;i++)
+          out.write(Float.toString(data[i]) + " ");
+       out.write("\n");
+    } catch (IOException e) {
+    e.printStackTrace();
+  }
+  }
   @Override
   public void onDrawFrame(GL10 gl) {
     if (session == null) return;
@@ -596,7 +613,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               int t = image.getWidth();//1920
 
 
-              contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight(), resizelvl, normLvL, closeLvL, openLvL, (double)(markerLvL)/100.0, bg_enable_filtering, (double)(filterLvL)/10);
+              contours =  jni.findTimberContours(bufferYUV, image.getWidth(), image.getHeight(), resizelvl, normLvL, closeLvL, openLvL, markerLvL/*(double)(markerLvL)/100.0*/, bg_enable_filtering, (double)(filterLvL)/10);
 
 
               if ( this.isCapture ) {
@@ -612,11 +629,25 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 String currentDateAndTime = sdf.format(new Date());
 
                 File dst  = new File(path, "image_yuv420 " + currentDateAndTime + ".raw");
+                File dst2  = new File(path, "info " + currentDateAndTime + ".txt");
                 Log.i("CaptureImage", dst.getAbsolutePath() );
                 try {
                   OutputStream os = new FileOutputStream(dst);
+                  OutputStream os2 = new FileOutputStream(dst2);
+                  OutputStreamWriter osw = new OutputStreamWriter(os2);
+                  writetxt(osw, snapprojMX);
+                  writetxt(osw, snapviewMX);
+                  writetxt(osw, snapcameratrans);
+                  writetxt(osw, plane.ll);
+                  writetxt(osw, plane.lr);
+                  writetxt(osw, plane.ul);
+                  writetxt(osw, plane.ur);
+                  writetxt(osw, plane.normal);
+                  writetxt(osw, plane.center);
                   os.write( bytesYUV );
                   os.close();
+                  osw.close();
+                  os2.close();
 
                   runOnUiThread(() -> {
                     Toast.makeText(this, "Save: " + dst.getAbsolutePath(), Toast.LENGTH_SHORT ).show();
@@ -648,9 +679,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
                 ellipses.add(tempellipse);
               }
 
-              runOnUiThread(() -> {
-                txtCount.setText("개수: "+localcontours.size());
-              });
+            long curtime = SystemClock.elapsedRealtime();
+            runOnUiThread(() -> {
+              txtCount.setText("개수: "+localcontours.size());
+              Toast.makeText(this,String.format("경과시간 : %dms",curtime-deltatime), Toast.LENGTH_SHORT).show();
+
+              deltatime = SystemClock.elapsedRealtime();
+            });
 
 
               image.close();
@@ -661,7 +696,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
                   for (Ellipse ellipse: ellipses)
                   {
-                      ellipse.pivot_to_local(projMX,viewMX);
+                      ellipse.pivot_to_local(snapprojMX,snapviewMX);
                       DrawEllipse drawEllipse = new DrawEllipse();
                       drawEllipse.setContour(plane,ellipse);
                       drawText.setEllipses(ellipse);

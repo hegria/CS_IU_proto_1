@@ -56,6 +56,7 @@ void TimberDetector::filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_
 
     // remove sky areas with H channel
     cv::Mat background;
+
     if (param.bg_enable_filtering) {
         if (param.bg_beg <= param.bg_end) {
             cv::inRange(hsv[0], cv::Scalar(param.bg_beg), cv::Scalar(param.bg_end), background);
@@ -174,7 +175,8 @@ void TimberDetector::setBackgroundRange(int beg, int end) {
 }
 
 void TimberDetector::setSegmentationSensitivity(double x) {
-    param.marker_th = utils::ensureBounds(static_cast<int>(255 * (1.0 - x)), 1, 255);
+    param.marker_p1 = x;
+            //utils::ensureBounds(static_cast<int>(255 * (1.0 - x)), 1, 255);
 }
 
 void TimberDetector::setFilterThresh(double x)

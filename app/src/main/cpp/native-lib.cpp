@@ -68,7 +68,6 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height,
             reinterpret_cast<byte*>( env->GetDirectBufferAddress(data_juv420_n12) ),
             width, height
     );
-
     resizeImage(img_bgr, resizelvl);
     int h = img_bgr.rows;
     int w = img_bgr.cols;
@@ -78,9 +77,14 @@ jobject J_FIND_TIMBER_CONTOURS(jobject data_juv420_n12, jint width, jint height,
     TimberDetector detector;
     detector.setCandidateThresh(normlvl);
     detector.setMorphologyParam(closelvl, openlvl);
-    detector.setSegmentationSensitivity(1.0 - markerlvl);
+    detector.setSegmentationSensitivity(markerlvl);
     detector.enableBackgroundFiltering(bg_enable_filtering);
     detector.setFilterThresh(filterlvl);
+
+
+    cv::Mat roi(img_bgr.rows, img_bgr.cols, CV_8UC1, cv::Scalar(0));
+    cv::Mat roiarea(roi, cv::Rect(roi.cols / 10, roi.rows / 10, roi.cols / 10 * 6, roi.rows / 8 * 6));
+    roiarea = 255;
     auto contours = detector.grabContours(img_bgr);
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
