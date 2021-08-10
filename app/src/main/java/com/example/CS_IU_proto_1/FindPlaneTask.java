@@ -60,8 +60,8 @@ public class FindPlaneTask implements Runnable
 
         RequestForm rf = new RequestForm();
         rf.setPointBufferDescription(pointCount, 16, 0); //pointcount, pointstride, pointoffset
-        rf.setPointDataDescription(0.05f, 0.02f); //accuracy, meanDistance
-        rf.setTargetROI(seedPointID, Math.max(z_dist * circleRad, 0.05f));//seedIndex,touchRadius
+        rf.setPointDataDescription(0.1f, 0.2f); //****accuracy, ****meanDistance
+        rf.setTargetROI(seedPointID, Math.max(z_dist * circleRad, 0.2f));//seedIndex,*****touchRadius
         rf.setAlgorithmParameter(RequestForm.SearchLevel.LV7, RequestForm.SearchLevel.NORMAL);//LatExt, RadExp
         try {
             ResponseForm resp = fsr.request( rf, points );

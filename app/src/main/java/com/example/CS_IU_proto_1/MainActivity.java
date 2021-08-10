@@ -473,7 +473,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     switch(state){
       case FoundSurface:
-
+      case Capture:
 //        // 컨투어 그리기 (디버그용)
 //        if(mode_contour) {
 //          for (ContourForDraw contourForDraw : contourForDraws) {
