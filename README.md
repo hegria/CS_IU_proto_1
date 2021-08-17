@@ -43,4 +43,15 @@ Import OpenCV to :opencv
 3. Import Opencv sdk using name space :opencv(4.5.2)
 4. Add opencv dependencies
 
+Working Process
+-------------------
+1. Collect Point Cloud by pressing the record button and slowly moving the smartphone left and right.
+2. Fix the collected Point Cloud by pressing the stop button.
+3. Set Seed Point and find Plane by touching the screen.
 
+[Background Process]
+4. (OpenCV 처리 과정 적어주세요) -> 개수 정보 도출
+5. Find Bounding Box from each Contour.
+6. Find Ellipse inscribed in Bounding box and derive diameter information.
+
+7. Move the information at the time to the Result View by pressing the capture button.
