@@ -1,5 +1,15 @@
 # CS_IU_proto_1
-CurvSurf Find Timber Application.
+
+Introduction
+---------------
+This repository is about the Android AR Timber measureing Application.
+
+We are a CurveSurf team of the 2021 Sungkyunkwan University Industry-Academic Cooperation Project, and we created this measuring app, which is the company's task.
+
+The app distinguishes and recognizes a single piece of wood while filming the cross section of the wood pile in real time, which measures the diameter and number of wood without any tools, visualizes it on-screen, and also provides the ability to manipulate the measured information by capturing
+
+![KakaoTalk_20210817_145203813](https://user-images.githubusercontent.com/79516073/129670965-dba2114e-c074-4b3e-ade1-78a62c4bc46e.png)
+.
 
 Development Enviorment
 -------------------
