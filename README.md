@@ -54,4 +54,5 @@ Operation Procedure
 5. Find Bounding Box from each Contour.
 6. Find Ellipse inscribed in Bounding box and derive diameter information.
 
-7. Move the information at the time to the Result View by pressing the capture button.
+7. Display the number of timber and diameter of each timber on the screen.
+8. Move the information at the time to the Result View by pressing the capture button.
