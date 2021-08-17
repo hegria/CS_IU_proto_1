@@ -47,6 +47,7 @@ Note that this procedure is only needed after cloning this repo. You do not need
 
 Operation Procedure
 -------------------
+
 1. Collect Point Cloud by pressing the record button and slowly moving the smartphone left and right.
 2. Fix the collected Point Cloud by pressing the stop button.
 3. Set Seed Point and find Plane by touching the screen.
@@ -55,11 +56,11 @@ Operation Procedure
 6. Normalize and threshold the *V channel* of the converted `cv::Mat` to get **binary image**.
 7. Perform morphological operations on **binary image** to get rid of some noises.
 8. Perform watershed segmentation on **binary image**.
-  - Distance transform the binary image to get a *distance map*.
-  - Get the local maximum points from distance map.
-  - Enlarge the points by the factor of `0.7 * distance_value` (from distance map)
-  - Label the enlarged points (circles) using `cv::connectedComponents`.
-  - Run `cv::watershed` algorithm, while labeled points (circles) being `markers`.
+    1. Distance transform the binary image to get a *distance map*.
+    2. Get the local maximum points from distance map.
+    3. Enlarge the points by the factor of `0.7 * distance_value` (from distance map)
+    4. Label the enlarged points (circles) using `cv::connectedComponents`.
+    5. Run `cv::watershed` algorithm, while labeled points (circles) being `markers`.
 9. Run `cv::findContours` algorithm to get contours.
 10. Filter non-circular contours.
 11. Find Bounding Box from each Contour.
