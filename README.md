@@ -6,10 +6,11 @@ This repository is about the Android AR Timber measureing Application.
 
 We are a CurveSurf team of the 2021 Sungkyunkwan University Industry-Academic Cooperation Project, and we created this measuring app, which is the company's task.
 
-The app distinguishes and recognizes a single piece of wood while filming the cross section of the wood pile in real time, which measures the diameter and number of wood without any tools, visualizes it on-screen, and also provides the ability to manipulate the measured information by capturing
+The app distinguishes and recognizes a single piece of wood while filming the cross section of the wood pile in real time, which measures the diameter and number of wood without any tools, visualizes it on-screen, and also provides the ability to manipulate the measured information by capturing.
 
 ![KakaoTalk_20210817_145203813](https://user-images.githubusercontent.com/79516073/129670965-dba2114e-c074-4b3e-ade1-78a62c4bc46e.png)
-.
+
+We use Google AR Core Sdk, CurvSurf FindSurfaceAPI, OpenGL version 2.0 and OpenCV JAVA Sdk module for development. 
 
 Development Enviorment
 -------------------
@@ -25,7 +26,7 @@ Jdk Version 1_8
 
 Implementation
 
-Google AR Core API 1.25.0
+Google AR Core Sdk 1.25.0
 
 org.florescu.android.rangeseekbar:rangeseekbar-library:0.3.0
 
