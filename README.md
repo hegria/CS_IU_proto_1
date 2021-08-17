@@ -56,3 +56,4 @@ Operation Procedure
 
 7. Display the number of timber and diameter of each timber on the screen.
 8. Move the information at the time to the Result View by pressing the capture button.
+9. Filter specific timber by touching image or adjusting the range of diameter.
