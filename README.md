@@ -50,10 +50,21 @@ Operation Procedure
 3. Set Seed Point and find Plane by touching the screen.
 
 [Background Process]
-4. (OpenCV 처리 과정 적어주세요) -> 개수 정보 도출
-5. Find Bounding Box from each Contour.
-6. Find Ellipse inscribed in Bounding box and derive diameter information.
+4. Send camera image data (format: YUV420_N12) to JNI (OpenCV codes)
+5. Convert image data into `cv::Mat` and resize so that the longest side is 900px wide.
+6. Normalize and threshold the *V channel* of the converted `cv::Mat` to get **binary image**.
+7. Perform morphological operations on **binary image** to get rid of some noises.
+8. Perform watershed segmentation on **binary image**.
+  1. Distance transform the binary image to get a *distance map*.
+  2. Get the local maximum points from distance map.
+  3. Enlarge the points by the factor of `0.7 * distance_value` (from distance map)
+  4. Label the enlarged points (circles) using `cv::connectedComponents`.
+  5. Run `cv::watershed` algorithm, while labeled points (circles) being `markers`.
+9. Run `cv::findContours` algorithm to get contours.
+10. Filter non-circular contours.
+11. Find Bounding Box from each Contour.
+12. Find Ellipse inscribed in Bounding box and derive diameter information.
 
-7. Display the number of timber and diameter of each timber on the screen.
-8. Move the information at the time to the Result View by pressing the capture button.
-9. Filter specific timber by touching image or adjusting the range of diameter.
+13. Display the number of timber and diameter of each timber on the screen.
+14. Move the information at the time to the Result View by pressing the capture button.
+15. Filter specific timber by touching image or adjusting the range of diameter.
