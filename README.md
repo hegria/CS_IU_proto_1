@@ -36,22 +36,24 @@ OpenCV SDK Module 4.5.2
 
 Requirement
 -------------------
-Because of Size issue, this repo has not openCV API
-Import OpenCV to :opencv
+Due to size issue, this repo does not contain OpenCV module.  
+To build our app, you must manually import OpenCV to `:opencv` by following steps:
 1. Remove opencv dependencies ( Project Structure > Depenendcies > app > remove opencv)
 2. Same window, Remove opencv module ( ... > opencv > remove module )
 3. Import Opencv sdk using name space :opencv(4.5.2)
 4. Add opencv dependencies
+
+Note that this procedure is only needed after cloning this repo. You do not need to repeat this.
 
 Operation Procedure
 -------------------
 1. Collect Point Cloud by pressing the record button and slowly moving the smartphone left and right.
 2. Fix the collected Point Cloud by pressing the stop button.
 3. Set Seed Point and find Plane by touching the screen.
-4. Send camera image data (format: YUV420_N12) to JNI. (OpenCV codes)  
-5. Convert image data into `cv::Mat` and resize so that the longest side is 900px wide.  
-6. Normalize and threshold the *V channel* of the converted `cv::Mat` to get **binary image**.  
-7. Perform morphological operations on **binary image** to get rid of some noises.  
+4. Send camera image data (format: YUV420_N12) to JNI. (OpenCV codes)
+5. Convert image data into `cv::Mat` and resize so that the longest side is 900px wide.
+6. Normalize and threshold the *V channel* of the converted `cv::Mat` to get **binary image**.
+7. Perform morphological operations on **binary image** to get rid of some noises.
 8. Perform watershed segmentation on **binary image**.
   - Distance transform the binary image to get a *distance map*.
   - Get the local maximum points from distance map.
