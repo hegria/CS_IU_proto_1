@@ -43,7 +43,7 @@ Import OpenCV to :opencv
 3. Import Opencv sdk using name space :opencv(4.5.2)
 4. Add opencv dependencies
 
-Working Process
+Operation Procedure
 -------------------
 1. Collect Point Cloud by pressing the record button and slowly moving the smartphone left and right.
 2. Fix the collected Point Cloud by pressing the stop button.
