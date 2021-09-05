@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".StartScreen">
+
+    <ImageButton
+        android:id="@+id/btnMeasure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnGuide"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/for_measure_icon" />
+
+    <ImageButton
+        android:id="@+id/btnGuide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnMeasure"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/for_guide_icon" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Measure"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/btnMeasure"
+        app:layout_constraintStart_toStartOf="@+id/btnMeasure"
+        app:layout_constraintTop_toBottomOf="@+id/btnMeasure" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Guide"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="@+id/btnGuide"
+        app:layout_constraintStart_toStartOf="@+id/btnGuide"
+        app:layout_constraintTop_toBottomOf="@+id/btnGuide" />
+</androidx.constraintlayout.widget.ConstraintLayout>
