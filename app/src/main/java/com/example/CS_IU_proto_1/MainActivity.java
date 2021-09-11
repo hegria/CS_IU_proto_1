@@ -9,6 +9,7 @@ import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowInsets;
@@ -55,6 +56,8 @@ import java.util.concurrent.TimeUnit;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import recorder.SnapshotRecorder;
+
 public class MainActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
 
   private static final String TAG = "opencv";
@@ -91,6 +94,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   DrawText drawText;
 
   OpenCVJNI jni;
+  Button snapshotRecordBtn;
+  SnapshotRecorder snapshotRecorder;
 
   // 컨투어 그리기 위한거(디버그용)
 //  ArrayList<ContourForDraw> contourForDraws;
@@ -149,7 +154,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     worker = Executors.newSingleThreadExecutor();
     findPlaneworker = Executors.newSingleThreadExecutor();
     findPlaneTask = new FindPlaneTask();
+
     jni = new OpenCVJNI();
+    snapshotRecorder = new SnapshotRecorder();
+
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
@@ -183,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
+    snapshotRecordBtn = findViewById(R.id.ssrecord);
 
     recordButton.setOnClickListener(l -> {
       // collecting 시작하기 위해 버튼 누름
@@ -203,6 +212,28 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         initAll();
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
+      }
+    });
+
+    snapshotRecordBtn.setOnClickListener(l -> {
+      if (state != State.FoundSurface) {
+        Toast.makeText(this, "No plane data found. Denied.", Toast.LENGTH_SHORT).show();
+        return;
+      }
+
+      if (!snapshotRecorder.isSafeToInterrupt()) {
+        Toast.makeText(this, "Error: Could not start/stop recording snapshot.", Toast.LENGTH_SHORT).show();
+        return;
+      }
+
+      if (snapshotRecorder.isRecording()) {
+        snapshotRecordBtn.setText(R.string.snap_rec_idle);
+        boolean res = snapshotRecorder.stopRecording();
+        if (res) Toast.makeText(this, "Snapshot created: " + snapshotRecorder.getSnapshotName(), Toast.LENGTH_SHORT).show();
+      } else {
+        snapshotRecordBtn.setText(R.string.snap_rec_ing);
+        snapshotRecorder.startRecording(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS));
+        Toast.makeText(this, "Snapshot recording start.", Toast.LENGTH_SHORT).show();
       }
     });
 
@@ -370,6 +401,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           float[] snapprojMX = projMX.clone();
           float[] snapviewMX = viewMX.clone();
           float[] snapcameratrans = camera.getPose().getTranslation();
+
+          snapshotRecorder.write(plane, snapprojMX, snapviewMX, snapcameratrans, image);
 
           contours.clear();
           ellipses.clear();

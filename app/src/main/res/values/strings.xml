@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">GLES</string>
+
+    <string name="snap_rec_idle">SNAP REC [_]</string>
+    <string name="snap_rec_ing">SNAP REC [R]</string>
+
 </resources>
