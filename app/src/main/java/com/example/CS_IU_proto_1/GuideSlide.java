@@ -21,7 +21,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class GuideActivity extends AppCompatActivity {
+public class GuideSlide extends AppCompatActivity {
 
     private ViewPager viewPager;
     private MyViewPagerAdapter myViewPagerAdapter;
@@ -29,27 +29,13 @@ public class GuideActivity extends AppCompatActivity {
     private TextView[] dots;
     private int[] layouts;
     private Button btnSkip, btnNext;
-    private PrefManager prefManager;
-    private String type;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Intent intent = getIntent();
-        type = intent.getStringExtra("type");
-
-        // Checking for first time launch - before calling setContentView()
-        prefManager = new PrefManager(this);
-        if (!prefManager.isFirstTimeLaunch()) {
-            launchHomeScreen();
-            finish();
-        }
-
-        // Making notification bar transparent
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
+//        // Making notification bar transparent
+//        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
         setContentView(R.layout.activity_guide);
 
@@ -57,9 +43,6 @@ public class GuideActivity extends AppCompatActivity {
         dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
         btnSkip = (Button) findViewById(R.id.btn_skip);
         btnNext = (Button) findViewById(R.id.btn_next);
-
-        if(type != null)
-            btnSkip.setText("Return");
 
         // layouts of welcome sliders
         layouts = new int[]{
@@ -77,17 +60,7 @@ public class GuideActivity extends AppCompatActivity {
         viewPager.setAdapter(myViewPagerAdapter);
         viewPager.addOnPageChangeListener(viewPagerPageChangeListener);
 
-        btnSkip.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(type != null) {
-                    prefManager.setFirstTimeLaunch(false);
-                    finish();
-                }
-                else
-                    launchHomeScreen();
-            }
-        });
+        btnSkip.setOnClickListener(v -> finish());
 
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,12 +71,7 @@ public class GuideActivity extends AppCompatActivity {
                     // move to next screen
                     viewPager.setCurrentItem(current);
                 } else {
-                    if(type != null) {
-                        prefManager.setFirstTimeLaunch(false);
-                        finish();
-                    }
-                    else
-                        launchHomeScreen();
+                    finish();
                 }
             }
         });
@@ -132,12 +100,6 @@ public class GuideActivity extends AppCompatActivity {
         return viewPager.getCurrentItem() + i;
     }
 
-    private void launchHomeScreen() {
-        prefManager.setFirstTimeLaunch(false);
-        startActivity(new Intent(GuideActivity.this, StartScreen.class));
-        finish();
-    }
-
     //  viewpager change listener
     ViewPager.OnPageChangeListener viewPagerPageChangeListener = new ViewPager.OnPageChangeListener() {
 
@@ -148,10 +110,7 @@ public class GuideActivity extends AppCompatActivity {
             // changing the next button text 'NEXT' / 'GOT IT'
             if (position == layouts.length - 1) {
                 // last page. make button text to GOT IT
-                if(type != null)
-                    btnNext.setText("Return");
-                else
-                    btnNext.setText("Start");
+                btnNext.setText("Finish");
                 btnSkip.setVisibility(View.GONE);
             } else {
                 // still pages are left
@@ -174,11 +133,9 @@ public class GuideActivity extends AppCompatActivity {
     // Making notification bar transparent
 
     private void changeStatusBarColor() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(Color.TRANSPARENT);
-        }
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(Color.TRANSPARENT);
     }
 
     /**

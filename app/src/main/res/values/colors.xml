@@ -8,6 +8,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="gl1_color">#4D857F7F</color>
+
     <!-- dots inactive colors -->
     <color name="dot_dark_screen">#EDA75D</color>
 

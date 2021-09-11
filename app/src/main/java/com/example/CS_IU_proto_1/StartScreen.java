@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageButton;
 
 public class StartScreen extends AppCompatActivity {
@@ -13,15 +14,13 @@ public class StartScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_screen);
 
-        PrefManager prefManager = new PrefManager(getApplicationContext());
-        if(prefManager.isFirstTimeLaunch()){
-            prefManager.setFirstTimeLaunch(false);
-            startActivity(new Intent(StartScreen.this, GuideActivity.class));
-            finish();
-        }
-
+        PrefManager pm = new PrefManager(this);
+        GuideLine guideLine = new GuideLine(this);
         ImageButton btnMeasure = findViewById(R.id.btnMeasure);
         ImageButton btnGuide = findViewById(R.id.btnGuide);
+
+        if(pm.isFirstTimeLaunch())
+            guideLine.gl1();
 
         btnMeasure.setOnClickListener(l -> {
             Intent intent = new Intent(this, MainActivity.class);
@@ -29,9 +28,7 @@ public class StartScreen extends AppCompatActivity {
         });
 
         btnGuide.setOnClickListener(l -> {
-            prefManager.setFirstTimeLaunch(true);
-            Intent intent = new Intent(this, GuideActivity.class);
-            intent.putExtra("type", "from_start_screen");
+            Intent intent = new Intent(this, GuideSlide.class);
             startActivity(intent);
         });
     }

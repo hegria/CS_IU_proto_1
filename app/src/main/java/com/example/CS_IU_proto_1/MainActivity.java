@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   DrawText drawText;
 
   OpenCVJNI jni;
+  GuideLine guideLine;
 
   // 컨투어 그리기 위한거(디버그용)
 //  ArrayList<ContourForDraw> contourForDraws;
@@ -150,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     findPlaneworker = Executors.newSingleThreadExecutor();
     findPlaneTask = new FindPlaneTask();
     jni = new OpenCVJNI();
+    guideLine = new GuideLine(this);
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
