@@ -1,11 +1,13 @@
 package com.example.CS_IU_proto_1;
 
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.curvsurf.fsweb.ResponseForm;
 
-public class Plane {
+public class Plane implements Parcelable {
   public float[] ll, lr, ul, ur;
   public float[] normal;
 
@@ -71,6 +73,7 @@ public class Plane {
   //
   // 초기화 함수들
   //
+
 
   protected  void setDval(){
     dval = normal[0]*ll[0] + normal[1]*ll[1] + normal[2]*ll[2];
@@ -152,5 +155,47 @@ public class Plane {
     return newpoint2;
   }
 
+  // correection 작업을 위한 Plane을 ResultView로 옮기기
+  protected Plane(Parcel in){
+    xvec = in.createFloatArray();
+    yvec = in.createFloatArray();
+    normal = in.createFloatArray();
+    center = in.createFloatArray();
+    dval = in.readFloat();
+    neworigin = in.createFloatArray();
 
+    transformlocaltoworld = new float[][]{
+            {xvec[0],yvec[0],normal[0]},
+            {xvec[1],yvec[1],normal[1]},
+            {xvec[2],yvec[2],normal[2]}
+    };
+  }
+
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeFloatArray(xvec);
+    dest.writeFloatArray(yvec);
+    dest.writeFloatArray(normal);
+    dest.writeFloatArray(center);
+    dest.writeFloat(dval);
+    dest.writeFloatArray(neworigin);
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  public static final Creator<Plane> CREATOR = new Creator<Plane>() {
+    @Override
+    public Plane createFromParcel(Parcel in) {
+      return new Plane(in);
+    }
+
+    @Override
+    public Plane[] newArray(int size) {
+      return new Plane[size];
+    }
+  };
 }

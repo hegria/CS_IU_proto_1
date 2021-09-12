@@ -183,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
-
     recordButton.setOnClickListener(l -> {
       // collecting 시작하기 위해 버튼 누름
       if(state == State.Idle) {
@@ -436,8 +435,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
               Intent intent = new Intent(MainActivity.this, ResultActivity.class);
               intent.putParcelableArrayListExtra("Ellipse",ellipses);
+              intent.putExtra("plane",plane);
               intent.putExtra("projMat",snapprojMX);
               intent.putExtra("viewMat",snapviewMX);
+              intent.putExtra("cameratrans",snapcameratrans);
               intent.putExtra("offset",background.getTexCoord()[1]-background.getTexCoord()[5]);
 
               Bitmap bmp = null;

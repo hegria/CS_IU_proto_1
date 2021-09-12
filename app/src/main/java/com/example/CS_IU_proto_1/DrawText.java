@@ -1,19 +1,13 @@
 package com.example.CS_IU_proto_1;
 
-import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
-import android.util.Log;
-import android.widget.TextView;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -117,7 +111,7 @@ public class DrawText {
     }
 
     public void setEllipses(Ellipse ellipse){
-        ellipses.add(new Ellipseinfo(ellipse.resultprivot,ellipse.size,ellipse.size2));
+        ellipses.add(new Ellipseinfo(ellipse.resultpivot,ellipse.size,ellipse.size2));
     }
 
 

@@ -145,6 +145,7 @@
                 app:showLabels="false"
                 app:textAboveThumbsColor="#000000"
                 app:valuesAboveThumbs="true" />
+
         </LinearLayout>
 
     </LinearLayout>
@@ -159,4 +160,26 @@
         app:layout_constraintTop_toTopOf="parent">
 
     </android.opengl.GLSurfaceView>
+
+    <SeekBar
+        android:id="@+id/seekBar2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:max="300"
+        android:min="10"
+        android:progress="20"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/correction"
+        app:layout_constraintStart_toEndOf="@+id/linearLayout"
+        app:layout_constraintTop_toBottomOf="@+id/subsurface" />
+
+    <Button
+        android:id="@+id/correction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:text="Add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/subsurface" />
 </androidx.constraintlayout.widget.ConstraintLayout>

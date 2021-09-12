@@ -4,21 +4,22 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +38,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     float[] projMX;
     float[] viewMX;
+    float[] cameratrans;
 
     int width = 1;
     int height = 1;
@@ -50,11 +52,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     final int b2 = 3;
 
     boolean isBusy = false;
+    boolean correctionmode = false;
 
     TextView textCont;
     TextView textAvgdia;
     Switch switch1, switch2, switch3;
     RangeSeekBar<Integer> seekBar;
+    SeekBar seekBar2;
+    Button button;
+    Plane plane;
+    Ellipse nowellipse;
 
     BackgroundImage backgroundImage;
     ExecutorService worker;
@@ -71,8 +78,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         // Background 같은경우도 새로운 자료형을 만들어내야함( Image를 Bitmap을 통해서 그려낼 수 있는
         Intent intent = getIntent();
         ellipses = intent.getParcelableArrayListExtra("Ellipse");
+        plane = intent.getParcelableExtra("plane");
         projMX = intent.getFloatArrayExtra("projMat");
         viewMX = intent.getFloatArrayExtra("viewMat");
+        cameratrans = intent.getFloatArrayExtra("cameratrans");
         offset = intent.getFloatExtra("offset",0);
         byte[] byteArray = intent.getByteArrayExtra("image");
 
@@ -92,9 +101,34 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         switch2 = findViewById(R.id.switch2);
         switch3 = findViewById(R.id.switch3);
         seekBar = findViewById(R.id.seekBar);
+        seekBar2 = findViewById(R.id.seekBar2);
+        seekBar2.setVisibility(View.INVISIBLE);
+        button = findViewById(R.id.correction);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(!correctionmode){
+                    correctionmode = true;
+                    Ray originray = Myutil.GenerateRay(glView.getMeasuredWidth()/2,glView.getMeasuredHeight()/2,glView.getMeasuredWidth(),glView.getMeasuredHeight(),projMX,viewMX,cameratrans);
+                    nowellipse = new Ellipse(originray, plane,projMX,viewMX);
+                    ellipses.add(nowellipse);
+                    button.setText("Apply");
+                    seekBar2.setVisibility(View.VISIBLE);
+
+                }else{
+                    correctionmode = false;
+                    nowellipse = null;
+                    button.setText("ADD");
+                    seekBar2.setVisibility(View.INVISIBLE);
+                }
+                setText();
+            }
+        });
 
 
         glView.setOnTouchListener((View view, MotionEvent event) -> {
+
             float xPx, yPx;
             int screenWidth, screenHeight;
             xPx = event.getX();
@@ -105,26 +139,36 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
             float x = 2.0f * xPx / screenWidth - 1.0f;
             float y = 1.0f - 2.0f * yPx / screenHeight;
-            worker.execute(()->{
-                float minDistanceSq = Float.MAX_VALUE;
-                int idx = -1;
-                int i = 0;
-                float[] point;
-                for(Ellipse ellipse : ellipses){
-                    point = new float[]{ellipse.resultprivot[0], ellipse.resultprivot[1]};
-                    float distanceSq = (x-point[0])*(x-point[0]) + (y-point[1])*(y-point[1]);
-                    Log.i("distance",""+distanceSq);
-                    if(distanceSq<0.01f&& distanceSq<minDistanceSq){
-                        idx = i;
-                        minDistanceSq = distanceSq;
+            Log.i("xpx,ypx", Float.toString(xPx)+ Float.toString(yPx));
+
+            if(!correctionmode){
+
+                worker.execute(()->{
+                    float minDistanceSq = Float.MAX_VALUE;
+                    int idx = -1;
+                    int i = 0;
+                    float[] point;
+                    for(Ellipse ellipse : ellipses){
+                        point = new float[]{ellipse.resultpivot[0], ellipse.resultpivot[1]};
+                        float distanceSq = (x-point[0])*(x-point[0]) + (y-point[1])*(y-point[1]);
+                        Log.i("distance",""+distanceSq);
+                        if(distanceSq<0.01f&& distanceSq<minDistanceSq){
+                            idx = i;
+                            minDistanceSq = distanceSq;
+                        }
+                        i++;
                     }
-                    i++;
-                }
-                if(idx != -1){
-                    ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
-                }
-            });
-            setText();
+                    if(idx != -1){
+                        ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
+                    }
+                });
+                setText();
+            }else{
+                //button으로 넘겨야함.
+                Ray ray = Myutil.GenerateRay(xPx,yPx,screenWidth,screenHeight,projMX,viewMX,cameratrans);
+                nowellipse.movepivot(ray,plane,projMX,viewMX);
+
+            }
             return false;
         });
 
@@ -188,7 +232,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         }
 
         seekBar.setRangeValues(minVal, maxVal);
-
         seekBar.setOnRangeSeekBarChangeListener((bar, minValue, maxValue) -> {
             int selectedMinVal = (Integer)(bar.getSelectedMinValue());
             int selectedMaxVal = (Integer)(bar.getSelectedMaxValue());
@@ -199,7 +242,25 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
             setText();
         });
+        seekBar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(correctionmode){
+                    nowellipse.changerad(seekBar.getProgress()/10f,plane);
+                    setText();
+                }
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
     @Override

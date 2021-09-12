@@ -1,15 +1,9 @@
 package com.example.CS_IU_proto_1;
 
 import android.opengl.Matrix;
-import android.os.Debug;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
-
-import com.google.ar.core.Camera;
-
-import java.io.Serializable;
-import java.util.Arrays;
 
 //Local
 public class Ellipse implements Parcelable {
@@ -30,7 +24,7 @@ public class Ellipse implements Parcelable {
     public float size2;
 
     // local pivot
-    public float[] resultprivot;
+    public float[] resultpivot;
 
     public Ellipse(float _r1, float _r2, float[] _pivot, float[] _xaxis, float[] _yaxis) {
         xrad = _r1;
@@ -43,6 +37,17 @@ public class Ellipse implements Parcelable {
         size2 = (yrad + xrad) *100f;
     }
 
+    // 그냥 하나.
+
+    public Ellipse(Ray ray, Plane plane, float[] projMX, float[] viewMX){
+        xrad = 0.01f;
+        yrad = 0.01f;
+
+        size = (int)( (yrad + xrad) *100);
+        size2 = (yrad + xrad) *100f;
+        movepivot(ray,plane,projMX,viewMX);
+    }
+
     protected Ellipse(Parcel in) {
         istoggled = in.readByte() != 0;
         modelmat0 = in.createFloatArray();
@@ -51,7 +56,7 @@ public class Ellipse implements Parcelable {
         modelmat3 = in.createFloatArray();
         size = in.readInt();
         size2 = in.readFloat();
-        resultprivot = in.createFloatArray();
+        resultpivot = in.createFloatArray();
         modelmat = new float[][] {
                 modelmat0,modelmat1,modelmat2,modelmat3
         };
@@ -66,7 +71,7 @@ public class Ellipse implements Parcelable {
         dest.writeFloatArray(modelmat3);
         dest.writeInt(size);
         dest.writeFloat(size2);
-        dest.writeFloatArray(resultprivot);
+        dest.writeFloatArray(resultpivot);
     }
 
     @Override
@@ -86,6 +91,21 @@ public class Ellipse implements Parcelable {
         }
     };
 
+    public void movepivot(Ray ray, Plane plane, float[] projMX, float[] viewMX){
+        worldpivot = Myutil.pickSurfacePoints(plane,ray);
+        pivot_to_local(projMX,viewMX);
+        setCircleRotatation(plane);
+    }
+
+    public void changerad(float rad,Plane plane){
+        xrad = rad/200;
+        yrad = rad/200;
+
+        size = (int)( (yrad + xrad) *100);
+        size2 = (yrad + xrad) *100f;
+        setCircleRotatation(plane);
+    }
+
     public void setRottation(Plane plane){
         worldpivot = plane.transintoworld(pivot);
         float[] newxvec = new float[]{plane.xvec[0]*xaxis[0]+plane.yvec[0]*xaxis[1],plane.xvec[1]*xaxis[0]+plane.yvec[1]*xaxis[1],plane.xvec[2]*xaxis[0]+plane.yvec[2]*xaxis[1]};
@@ -100,8 +120,24 @@ public class Ellipse implements Parcelable {
         modelmat1 = modelmat[1];
         modelmat2 = modelmat[2];
         modelmat3 = modelmat[3];
+        Log.i("pivot", Float.toString(worldpivot[0])+Float.toString(worldpivot[1])+Float.toString(worldpivot[2]));
     }
 
+
+    //TODO 이거갈격야함
+
+    public void setCircleRotatation(Plane plane){
+        modelmat = new float[][]{
+                {xrad*plane.xvec[0],yrad*plane.yvec[0],plane.normal[0],worldpivot[0]},
+                {xrad*plane.xvec[1],yrad*plane.yvec[1],plane.normal[1],worldpivot[1]},
+                {xrad*plane.xvec[2],yrad*plane.yvec[2],plane.normal[2],worldpivot[2]},
+                {0,0,0,1}
+        };
+        Log.i("circlepivot", Float.toString(worldpivot[0])+Float.toString(worldpivot[1])+Float.toString(worldpivot[2]));
+
+    }
+
+    //Clipt to world
 
     //World Pivot to Clip Pivot
     public void pivot_to_local(float[] projMX, float[] viewMX) {
@@ -109,10 +145,10 @@ public class Ellipse implements Parcelable {
         float[] MVPmx = new float[16];
         Matrix.multiplyMM(MVPmx,0,projMX,0,viewMX,0);
         float[] thisworldpivot = new float[]{worldpivot[0],worldpivot[1],worldpivot[2],1.0f};
-        resultprivot = new float[4];
-        Matrix.multiplyMV(resultprivot,0,MVPmx,0,thisworldpivot,0);
+        resultpivot = new float[4];
+        Matrix.multiplyMV(resultpivot,0,MVPmx,0,thisworldpivot,0);
         for(int i =0;i<3;i++){
-            resultprivot[i]/=resultprivot[3];
+            resultpivot[i]/= resultpivot[3];
         }
     }
 
