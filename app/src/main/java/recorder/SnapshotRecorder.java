@@ -116,7 +116,6 @@ public class SnapshotRecorder {
     private byte[] frameBuffer = null;
 
     private void writeHeader(int w, int h, Plane plane, float[] proj) throws IOException {
-        Arrays.fill(headerBuffer, (byte) 0);
 
         int frameSize = (w * h * 3 / 2) + (4 * 16) + (4 * 3); // img + viewMX + camTrans
         frameBuffer = new byte[frameSize];
@@ -154,6 +153,7 @@ public class SnapshotRecorder {
     }
 
     private void writeVariables(float[] viewMX, float[] camTrans, Image image) throws IOException {
+        Arrays.fill(frameBuffer, (byte) 0);
         Image.Plane[] planes = image.getPlanes();
         ByteBuffer bufferY   = planes[0].getBuffer();
         ByteBuffer bufferUV  = planes[1].getBuffer();
@@ -161,9 +161,10 @@ public class SnapshotRecorder {
         ByteBuffer wrapper = ByteBuffer.wrap(frameBuffer);
         wrapper.order(ByteOrder.LITTLE_ENDIAN);
 
+        loadToBuffer(wrapper, viewMX, -1);
+        loadToBuffer(wrapper, camTrans, -1);
         wrapper.put(bufferY);
         wrapper.put(bufferUV);
-        loadToBuffer(wrapper, viewMX, -1);
 
         os.write(frameBuffer);
     }
