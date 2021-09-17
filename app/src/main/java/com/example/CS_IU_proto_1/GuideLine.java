@@ -86,7 +86,7 @@ public class GuideLine{
         ConstraintLayout guideLayout2 = activity.findViewById(R.id.gl_Layout);
 
         guideLayout2.setVisibility(View.GONE);
-        text2.setText("하얀 점들을 터치해주시기 바랍니다.\n(실패할 경우, 버튼을 눌러 점들을 인식하는 과정부터 다시 해주세요.)");
+        text2.setText("화면을 터치해주시기 바랍니다.\n(실패할 경우, 버튼을 눌러 점들을 인식하는 과정부터 다시 해주세요.)");
         text2.setVisibility(View.VISIBLE);
     }
 

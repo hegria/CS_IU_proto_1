@@ -47,7 +47,10 @@ public class GuideSlide extends AppCompatActivity {
         // layouts of welcome sliders
         layouts = new int[]{
                 R.layout.guide_slide1,
-                R.layout.guide_slide2
+                R.layout.guide_slide2,
+                R.layout.guide_slide3,
+                R.layout.guide_slide4,
+                R.layout.guide_slide5
         };
 
         // adding bottom dots

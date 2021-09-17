@@ -15,7 +15,7 @@
         <ImageView
             android:layout_width="384dp"
             android:layout_height="180dp"
-            android:src="@drawable/slide_img1" />
+            android:src="@drawable/slide_img5" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -23,7 +23,7 @@
             android:layout_marginTop="20dp"
             android:paddingLeft="40dp"
             android:paddingRight="40dp"
-            android:text="1. 오른쪽의 녹화 버튼을 눌러 스캔을 시작합니다."
+            android:text="5. 성공하면 실시간으로 측정이 시작됩니다. 캡쳐 버튼으로 해당 화면을 자세히 다룰 수 있습니다."
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="18dp"

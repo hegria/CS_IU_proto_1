@@ -2,26 +2,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#8FEA7A">
+    android:background="#F6EECF">
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="40dp">
 
         <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:src="@android:drawable/ic_menu_gallery" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Slide2"
-            android:textColor="@android:color/white"
-            android:textSize="30dp"
-            android:textStyle="bold" />
+            android:layout_width="384dp"
+            android:layout_height="180dp"
+            android:src="@drawable/slide_img2" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -29,11 +23,11 @@
             android:layout_marginTop="20dp"
             android:paddingLeft="40dp"
             android:paddingRight="40dp"
-            android:text="This is Slide2"
+            android:text="2. 하얀 점이 많이 인식되도록 좌우로 천천히 움직인 후 정지 버튼을 눌러주세요."
             android:textAlignment="center"
-            android:textColor="@android:color/white"
-            android:textSize="16dp" />
+            android:textColor="@color/black"
+            android:textSize="18dp"
+            android:textStyle="bold" />
 
     </LinearLayout>
-
 </RelativeLayout>

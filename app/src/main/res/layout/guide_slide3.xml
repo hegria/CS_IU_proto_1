@@ -15,7 +15,7 @@
         <ImageView
             android:layout_width="384dp"
             android:layout_height="180dp"
-            android:src="@drawable/slide_img1" />
+            android:src="@drawable/slide_img3" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -23,7 +23,7 @@
             android:layout_marginTop="20dp"
             android:paddingLeft="40dp"
             android:paddingRight="40dp"
-            android:text="1. 오른쪽의 녹화 버튼을 눌러 스캔을 시작합니다."
+            android:text="3. 화면을 터치하고 기다려주세요"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="18dp"
