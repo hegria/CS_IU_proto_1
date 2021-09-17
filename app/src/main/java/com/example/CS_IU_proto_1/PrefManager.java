@@ -12,7 +12,8 @@ public class PrefManager {
 
     // Shared preferences file name
     private static final String PREF_NAME = "welcome";
-    private static final String IS_FIRST_TIME_LAUNCH = "IsFirstTimeLaunch";
+    private static final String Key1 = "GuideLine1ForFirstTime";
+    private static final String Key2 = "GuideLine2ForFirstTime";
 
     public PrefManager(Context context) {
         this._context = context;
@@ -20,12 +21,12 @@ public class PrefManager {
         editor = pref.edit();
     }
 
-    public void setFirstTimeLaunch(boolean isFirstTime) {
-        editor.putBoolean(IS_FIRST_TIME_LAUNCH, isFirstTime);
+    public void setFirstTimeLaunch1(boolean isFirstTime) {
+        editor.putBoolean(Key1, isFirstTime);
         editor.commit();
     }
 
-    public boolean isFirstTimeLaunch() {
-        return pref.getBoolean(IS_FIRST_TIME_LAUNCH, true);
+    public boolean isFirstTimeLaunch1() {
+        return pref.getBoolean(Key1, true);
     }
 }

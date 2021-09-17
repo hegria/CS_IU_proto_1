@@ -161,8 +161,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         if(state != State.FindingSurface)
           return;
         runOnUiThread(() -> {
-          if(pf.isFirstTimeLaunch())
+          if(pf.isFirstTimeLaunch1()) {
             guideLine.gl5();
+            pf.setFirstTimeLaunch1(false);
+          }
           Toast.makeText(MainActivity.this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
           recordButton.setImageResource(R.drawable.for_capture_button);
         });
@@ -191,20 +193,20 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
 
-    if(pf.isFirstTimeLaunch())
+    if(pf.isFirstTimeLaunch1())
       guideLine.gl2();
 
     recordButton.setOnClickListener(l -> {
       // collecting 시작하기 위해 버튼 누름
       if(state == State.Idle) {
-        if(pf.isFirstTimeLaunch())
+        if(pf.isFirstTimeLaunch1())
           guideLine.gl3();
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
       }
       // collecting 끝내기 위해 버튼 누름
       else if (state == State.PointCollecting) {
-        if(pf.isFirstTimeLaunch())
+        if(pf.isFirstTimeLaunch1())
           guideLine.gl4();
         recordButton.setImageResource(R.drawable.for_record_button);
         glView.queueEvent(() -> pointCloudRenderer.fix(pointCollector.getPointBuffer()));
@@ -229,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
         findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
         findPlaneworker.execute(findPlaneTask);
-      }else if(pf.isFirstTimeLaunch()){
+      }else if(pf.isFirstTimeLaunch1()){
         if(state == State.PointCollecting){
           Log.d("테스트", "WOWOWOWOWOW");
           ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);

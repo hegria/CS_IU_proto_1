@@ -24,7 +24,7 @@ public class StartScreen extends AppCompatActivity {
         ImageButton btnMeasure = findViewById(R.id.btnMeasure);
         ImageButton btnGuide = findViewById(R.id.btnGuide);
 
-        if(pm.isFirstTimeLaunch())
+        if(pm.isFirstTimeLaunch1())
             guideLine.gl0();
 
         btnMeasure.setOnClickListener(l -> {
@@ -40,7 +40,7 @@ public class StartScreen extends AppCompatActivity {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if(pm.isFirstTimeLaunch() && event.getAction() == MotionEvent.ACTION_UP){
+        if(pm.isFirstTimeLaunch1() && event.getAction() == MotionEvent.ACTION_UP){
             guideLine.gl1();
         }
         return super.onTouchEvent(event);

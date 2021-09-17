@@ -35,6 +35,7 @@ public class GuideLine{
         text1.setText("터치하여 다음으로 넘어가기");
         Animation anim_fadeOut;
         anim_fadeOut = AnimationUtils.loadAnimation(activity.getApplicationContext(),R.anim.fade_out);
+        textLayout.setVisibility(View.VISIBLE);
         textLayout.startAnimation(anim_fadeOut);
 
     }
@@ -72,7 +73,7 @@ public class GuideLine{
         ImageView gifImg = activity.findViewById(R.id.gl_image);
 
         text2.setVisibility(View.GONE);
-        text3.setText("하얀 점이 많이 인식되도록 좌우로 천천히 움직인 후 버튼을 눌러주세요.");
+        text3.setText("하얀 점이 많이 인식되도록 좌우로 천천히 움직인 후 정지 버튼을 눌러주세요.");
         text4.setText("터치하여 닫기");
         GlideDrawableImageViewTarget gifImage = new GlideDrawableImageViewTarget(gifImg);
         Glide.with(activity).load(R.drawable.moving_image).into(gifImage);
@@ -85,7 +86,7 @@ public class GuideLine{
         ConstraintLayout guideLayout2 = activity.findViewById(R.id.gl_Layout);
 
         guideLayout2.setVisibility(View.GONE);
-        text2.setText("화면에서 하얀 점들이 모여 있는 곳을 터치해주시기 바랍니다.\n(실패할 경우 버튼을 눌러 하얀점들을 찾는 과정부터 다시 해주세요.)");
+        text2.setText("하얀 점들을 터치해주시기 바랍니다.\n(실패할 경우, 버튼을 눌러 점들을 인식하는 과정부터 다시 해주세요.)");
         text2.setVisibility(View.VISIBLE);
     }
 
