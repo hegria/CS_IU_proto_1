@@ -5,8 +5,8 @@
     android:thickness="25dp"
     android:useLevel="false">
 
-    <size android:width="200dp"
-        android:height="200dp" />
+    <size android:width="170dp"
+        android:height="170dp" />
 
     <solid android:color="#FFFFFF" />
 
