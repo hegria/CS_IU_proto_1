@@ -58,12 +58,12 @@ public class FindPlaneTask implements Runnable
         pickSeedPoint(points,ray);
         float z_dist = 1.0f;
 
-        RequestForm rf = new RequestForm();
-        rf.setPointBufferDescription(pointCount, 16, 0); //pointcount, pointstride, pointoffset
-        rf.setPointDataDescription(0.1f, 0.2f); //****accuracy, ****meanDistance
-        rf.setTargetROI(seedPointID, Math.max(z_dist * circleRad, 0.2f));//seedIndex,*****touchRadius
-        rf.setAlgorithmParameter(RequestForm.SearchLevel.LV7, RequestForm.SearchLevel.NORMAL);//LatExt, RadExp
         try {
+            RequestForm rf = new RequestForm();
+            rf.setPointBufferDescription(pointCount, 16, 0); //pointcount, pointstride, pointoffset
+            rf.setPointDataDescription(0.1f, 0.2f); //****accuracy, ****meanDistance
+            rf.setTargetROI(seedPointID, Math.max(z_dist * circleRad, 0.2f));//seedIndex,*****touchRadius
+            rf.setAlgorithmParameter(RequestForm.SearchLevel.LV7, RequestForm.SearchLevel.NORMAL);//LatExt, RadExp
             ResponseForm resp = fsr.request( rf, points );
             if( resp != null &&resp.isSuccess() ) {
                 ResponseForm.PlaneParam param = resp.getParamAsPlane();
@@ -73,26 +73,22 @@ public class FindPlaneTask implements Runnable
                     Log.d("Plane", "평면 추출 실패");
                     resetSeedPoint();
                     findPlaneTaskListener.onFailTask();
-
                 }else{
-
                     findPlaneTaskListener.onSuccessTask(new Plane( param, z_axis ));
-
                 }
-
                 // Success notification...
             } else{
                 Log.d("Plane","request fail");
                 resetSeedPoint();
                 findPlaneTaskListener.onFailTask();
-
             }
             return;
         }
         catch(Exception e) {
             e.printStackTrace();
-
-            // Error Handling
+            Log.d("Plane", "평면 추출 실패");
+            resetSeedPoint();
+            findPlaneTaskListener.onFailTask();
         }
         return;
     }

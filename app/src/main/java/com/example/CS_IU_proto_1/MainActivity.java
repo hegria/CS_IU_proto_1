@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.view.WindowCompat;
 
 import com.google.ar.core.ArCoreApk;
@@ -91,6 +92,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   DrawText drawText;
 
   OpenCVJNI jni;
+  PrefManager pf;
+  GuideLine guideLine;
 
   // 컨투어 그리기 위한거(디버그용)
 //  ArrayList<ContourForDraw> contourForDraws;
@@ -120,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     if(System.currentTimeMillis()>backKeyPressedTime+2000){
       backKeyPressedTime = System.currentTimeMillis();
-      Toast.makeText(this, "초기화 되었습니다.\n한번 더 눌러 앱 종료", Toast.LENGTH_SHORT).show();
+      Toast.makeText(this, "초기화 되었습니다.\n한번 더 눌러 메인 화면으로 이동", Toast.LENGTH_SHORT).show();
     }
     //2번째 백버튼 클릭 (종료)
     else{
@@ -130,9 +133,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   //앱종료
   public void AppFinish(){
-    finish();
     System.exit(0);
     android.os.Process.killProcess(android.os.Process.myPid());
+    finish();
   }
 
   @Override
@@ -150,13 +153,19 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     findPlaneworker = Executors.newSingleThreadExecutor();
     findPlaneTask = new FindPlaneTask();
     jni = new OpenCVJNI();
+    guideLine = new GuideLine(this);
+    pf = new PrefManager(this);
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
       @Override
       public void onSuccessTask(Plane _plane) {
         if(state != State.FindingSurface)
           return;
         runOnUiThread(() -> {
-          Toast.makeText(MainActivity.this,"평면을 찾았습니다.",Toast.LENGTH_SHORT).show();
+          if(pf.isFirstTimeLaunch1()) {
+            guideLine.gl5();
+            pf.setFirstTimeLaunch1(false);
+          }
+          Toast.makeText(MainActivity.this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
           recordButton.setImageResource(R.drawable.for_capture_button);
         });
         state = State.FoundSurface;
@@ -167,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       public void onFailTask() {
         if(state != State.FindingSurface)
           return;
-        runOnUiThread(() -> Toast.makeText(MainActivity.this,"평면을 못 찾았습니다. 다시 시도하여 주세요.",Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> Toast.makeText(MainActivity.this,"스캔을 실패했습니다. 다시 시도하여 주세요.",Toast.LENGTH_SHORT).show());
         state = State.PointCollected;
       }
     });
@@ -183,14 +192,22 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
+
+    if(pf.isFirstTimeLaunch1())
+      guideLine.gl2();
+
     recordButton.setOnClickListener(l -> {
       // collecting 시작하기 위해 버튼 누름
       if(state == State.Idle) {
+        if(pf.isFirstTimeLaunch1())
+          guideLine.gl3();
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
       }
       // collecting 끝내기 위해 버튼 누름
       else if (state == State.PointCollecting) {
+        if(pf.isFirstTimeLaunch1())
+          guideLine.gl4();
         recordButton.setImageResource(R.drawable.for_record_button);
         glView.queueEvent(() -> pointCloudRenderer.fix(pointCollector.getPointBuffer()));
         state = State.PointCollected;
@@ -199,6 +216,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       }
       //초기화하고 다시 시작
       else{
+        TextView glText = findViewById(R.id.gl_text);
+        glText.setVisibility(View.GONE);
         initAll();
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
@@ -212,6 +231,12 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // 레코드버튼을 두번째 눌러서 다 점 수집을 끝낸 상태에서 화면을 터치하면 레이를 발사해서 점 선택. 그 점으로 바닥 찾기
         findPlaneTask.initTask(pointCollector.getPointBuffer(),ray,camera.getPose().getZAxis());
         findPlaneworker.execute(findPlaneTask);
+      }else if(pf.isFirstTimeLaunch1()){
+        if(state == State.PointCollecting){
+          Log.d("테스트", "WOWOWOWOWOW");
+          ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);
+          guideLayout.setVisibility(View.GONE);
+        }
       }
       return false;
     });
