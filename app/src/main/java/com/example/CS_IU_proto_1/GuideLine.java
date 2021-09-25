@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.GlideDrawableImageViewTarget;
@@ -105,10 +106,12 @@ public class GuideLine{
         ImageView img = activity.findViewById(R.id.gl_image2);
 
         guideLayout3.setVisibility(View.VISIBLE);
-        text3.setText("스위치를 누르거나 조정바를 움직여서 직경에 따라 목재를 분류할 수 있습니다.");
+        text3.setText("스위치와 조정바를 이용해 직경에 따라 목재를 분류할 수 있습니다.");
         text4.setText("터치하여 다음으로 넘어가기");
         text5.setText("분류하기");
         img.setImageResource(R.drawable.slide_img1);
+
+        Glide.with(activity).load(R.drawable.slide_img1).into(img);
     }
 
     //목재 없애기
@@ -117,8 +120,8 @@ public class GuideLine{
         TextView text5 = activity.findViewById(R.id.gl_text5);
         ImageView img = activity.findViewById(R.id.gl_image2);
         text3.setText("화면의 목재를 터치하여 없애거나 다시 나타나게 할 수 있습니다.");
-        text5.setText("없애기/나타나게 하기");
-        img.setImageResource(R.drawable.slide_img2);
+        text5.setText("없애기/\n나타나게 하기");
+        Glide.with(activity).load(R.drawable.slide_img2).into(img);
     }
 
     //목재 추가하기1
@@ -126,17 +129,19 @@ public class GuideLine{
         TextView text3 = activity.findViewById(R.id.gl_text3);
         TextView text5 = activity.findViewById(R.id.gl_text5);
         ImageView img = activity.findViewById(R.id.gl_image2);
-        text3.setText("Add 버튼을 눌러 새로운 목재를 추가한 후, 화면을 터치하여 위치를 정하고");
+        text3.setText("Add 버튼을 눌러 목재를 추가한 후, 화면을 터치하여 위치를 정하고");
         text5.setText("추가하기");
-        img.setImageResource(R.drawable.slide_img3);
+        Glide.with(activity).load(R.drawable.slide_img3).into(img);
     }
 
     //목재 추가하기2
     public void gl8_2(){
         TextView text3 = activity.findViewById(R.id.gl_text3);
+        TextView text4 = activity.findViewById(R.id.gl_text4);
         ImageView img = activity.findViewById(R.id.gl_image2);
         text3.setText("스크롤바를 조정해 크기를 맞춘 뒤, Apply 버튼을 눌러 고정합니다.");
-        img.setImageResource(R.drawable.slide_img4);
+        text4.setText("터치하여 닫기");
+        Glide.with(activity).load(R.drawable.slide_img4).into(img);
     }
 
     //가이드라인 종료

@@ -67,12 +67,27 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     ExecutorService worker;
     EllipsePool ellipsePool;
 
+    //가이드라인 진행 상태
+    private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2}
+    Gl_State gl_state = Gl_State.Idle;
+    GuideLine guideLine;
+    PrefManager pf;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         worker = Executors.newSingleThreadExecutor();
         setContentView(R.layout.activity_result);
+
+        guideLine = new GuideLine(this);
+        pf = new PrefManager(this);
+        if(pf.isFirstTimeLaunch2()) {
+            guideLine.gl6();
+            gl_state = Gl_State.Filtering;
+        }
+
+
         // Image랑 Ellipse를 받아내고, 이를 다시 그려내야함.
         // 그려내는 부분에서 차라리 Ellipse를 평면에 정사영 시키는 편이 낫지 않을까?
         // Background 같은경우도 새로운 자료형을 만들어내야함( Image를 Bitmap을 통해서 그려낼 수 있는
@@ -128,6 +143,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
         glView.setOnTouchListener((View view, MotionEvent event) -> {
+
+            if(pf.isFirstTimeLaunch2())
+                return false;
 
             float xPx, yPx;
             int screenWidth, screenHeight;
@@ -369,5 +387,31 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
         });
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(event.getAction() == MotionEvent.ACTION_UP) {
+            switch (gl_state){
+                case Filtering:
+                    guideLine.gl7();
+                    gl_state = Gl_State.VisibilityControl;
+                    break;
+                case VisibilityControl:
+                    guideLine.gl8_1();
+                    gl_state = Gl_State.Adding1;
+                    break;
+                case Adding1:
+                    guideLine.gl8_2();
+                    gl_state = Gl_State.Adding2;
+                    break;
+                case Adding2:
+                    guideLine.gl9();
+                    pf.setFirstTimeLaunch2(false);
+                    break;
+            }
+        }
+        return true;
     }
 }
