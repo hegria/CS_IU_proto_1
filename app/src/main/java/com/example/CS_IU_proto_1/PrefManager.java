@@ -29,4 +29,13 @@ public class PrefManager {
     public boolean isFirstTimeLaunch1() {
         return pref.getBoolean(Key1, true);
     }
+
+    public void setFirstTimeLaunch2(boolean isFirstTime) {
+        editor.putBoolean(Key2, isFirstTime);
+        editor.commit();
+    }
+
+    public boolean isFirstTimeLaunch2() {
+        return pref.getBoolean(Key2, true);
+    }
 }

@@ -5,6 +5,7 @@ import androidx.core.text.HtmlCompat;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,8 +19,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 public class GuideSlide extends AppCompatActivity {
 
@@ -28,7 +32,9 @@ public class GuideSlide extends AppCompatActivity {
     private LinearLayout dotsLayout;
     private TextView[] dots;
     private int[] layouts;
+    private int[] images;
     private Button btnSkip, btnNext;
+    private Activity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +45,7 @@ public class GuideSlide extends AppCompatActivity {
 
         setContentView(R.layout.activity_guide);
 
+        activity = this;
         viewPager = (ViewPager) findViewById(R.id.view_pager);
         dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
         btnSkip = (Button) findViewById(R.id.btn_skip);
@@ -50,7 +57,15 @@ public class GuideSlide extends AppCompatActivity {
                 R.layout.guide_slide2,
                 R.layout.guide_slide3,
                 R.layout.guide_slide4,
-                R.layout.guide_slide5
+                R.layout.guide_slide5,
+        };
+
+        images = new int[]{
+                R.drawable.slide_img1,
+                R.drawable.slide_img2,
+                R.drawable.slide_img3,
+                R.drawable.slide_img4,
+                R.drawable.slide_img5,
         };
 
         // adding bottom dots
@@ -109,7 +124,6 @@ public class GuideSlide extends AppCompatActivity {
         @Override
         public void onPageSelected(int position) {
             addBottomDots(position);
-
             // changing the next button text 'NEXT' / 'GOT IT'
             if (position == layouts.length - 1) {
                 // last page. make button text to GOT IT
@@ -146,8 +160,16 @@ public class GuideSlide extends AppCompatActivity {
      */
     public class MyViewPagerAdapter extends PagerAdapter {
         private LayoutInflater layoutInflater;
+        private int[] imageViews;
 
         public MyViewPagerAdapter() {
+            imageViews = new int[]{
+                    R.id.imageView1,
+                    R.id.imageView2,
+                    R.id.imageView3,
+                    R.id.imageView4,
+                    R.id.imageView5,
+            };
         }
 
         @Override
@@ -155,6 +177,7 @@ public class GuideSlide extends AppCompatActivity {
             layoutInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
             View view = layoutInflater.inflate(layouts[position], container, false);
+            Glide.with(activity).load(images[position]).into((ImageView) view.findViewById(imageViews[position]));
             container.addView(view);
 
             return view;

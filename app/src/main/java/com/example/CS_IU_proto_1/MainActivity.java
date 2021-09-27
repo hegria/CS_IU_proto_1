@@ -233,7 +233,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         findPlaneworker.execute(findPlaneTask);
       }else if(pf.isFirstTimeLaunch1()){
         if(state == State.PointCollecting){
-          Log.d("테스트", "WOWOWOWOWOW");
           ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);
           guideLayout.setVisibility(View.GONE);
         }

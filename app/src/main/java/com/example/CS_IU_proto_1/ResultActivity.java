@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,8 +35,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     ArrayList<Ellipse> ellipses;
 
     DrawText drawText;
-
-
 
     float[] projMX;
     float[] viewMX;
@@ -74,12 +73,27 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     long starttime = 0;
 
+    //가이드라인 진행 상태
+    private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2}
+    Gl_State gl_state = Gl_State.Idle;
+    GuideLine guideLine;
+    PrefManager pf;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         worker = Executors.newSingleThreadExecutor();
         setContentView(R.layout.activity_result);
+
+        guideLine = new GuideLine(this);
+        pf = new PrefManager(this);
+        if(pf.isFirstTimeLaunch2()) {
+            guideLine.gl6();
+            gl_state = Gl_State.Filtering;
+        }
+
+
         // Image랑 Ellipse를 받아내고, 이를 다시 그려내야함.
         // 그려내는 부분에서 차라리 Ellipse를 평면에 정사영 시키는 편이 낫지 않을까?
         // Background 같은경우도 새로운 자료형을 만들어내야함( Image를 Bitmap을 통해서 그려낼 수 있는
@@ -133,29 +147,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
-//        // 이거를 Touch Listner로 바꿔야함.
-//        glView.setOnLongClickListener((View view) -> {
-//            if(!correctionmode){
-//
-//                float xPx, yPx;
-//                int screenWidth, screenHeight;
-//                xPx = view.getX();
-//                yPx = view.getY();
-//                screenWidth = glView.getMeasuredWidth();
-//                screenHeight = glView.getMeasuredHeight();
-//
-//
-//                float x = 2.0f * xPx / screenWidth - 1.0f;
-//                float y = 1.0f - 2.0f * yPx / screenHeight;
-//                Log.i("xpx,ypx", Float.toString(xPx)+ Float.toString(yPx));
-//
-//
-//            return true;
-//        });
-
 
         glView.setOnTouchListener((View view, MotionEvent event) -> {
 
+
+            if(pf.isFirstTimeLaunch2())
+                return false;
 
             float xPx, yPx;
             int screenWidth, screenHeight;
@@ -315,7 +312,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(correctionmode){
                     nowellipse.changerad(seekBar.getProgress()/10f,plane);
-                    Log.i("xrad",""+nowellipse.modelmat);
                     setText();
                 }
             }
@@ -438,5 +434,31 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
         });
+    }
+
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if(event.getAction() == MotionEvent.ACTION_UP) {
+            switch (gl_state){
+                case Filtering:
+                    guideLine.gl7();
+                    gl_state = Gl_State.VisibilityControl;
+                    break;
+                case VisibilityControl:
+                    guideLine.gl8_1();
+                    gl_state = Gl_State.Adding1;
+                    break;
+                case Adding1:
+                    guideLine.gl8_2();
+                    gl_state = Gl_State.Adding2;
+                    break;
+                case Adding2:
+                    guideLine.gl9();
+                    pf.setFirstTimeLaunch2(false);
+                    break;
+            }
+        }
+        return true;
     }
 }
