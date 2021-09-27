@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,6 +34,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     ArrayList<Ellipse> ellipses;
 
     DrawText drawText;
+
+
 
     float[] projMX;
     float[] viewMX;
@@ -66,6 +67,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     BackgroundImage backgroundImage;
     ExecutorService worker;
     EllipsePool ellipsePool;
+
+
+    //for Long touch
+    static int LONG_PRESS_TIME = 300;
+
+    long starttime = 0;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -126,8 +133,29 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
+//        // 이거를 Touch Listner로 바꿔야함.
+//        glView.setOnLongClickListener((View view) -> {
+//            if(!correctionmode){
+//
+//                float xPx, yPx;
+//                int screenWidth, screenHeight;
+//                xPx = view.getX();
+//                yPx = view.getY();
+//                screenWidth = glView.getMeasuredWidth();
+//                screenHeight = glView.getMeasuredHeight();
+//
+//
+//                float x = 2.0f * xPx / screenWidth - 1.0f;
+//                float y = 1.0f - 2.0f * yPx / screenHeight;
+//                Log.i("xpx,ypx", Float.toString(xPx)+ Float.toString(yPx));
+//
+//
+//            return true;
+//        });
+
 
         glView.setOnTouchListener((View view, MotionEvent event) -> {
+
 
             float xPx, yPx;
             int screenWidth, screenHeight;
@@ -140,36 +168,76 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             float x = 2.0f * xPx / screenWidth - 1.0f;
             float y = 1.0f - 2.0f * yPx / screenHeight;
             Log.i("xpx,ypx", Float.toString(xPx)+ Float.toString(yPx));
+            int action = event.getAction();
+            switch (action){
+                case MotionEvent.ACTION_UP:
+                    long deltatime = event.getEventTime() - event.getDownTime();
+                    Log.i("Time",""+deltatime);
+                    if(deltatime<LONG_PRESS_TIME){
 
-            if(!correctionmode){
+                        if(!correctionmode){
 
-                worker.execute(()->{
-                    float minDistanceSq = Float.MAX_VALUE;
-                    int idx = -1;
-                    int i = 0;
-                    float[] point;
-                    for(Ellipse ellipse : ellipses){
-                        point = new float[]{ellipse.resultpivot[0], ellipse.resultpivot[1]};
-                        float distanceSq = (x-point[0])*(x-point[0]) + (y-point[1])*(y-point[1]);
-                        Log.i("distance",""+distanceSq);
-                        if(distanceSq<0.01f&& distanceSq<minDistanceSq){
-                            idx = i;
-                            minDistanceSq = distanceSq;
+                            worker.execute(()->{
+                                float minDistanceSq = Float.MAX_VALUE;
+                                int idx = -1;
+                                int i = 0;
+                                float[] point;
+                                for(Ellipse ellipse : ellipses){
+                                    point = new float[]{ellipse.resultpivot[0], ellipse.resultpivot[1]};
+                                    float distanceSq = (x-point[0])*(x-point[0]) + (y-point[1])*(y-point[1]);
+                                    Log.i("distance",""+distanceSq);
+                                    if(distanceSq<0.01f&& distanceSq<minDistanceSq){
+                                        idx = i;
+                                        minDistanceSq = distanceSq;
+                                    }
+                                    i++;
+                                }
+                                if(idx != -1){
+                                    ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
+                                }
+                            });
+                            setText();
+                        }else{
+                            //button으로 넘겨야함.
+                            Ray ray = Myutil.GenerateRay(xPx,yPx,screenWidth,screenHeight,projMX,viewMX,cameratrans);
+                            nowellipse.movepivot(ray,plane,projMX,viewMX);
                         }
-                        i++;
-                    }
-                    if(idx != -1){
-                        ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
-                    }
-                });
-                setText();
-            }else{
-                //button으로 넘겨야함.
-                Ray ray = Myutil.GenerateRay(xPx,yPx,screenWidth,screenHeight,projMX,viewMX,cameratrans);
-                nowellipse.movepivot(ray,plane,projMX,viewMX);
+                    }else {
+                        if (!correctionmode) {
+                            worker.execute(() -> {
+                                float minDistanceSq = Float.MAX_VALUE;
+                                int idx = -1;
+                                int i = 0;
+                                float[] point;
+                                for (Ellipse ellipse : ellipses) {
+                                    point = new float[]{ellipse.resultpivot[0], ellipse.resultpivot[1]};
+                                    float distanceSq = (x - point[0]) * (x - point[0]) + (y - point[1]) * (y - point[1]);
+                                    Log.i("distance", "" + distanceSq);
+                                    if (distanceSq < 0.01f && distanceSq < minDistanceSq) {
+                                        idx = i;
+                                        minDistanceSq = distanceSq;
+                                    }
+                                    i++;
+                                }
+                                if (idx != -1) {
+                                    // TODO 여길 바꿔야함.
+                                    correctionmode = true;
+                                    nowellipse = ellipses.get(idx);
+                                    Log.i("xvec",""+nowellipse.modelmat[0].toString()+nowellipse.modelmat[1].toString()+nowellipse.modelmat[2].toString());
+                                    runOnUiThread(()->{
+                                        button.setText("Apply");
+                                        seekBar2.setVisibility(View.VISIBLE);
+                                        seekBar2.setProgress((int) (nowellipse.size2 * 10));
 
+                                    });
+                                }
+                            });
+                        }
+                        setText();
+
+                    }
             }
-            return false;
+            return true;
         });
 
         switch1.setOnClickListener(l -> {
@@ -247,6 +315,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(correctionmode){
                     nowellipse.changerad(seekBar.getProgress()/10f,plane);
+                    Log.i("xrad",""+nowellipse.modelmat);
                     setText();
                 }
             }

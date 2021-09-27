@@ -8,7 +8,8 @@ import android.util.Log;
 //Local
 public class Ellipse implements Parcelable {
     boolean istoggled = true;
-    boolean isranged = true;
+    boolean isCircle = false;
+    boolean isResult = false;
     float yrad;
     float xrad;
     float[] pivot;
@@ -40,6 +41,7 @@ public class Ellipse implements Parcelable {
     // 그냥 하나.
 
     public Ellipse(Ray ray, Plane plane, float[] projMX, float[] viewMX){
+        isCircle = true;
         xrad = 0.01f;
         yrad = 0.01f;
 
@@ -50,25 +52,36 @@ public class Ellipse implements Parcelable {
 
     protected Ellipse(Parcel in) {
         istoggled = in.readByte() != 0;
+        worldpivot = in.createFloatArray();
+        xaxis = in.createFloatArray();
+        yaxis = in.createFloatArray();
         modelmat0 = in.createFloatArray();
         modelmat1 = in.createFloatArray();
         modelmat2 = in.createFloatArray();
         modelmat3 = in.createFloatArray();
+        xrad = in.readFloat();
+        yrad = in.readFloat();
         size = in.readInt();
         size2 = in.readFloat();
         resultpivot = in.createFloatArray();
         modelmat = new float[][] {
                 modelmat0,modelmat1,modelmat2,modelmat3
         };
+        isResult = true;
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte((byte) (istoggled ? 1 : 0));
+        dest.writeFloatArray(worldpivot);
+        dest.writeFloatArray(xaxis);
+        dest.writeFloatArray(yaxis);
         dest.writeFloatArray(modelmat0);
         dest.writeFloatArray(modelmat1);
         dest.writeFloatArray(modelmat2);
         dest.writeFloatArray(modelmat3);
+        dest.writeFloat(xrad);
+        dest.writeFloat(yrad);
         dest.writeInt(size);
         dest.writeFloat(size2);
         dest.writeFloatArray(resultpivot);
@@ -92,22 +105,36 @@ public class Ellipse implements Parcelable {
     };
 
     public void movepivot(Ray ray, Plane plane, float[] projMX, float[] viewMX){
+        //TODO 변경해야함
         worldpivot = Myutil.pickSurfacePoints(plane,ray);
         pivot_to_local(projMX,viewMX);
         setCircleRotatation(plane);
     }
 
     public void changerad(float rad,Plane plane){
-        xrad = rad/200;
-        yrad = rad/200;
+        //TODO 변경해야함
+        if(isCircle){
+            xrad = rad/200;
+            yrad = rad/200;
 
-        size = (int)( (yrad + xrad) *100);
-        size2 = (yrad + xrad) *100f;
-        setCircleRotatation(plane);
+            size = (int)( (yrad + xrad) *100);
+            size2 = (yrad + xrad) *100f;
+            setCircleRotatation(plane);
+        }else{
+            float ratio = rad/size2;
+            xrad *= ratio;
+            yrad *= ratio;
+
+            size = (int)(size * ratio);
+            size2 *= ratio;
+            setRottation(plane);
+        }
     }
 
     public void setRottation(Plane plane){
-        worldpivot = plane.transintoworld(pivot);
+        if(!isResult) {
+            worldpivot = plane.transintoworld(pivot);
+        }
         float[] newxvec = new float[]{plane.xvec[0]*xaxis[0]+plane.yvec[0]*xaxis[1],plane.xvec[1]*xaxis[0]+plane.yvec[1]*xaxis[1],plane.xvec[2]*xaxis[0]+plane.yvec[2]*xaxis[1]};
         float[] newyvec = new float[]{plane.xvec[0]*yaxis[0]+plane.yvec[0]*yaxis[1],plane.xvec[1]*yaxis[0]+plane.yvec[1]*yaxis[1],plane.xvec[2]*yaxis[0]+plane.yvec[2]*yaxis[1]};
         modelmat = new float[][]{
@@ -122,7 +149,6 @@ public class Ellipse implements Parcelable {
         modelmat3 = modelmat[3];
         Log.i("pivot", Float.toString(worldpivot[0])+Float.toString(worldpivot[1])+Float.toString(worldpivot[2]));
     }
-
 
     //TODO 이거갈격야함
 
