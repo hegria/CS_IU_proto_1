@@ -22,6 +22,8 @@ public class DrawEllipse {
 
     static float[] circle = new float[72];
 
+    boolean isediting = false;
+
 
     private final String vscode = "" +
             "attribute vec3 vPosition;" +
@@ -91,7 +93,9 @@ public class DrawEllipse {
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vBuffer);
         GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, pointsBuffer.remaining() * 4, pointsBuffer, GLES20.GL_DYNAMIC_DRAW);
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
-
+        if(ellipse.isEdited){
+            isediting = true;
+        }
     }
     public void draw(float[] viewMX, float[] projMX) {
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
@@ -121,10 +125,15 @@ public class DrawEllipse {
 
         pos = GLES20.glGetUniformLocation(program, "color");
         float r = 0, g = 1.0f, b = 0;
-        if(size<15){
+        if(isediting){
             r = 1.0f;
+            g = 0;
+        }else{
+            if(size<15){
+                r = 1.0f;
             } else if(size>=30){
-            b = 1.0f;
+                b = 1.0f;
+            }
         }
         GLES20.glUniform3f(pos, r, g, b);
 

@@ -133,12 +133,14 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     correctionmode = true;
                     Ray originray = Myutil.GenerateRay(glView.getMeasuredWidth()/2,glView.getMeasuredHeight()/2,glView.getMeasuredWidth(),glView.getMeasuredHeight(),projMX,viewMX,cameratrans);
                     nowellipse = new Ellipse(originray, plane,projMX,viewMX);
+                    nowellipse.isEdited = true;
                     ellipses.add(nowellipse);
                     button.setText("Apply");
                     seekBar2.setVisibility(View.VISIBLE);
 
                 }else{
                     correctionmode = false;
+                    nowellipse.isEdited =false;
                     nowellipse = null;
                     button.setText("ADD");
                     seekBar2.setVisibility(View.INVISIBLE);
@@ -220,7 +222,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                     // TODO 여길 바꿔야함.
                                     correctionmode = true;
                                     nowellipse = ellipses.get(idx);
-                                    Log.i("xvec",""+nowellipse.modelmat[0].toString()+nowellipse.modelmat[1].toString()+nowellipse.modelmat[2].toString());
+                                    nowellipse.isEdited = true;
                                     runOnUiThread(()->{
                                         button.setText("Apply");
                                         seekBar2.setVisibility(View.VISIBLE);

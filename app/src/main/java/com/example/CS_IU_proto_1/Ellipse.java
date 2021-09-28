@@ -10,6 +10,8 @@ public class Ellipse implements Parcelable {
     boolean istoggled = true;
     boolean isCircle = false;
     boolean isResult = false;
+    public boolean isEdited = false;
+
     float yrad;
     float xrad;
     float[] pivot;
