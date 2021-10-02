@@ -66,19 +66,28 @@ public class GuideLine{
     }
 
     //촬영 화면에서 양옆으로 스마트폰 움직이고 정지 버튼 누르기
-    public void gl3(){
+    public void gl3_1(){
         TextView text2 = activity.findViewById(R.id.gl_text);
         TextView text3 = activity.findViewById(R.id.layout_text1);
         TextView text4 = activity.findViewById(R.id.gl1_text2);
         ConstraintLayout guideLayout2 = activity.findViewById(R.id.gl_Layout);
-        ImageView gifImg = activity.findViewById(R.id.gl_image);
+        ImageView img = activity.findViewById(R.id.gl_image);
 
         text2.setVisibility(View.GONE);
-        text3.setText("하얀 점이 많이 인식되도록 좌우로 천천히 움직인 후 정지 버튼을 눌러주세요.");
-        text4.setText("터치하여 닫기");
-        GlideDrawableImageViewTarget gifImage = new GlideDrawableImageViewTarget(gifImg);
-        Glide.with(activity).load(R.drawable.moving_image).into(gifImage);
+        text3.setText("화면 스캔이 잘되면 전구가 노란색이 됩니다.");
+        text4.setText("터치하여 다음으로 넘어가기");
+        Glide.with(activity).load(R.drawable.light_on).into(img);
         guideLayout2.setVisibility(View.VISIBLE);
+    }
+
+    public void gl3_2(){
+        TextView text3 = activity.findViewById(R.id.layout_text1);
+        TextView text4 = activity.findViewById(R.id.gl1_text2);
+        ImageView img = activity.findViewById(R.id.gl_image);
+        text3.setText("노란색이 될 때까지 좌우로 천천히 움직인 후 정지 버튼을 눌러주세요.");
+        text4.setText("터치하여 닫기");
+        GlideDrawableImageViewTarget gifImage = new GlideDrawableImageViewTarget(img);
+        Glide.with(activity).load(R.drawable.moving_image).into(gifImage);
     }
 
     //화면 터치하기
@@ -87,7 +96,7 @@ public class GuideLine{
         ConstraintLayout guideLayout2 = activity.findViewById(R.id.gl_Layout);
 
         guideLayout2.setVisibility(View.GONE);
-        text2.setText("화면을 터치해주시기 바랍니다.\n(실패할 경우, 버튼을 눌러 점들을 인식하는 과정부터 다시 해주세요.)");
+        text2.setText("화면을 터치해주시기 바랍니다.\n(실패할 경우, 버튼을 눌러 화면을 스캔하는 과정부터 다시 해주세요.)");
         text2.setVisibility(View.VISIBLE);
     }
 

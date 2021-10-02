@@ -42,6 +42,72 @@ public class PointCollector {
     }
   }
 
+  public int filteringTest(){
+    Map<Integer, float[]> test_filteredPoints = new HashMap<>();
+    for (int id : allPoints.keySet()) {
+      ArrayList<float[]> list = allPoints.get(id);
+      float meanX = 0f, meanY = 0f, meanZ = 0f;
+      if (list == null) continue;
+      for (float[] p : list) {
+        meanX += p[0];
+        meanY += p[1];
+        meanZ += p[2];
+      }
+      meanX /= list.size();
+      meanY /= list.size();
+      meanZ /= list.size();
+
+      if (list.size() < 5) {
+        float[] finalPoint = new float[]{meanX, meanY, meanZ};
+        test_filteredPoints.put(id, finalPoint);
+        continue;
+      }
+
+      float distanceMean = 0f;
+      float variance = 0f;
+      for (float[] point : list) {
+        float sqDist = (float) (Math.pow((point[0] - meanX), 2.0) + Math.pow((point[1] - meanY), 2.0) + Math.pow((point[2] - meanZ), 2.0));
+        variance += sqDist;
+        distanceMean += Math.sqrt(sqDist);
+      }
+      distanceMean /= list.size();
+      variance = (variance / list.size()) - distanceMean * distanceMean;
+
+      if (variance == 0) {
+        float[] finalPoint = new float[]{meanX, meanY, meanZ};
+        test_filteredPoints.put(id, finalPoint);
+        continue;
+      }
+
+      Iterator<float[]> iter = list.iterator();
+      while (iter.hasNext()) {
+        float[] tmp = iter.next();
+        float sqDistance = (float) (Math.pow((tmp[0] - meanX), 2) + Math.pow((tmp[1] - meanY), 2) + Math.pow((tmp[2] - meanZ), 2));
+        float z_score = (float) (Math.abs(Math.sqrt(sqDistance) - distanceMean) / Math.sqrt(variance));
+        if (z_score >= 1.2f) {
+          iter.remove();
+        }
+      }
+
+      if (list.size() == 0) continue;
+
+      meanX = 0.f;
+      meanY = 0.f;
+      meanZ = 0.f;
+      for (float[] tmp : list) {
+        meanX += tmp[0];
+        meanY += tmp[1];
+        meanZ += tmp[2];
+      }
+      meanX /= list.size();
+      meanY /= list.size();
+      meanZ /= list.size();
+
+      test_filteredPoints.put(id, new float[]{meanX, meanY, meanZ});
+    }
+    return test_filteredPoints.keySet().size();
+  }
+
   public void filter() {
     for (int id : allPoints.keySet()) {
       ArrayList<float[]> list = allPoints.get(id);
