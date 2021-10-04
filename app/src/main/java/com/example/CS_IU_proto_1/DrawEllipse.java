@@ -22,7 +22,14 @@ public class DrawEllipse {
 
     static float[] circle = new float[72];
 
+    int selected_index;
+
     boolean isediting = false;
+
+    enum State{
+        normal, edit, toggled
+    }
+    State state = State.normal;
 
 
     private final String vscode = "" +
@@ -72,9 +79,7 @@ public class DrawEllipse {
     // 2차원 Local 좌표를 받습니다!!
     // TODO float array보다는 Contour 자료형을 받는 걸로 생각하기.
     public void setContour(Ellipse ellipse){
-        if(!ellipse.istoggled){
-            return;
-        }
+
         size = ellipse.size;
         numpoints = 36;
         FloatBuffer pointsBuffer = ByteBuffer.allocateDirect(4*3*(1+numpoints)).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -94,7 +99,11 @@ public class DrawEllipse {
         GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, pointsBuffer.remaining() * 4, pointsBuffer, GLES20.GL_DYNAMIC_DRAW);
         GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, 0);
         if(ellipse.isEdited){
-            isediting = true;
+            state = State.edit;
+        }else if(!ellipse.istoggled){
+            state = State.toggled;
+        }else{
+            state = State.normal;
         }
     }
     public void draw(float[] viewMX, float[] projMX) {
@@ -125,15 +134,11 @@ public class DrawEllipse {
 
         pos = GLES20.glGetUniformLocation(program, "color");
         float r = 0, g = 1.0f, b = 0;
-        if(isediting){
+
+        if(size<15){
             r = 1.0f;
-            g = 0;
-        }else{
-            if(size<15){
-                r = 1.0f;
-            } else if(size>=30){
-                b = 1.0f;
-            }
+        } else if(size>=30){
+            b = 1.0f;
         }
         GLES20.glUniform3f(pos, r, g, b);
 
@@ -171,10 +176,30 @@ public class DrawEllipse {
 
         pos = GLES20.glGetUniformLocation(program, "color");
         float r = 0, g = 1.0f, b = 0;
-        if(size<15){
-            r = 1.0f;
-        } else if(size>=30){
-            b = 1.0f;
+
+        switch (state){
+            case normal:
+                if(size<15){
+                    r = 1.0f;
+                } else if(size>=30){
+                    b = 1.0f;
+                }
+                break;
+            case edit:
+                r = 1.0f;
+                g = 0;
+                break;
+            case toggled:
+                r = 0.5f;
+                g = 0.5f;
+                b = 0.5f;
+                break;
+        }
+
+        if(isediting){
+
+        }else{
+
         }
         GLES20.glUniform3f(pos, r, g, b);
 

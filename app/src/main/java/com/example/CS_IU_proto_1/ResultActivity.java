@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,9 +58,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Switch switch1, switch2, switch3;
     RangeSeekBar<Integer> seekBar;
     SeekBar seekBar2;
-    Button button;
+    Button correctionbutton;
+    Button delbutton;
     Plane plane;
     Ellipse nowellipse;
+    int selected_index;
 
     BackgroundImage backgroundImage;
     ExecutorService worker;
@@ -124,9 +125,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         seekBar = findViewById(R.id.seekBar);
         seekBar2 = findViewById(R.id.seekBar2);
         seekBar2.setVisibility(View.INVISIBLE);
-        button = findViewById(R.id.correction);
+        correctionbutton = findViewById(R.id.correction);
 
-        button.setOnClickListener(new View.OnClickListener() {
+        correctionbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(!correctionmode){
@@ -135,17 +136,34 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     nowellipse = new Ellipse(originray, plane,projMX,viewMX);
                     nowellipse.isEdited = true;
                     ellipses.add(nowellipse);
-                    button.setText("Apply");
+                    selected_index = ellipses.indexOf(nowellipse);
+                    correctionbutton.setText("Apply");
                     seekBar2.setVisibility(View.VISIBLE);
+                    delbutton.setVisibility(View.VISIBLE);
 
                 }else{
                     correctionmode = false;
                     nowellipse.isEdited =false;
                     nowellipse = null;
-                    button.setText("ADD");
+                    correctionbutton.setText("ADD");
                     seekBar2.setVisibility(View.INVISIBLE);
+                    delbutton.setVisibility(View.INVISIBLE);
                 }
                 setText();
+            }
+        });
+        delbutton = findViewById(R.id.correction3);
+        delbutton.setVisibility(View.INVISIBLE);
+
+        delbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                correctionmode = false;
+                nowellipse = null;
+                ellipses.remove(selected_index);
+                correctionbutton.setText("ADD");
+                seekBar2.setVisibility(View.INVISIBLE);
+                delbutton.setVisibility(View.INVISIBLE);
             }
         });
 
@@ -221,11 +239,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                 if (idx != -1) {
                                     // TODO 여길 바꿔야함.
                                     correctionmode = true;
+                                    selected_index = idx;
                                     nowellipse = ellipses.get(idx);
                                     nowellipse.isEdited = true;
                                     runOnUiThread(()->{
-                                        button.setText("Apply");
+                                        correctionbutton.setText("Apply");
                                         seekBar2.setVisibility(View.VISIBLE);
+                                        delbutton.setVisibility(View.VISIBLE);
                                         seekBar2.setProgress((int) (nowellipse.size2 * 10));
 
                                     });
@@ -369,11 +389,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 ellipsePool.clear();
                 drawText.clearEllipses();
                 for (Ellipse ellipse : ellipses) {
-                    if (ellipse.istoggled) {
-                        if(ellipsePool.isFull())
-                            ellipsePool.addEllipse(ellipse);
-                        else
-                            ellipsePool.setEllipse(ellipse);
+                    if(ellipsePool.isFull())
+                        ellipsePool.addEllipse(ellipse);
+                    else
+                        ellipsePool.setEllipse(ellipse);
+                    if(ellipse.istoggled) {
                         drawText.setEllipses(ellipse);
                     }
                 }
