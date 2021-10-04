@@ -72,6 +72,7 @@
             android:layout_marginStart="32dp"
             android:layout_marginEnd="32dp"
             android:layout_marginBottom="32dp"
+            android:gravity="center"
             android:textColor="#1E0859"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -106,5 +107,16 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/light_img"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/txtCount"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/light_off" />
 
 </RelativeLayout>

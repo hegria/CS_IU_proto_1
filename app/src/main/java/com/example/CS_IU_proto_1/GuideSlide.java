@@ -58,6 +58,11 @@ public class GuideSlide extends AppCompatActivity {
                 R.layout.guide_slide3,
                 R.layout.guide_slide4,
                 R.layout.guide_slide5,
+                R.layout.guide_slide6,
+                R.layout.guide_slide7,
+                R.layout.guide_slide8,
+                R.layout.guide_slide9,
+                R.layout.guide_slide10,
         };
 
         images = new int[]{
@@ -66,6 +71,11 @@ public class GuideSlide extends AppCompatActivity {
                 R.drawable.slide_img3,
                 R.drawable.slide_img4,
                 R.drawable.slide_img5,
+                R.drawable.resultview_img1_1,
+                R.drawable.resultview_img2,
+                R.drawable.resultview_img3,
+                R.drawable.resultview_img4,
+                R.drawable.resultview_img5,
         };
 
         // adding bottom dots
@@ -169,6 +179,11 @@ public class GuideSlide extends AppCompatActivity {
                     R.id.imageView3,
                     R.id.imageView4,
                     R.id.imageView5,
+                    R.id.imageView6,
+                    R.id.imageView7,
+                    R.id.imageView8,
+                    R.id.imageView9,
+                    R.id.imageView10,
             };
         }
 

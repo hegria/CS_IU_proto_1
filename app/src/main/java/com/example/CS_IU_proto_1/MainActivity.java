@@ -17,6 +17,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -104,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   ImageButton recordButton;
   TextView txtCount;
+  ImageView lightImg;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -111,6 +113,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   //앱종료시간체크
   long backKeyPressedTime;    //앱종료 위한 백버튼 누른시간
+
+  //가이드라인 3번 터치 횟수 체크
+  boolean isGl3 = true;
 
   //뒤로가기 2번하면 앱종료
   @Override
@@ -167,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           }
           Toast.makeText(MainActivity.this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
           recordButton.setImageResource(R.drawable.for_capture_button);
+          lightImg.setVisibility(View.INVISIBLE);
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -192,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
+    lightImg = findViewById(R.id.light_img);
 
     if(pf.isFirstTimeLaunch1())
       guideLine.gl2();
@@ -200,9 +207,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       // collecting 시작하기 위해 버튼 누름
       if(state == State.Idle) {
         if(pf.isFirstTimeLaunch1())
-          guideLine.gl3();
+          guideLine.gl3_1();
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
+        lightImg.setVisibility(View.VISIBLE);
       }
       // collecting 끝내기 위해 버튼 누름
       else if (state == State.PointCollecting) {
@@ -233,8 +241,13 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         findPlaneworker.execute(findPlaneTask);
       }else if(pf.isFirstTimeLaunch1()){
         if(state == State.PointCollecting){
-          ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);
-          guideLayout.setVisibility(View.GONE);
+          if(isGl3) {
+            guideLine.gl3_2();
+            isGl3 = false;
+          }else {
+            ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);
+            guideLayout.setVisibility(View.GONE);
+          }
         }
       }
       return false;
@@ -518,6 +531,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         pointCollector.push(frame.acquirePointCloud());
         pointCloudRenderer.update(frame.acquirePointCloud());
         pointCloudRenderer.draw(viewMX, projMX);
+        if(pointCollector.filteringTest() >= 30){
+          runOnUiThread(()->lightImg.setImageResource(R.drawable.light_on));
+        }
         break;
       case FindingSurface:
         // 선택한 점 그리기.
