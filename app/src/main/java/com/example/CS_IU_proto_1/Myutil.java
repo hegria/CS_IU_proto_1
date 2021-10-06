@@ -327,11 +327,12 @@ public class Myutil {
 //        return new Contour(new float[]{LL[0],LL[1],LR[0],LR[1],UR[0],UR[1],UL[0],UL[1]});
         return new Ellipse(dx,dy,pivot,M_axisx,M_axisy);
     }
-    
-//    public static EllipseSize findElipses ( Contour localContour){
-//
-//    }
-//    public static RectEllipseSize findElipses ( Contour localContour){
-//
-//    }
+
+    //평면과 핸드폰 거리 계산
+    static float calcDistance(float[] camPos, float[] norm, float dVal){
+        float up, down;
+        up = norm[0]*camPos[0]+norm[1]*camPos[1]+norm[2]*camPos[2]+dVal;
+        down = (float)Math.sqrt(Math.pow(norm[0], 2)+Math.pow(norm[1], 2)+Math.pow(norm[2], 2));
+        return up/down;
+    }
 }

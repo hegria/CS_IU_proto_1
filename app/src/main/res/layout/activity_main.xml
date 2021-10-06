@@ -109,7 +109,7 @@
         android:visibility="gone" />
 
     <ImageView
-        android:id="@+id/light_img"
+        android:id="@+id/notice_img"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_below="@+id/txtCount"

@@ -1,7 +1,6 @@
 package com.example.CS_IU_proto_1;
 
 import android.annotation.SuppressLint;
-import android.app.ActionBar;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -11,11 +10,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowInsets;
-import android.view.WindowInsetsController;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,7 +19,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.view.WindowCompat;
 
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
@@ -105,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   ImageButton recordButton;
   TextView txtCount;
-  ImageView lightImg;
+  ImageView noticeImg;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -116,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   //가이드라인 3번 터치 횟수 체크
   boolean isGl3 = true;
+  boolean isGL5 = true;
 
   //뒤로가기 2번하면 앱종료
   @Override
@@ -167,12 +162,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           return;
         runOnUiThread(() -> {
           if(pf.isFirstTimeLaunch1()) {
-            guideLine.gl5();
-            pf.setFirstTimeLaunch1(false);
+            guideLine.gl5_1();
           }
           Toast.makeText(MainActivity.this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
           recordButton.setImageResource(R.drawable.for_capture_button);
-          lightImg.setVisibility(View.INVISIBLE);
+          noticeImg.setVisibility(View.INVISIBLE);
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -198,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
-    lightImg = findViewById(R.id.light_img);
+    noticeImg = findViewById(R.id.notice_img);
 
     if(pf.isFirstTimeLaunch1())
       guideLine.gl2();
@@ -210,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           guideLine.gl3_1();
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
-        lightImg.setVisibility(View.VISIBLE);
+        noticeImg.setVisibility(View.VISIBLE);
       }
       // collecting 끝내기 위해 버튼 누름
       else if (state == State.PointCollecting) {
@@ -220,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         glView.queueEvent(() -> pointCloudRenderer.fix(pointCollector.getPointBuffer()));
         state = State.PointCollected;
       }else if(state == State.FoundSurface){
+        pf.setFirstTimeLaunch1(false);
         state = State.Capture;
       }
       //초기화하고 다시 시작
@@ -247,6 +242,16 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           }else {
             ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);
             guideLayout.setVisibility(View.GONE);
+          }
+        }
+        else if(state == State.FoundSurface){
+          if(isGL5) {
+            guideLine.gl5_2();
+            isGL5 = false;
+          }else {
+            ConstraintLayout guideLayout = findViewById(R.id.gl_Layout);
+            guideLayout.setVisibility(View.GONE);
+            pf.setFirstTimeLaunch1(false);
           }
         }
       }
@@ -525,6 +530,28 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           ellipsePool.drawEllipses.get(i).draw(viewMX, projMX);
         }
         drawText.draw();
+
+        //거리 조절 알림
+        float distance = Myutil.calcDistance(camera.getPose().getTranslation(), plane.normal, plane.dval);
+//        Log.d("테스트","distance: " + distance);
+        if(distance>0.1){
+          if(noticeImg.getVisibility() == View.INVISIBLE) {
+            runOnUiThread(() -> {
+              noticeImg.setVisibility(View.VISIBLE);
+              noticeImg.setImageResource(R.drawable.move_closer);
+            });
+          }
+        }else if(distance<-0.1){
+          if(noticeImg.getVisibility() == View.INVISIBLE) {
+            runOnUiThread(() -> {
+              noticeImg.setVisibility(View.VISIBLE);
+              noticeImg.setImageResource(R.drawable.move_farther);
+            });
+          }
+        }else if(noticeImg.getVisibility() == View.VISIBLE){
+          runOnUiThread(()->noticeImg.setVisibility(View.INVISIBLE));
+        }
+
         break;
       case PointCollecting:
         // 일이 분리가 안된것 같긴한데 frame을 얻고 해야하므로 어쩔 수 없음.
@@ -532,7 +559,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         pointCloudRenderer.update(frame.acquirePointCloud());
         pointCloudRenderer.draw(viewMX, projMX);
         if(pointCollector.filteringTest() >= 30){
-          runOnUiThread(()->lightImg.setImageResource(R.drawable.light_on));
+          runOnUiThread(()->noticeImg.setImageResource(R.drawable.light_on));
         }
         break;
       case FindingSurface:

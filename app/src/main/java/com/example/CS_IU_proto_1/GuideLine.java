@@ -100,11 +100,32 @@ public class GuideLine{
         text2.setVisibility(View.VISIBLE);
     }
 
-    //캡쳐 버튼 누르기
-    public void gl5(){
+    //실시간 측정 화면
+    public void gl5_1(){
         TextView text2 = activity.findViewById(R.id.gl_text);
-        text2.setText("캡쳐 버튼을 눌러 해당 화면을 자세히 다룹니다.");
+        TextView text3 = activity.findViewById(R.id.layout_text1);
+        TextView text4 = activity.findViewById(R.id.gl1_text2);
+        ConstraintLayout guideLayout2 = activity.findViewById(R.id.gl_Layout);
+        ImageView img = activity.findViewById(R.id.gl_image);
+
+        text2.setVisibility(View.GONE);
+        text3.setText("더 정확한 측정을 위해 화살표의 방향에 따라 목재와의 거리를 조절해주세요");
+        text4.setText("터치하여 다음으로 넘어가기");
+        Glide.with(activity).load(R.drawable.move_closer).into(img);
+        guideLayout2.setVisibility(View.VISIBLE);
     }
+
+    public void gl5_2(){
+        TextView text3 = activity.findViewById(R.id.layout_text1);
+        TextView text4 = activity.findViewById(R.id.gl1_text2);
+        ImageView img = activity.findViewById(R.id.gl_image);
+        text3.setText("캡쳐 버튼을 눌러 해당 화면을 자세히 다룹니다.");
+        text4.setText("터치하여 닫기");
+        GlideDrawableImageViewTarget gifImage = new GlideDrawableImageViewTarget(img);
+        Glide.with(activity).load(R.drawable.result_view).into(gifImage);
+    }
+
+
 
     //스위치, Seek bar 조정하기
     public void gl6(){
