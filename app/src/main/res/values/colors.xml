@@ -16,6 +16,9 @@
     <!-- dots active colors -->
     <color name="dot_light_screen">#90CFE3</color>
 
+    <color name="green">#00FF24</color>
+    <color name="red">#FF0707</color>
+
     <array name="array_dot_active">
         <item>@color/dot_dark_screen</item>
         <item>@color/dot_dark_screen</item>

@@ -3,22 +3,30 @@ package com.example.CS_IU_proto_1;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.BlendMode;
+import android.graphics.BlendModeColorFilter;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.media.Image;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
@@ -98,8 +106,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
   ArrayList<Ellipse> ellipses;
 
   ImageButton recordButton;
-  TextView txtCount;
+  TextView txtCount, progressState;
   ImageView noticeImg;
+  ProgressBar progressBar;
 
   int width = 1, height = 1;
   float[] projMX = {1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f,0,0,0,0,1.0f};
@@ -166,7 +175,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           }
           Toast.makeText(MainActivity.this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
           recordButton.setImageResource(R.drawable.for_capture_button);
-          noticeImg.setVisibility(View.INVISIBLE);
+          noticeImg.setImageResource(R.drawable.timber);
+          progressBar.setMax(50);
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -193,6 +203,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     txtCount = findViewById(R.id.txtCount);
     recordButton = findViewById(R.id.recordButton);
     noticeImg = findViewById(R.id.notice_img);
+    progressBar = findViewById(R.id.progressBar);
+    progressState = findViewById(R.id.progressState);
 
     if(pf.isFirstTimeLaunch1())
       guideLine.gl2();
@@ -533,23 +545,23 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         //거리 조절 알림
         float distance = Myutil.calcDistance(camera.getPose().getTranslation(), plane.normal, plane.dval);
-//        Log.d("테스트","distance: " + distance);
+//        Log.d("테스트","distance2: " + distance);
+        runOnUiThread(()->progressBar.setProgress(20 - (int)(distance*100)));
         if(distance>0.1){
-          if(noticeImg.getVisibility() == View.INVISIBLE) {
             runOnUiThread(() -> {
-              noticeImg.setVisibility(View.VISIBLE);
-              noticeImg.setImageResource(R.drawable.move_closer);
+              progressState.setText("너무 멀어요");
+              progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
             });
-          }
         }else if(distance<-0.1){
-          if(noticeImg.getVisibility() == View.INVISIBLE) {
             runOnUiThread(() -> {
-              noticeImg.setVisibility(View.VISIBLE);
-              noticeImg.setImageResource(R.drawable.move_farther);
+              progressState.setText("너무 가까워요");
+              progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
             });
-          }
-        }else if(noticeImg.getVisibility() == View.VISIBLE){
-          runOnUiThread(()->noticeImg.setVisibility(View.INVISIBLE));
+        }else{
+          runOnUiThread(()-> {
+            progressState.setText("");
+            progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
+          });
         }
 
         break;
@@ -558,9 +570,18 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         pointCollector.push(frame.acquirePointCloud());
         pointCloudRenderer.update(frame.acquirePointCloud());
         pointCloudRenderer.draw(viewMX, projMX);
-        if(pointCollector.filteringTest() >= 30){
-          runOnUiThread(()->noticeImg.setImageResource(R.drawable.light_on));
-        }
+        int testRst = pointCollector.filteringTest();
+        runOnUiThread(()-> {
+          if(testRst >= 100) {
+            noticeImg.setImageResource(R.drawable.light_on);
+            progressBar.setProgress(100);
+            progressState.setText("진행률: 100%");
+          }else {
+            progressBar.setProgress(testRst);
+            progressState.setText("진행률: " + testRst + "%");
+          }
+        });
+
         break;
       case FindingSurface:
         // 선택한 점 그리기.

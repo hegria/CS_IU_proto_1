@@ -112,11 +112,32 @@
         android:id="@+id/notice_img"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_below="@+id/txtCount"
-        android:layout_alignParentStart="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:visibility="invisible"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="12dp"
+        android:layout_toEndOf="@+id/progressBar"
+        android:visibility="visible"
         app:srcCompat="@drawable/light_off" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="250dp"
+        android:layout_height="20dp"
+        android:layout_below="@+id/progressState"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="2dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:scaleY="3" />
+
+    <TextView
+        android:id="@+id/progressState"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:textSize="14sp" />
 
 </RelativeLayout>
