@@ -161,7 +161,11 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     worker = Executors.newSingleThreadExecutor();
     findPlaneworker = Executors.newSingleThreadExecutor();
     findPlaneTask = new FindPlaneTask();
-    jni = new OpenCVJNI();
+
+    jni = new OpenCVJNI(this);
+    jni.setThreshold(0.5);
+    jni.useHOG(true);
+
     guideLine = new GuideLine(this);
     pf = new PrefManager(this);
     findPlaneTask.setFindPlaneTaskListener(new FindPlaneTask.FindPlaneTaskListener() {
@@ -437,9 +441,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           }
           image.close();
           //Contour 들을 ellipse로 변환
-          for(Contour contour: contours){
-            if(contour.points.length <= 10)
-              continue;
+          for(Contour contour: contours) {
             Contour localContour = contour.cliptolocal(snapprojMX,snapviewMX,snapcameratrans,plane,background.getTexCoord());
             Ellipse tempellipse = Myutil.findBoundingBox(localContour);
             tempellipse.setRottation(plane);

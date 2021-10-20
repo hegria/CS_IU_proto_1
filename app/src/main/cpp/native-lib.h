@@ -17,11 +17,16 @@
     (JNIEnv* env, jobject thiz, ##__VA_ARGS__)
 
 #define J_FIND_TIMBER_CONTOURS _1findTimberContours
+#define J_FIND_TIMBER_CONTOUR2 _1findTimberContours2
 
 extern "C" {
 
     JNIEXPORT jobject JNICALL
     J_OPENCV_FUNC(J_FIND_TIMBER_CONTOURS, jobject data_yuv_n12, jint width, jint height);
+    JNIEXPORT jobject JNICALL
+    J_OPENCV_FUNC(J_FIND_TIMBER_CONTOUR2, jobject data_yuv_n12, jint width, jint height, jdouble th);
+
+    JNIEXPORT void JNICALL J_OPENCV_FUNC(loadTrainedModel, jstring model);
 
     JNIEXPORT void JNICALL J_OPENCV_FUNC(setTH, jint lvl);
     JNIEXPORT void JNICALL J_OPENCV_FUNC(setMORPHO, jint lvl);

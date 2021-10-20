@@ -58,10 +58,64 @@ void JNI_OnUnload(JavaVM* vm, void* reserved) {
 // JNI stuff
 //
 
-using byte = uint8_t;
-
 cv::Mat getMatrixFromYUV420N12(const byte* buffer, int width, int height);
 void resizeImage(cv::Mat& src, int a);
+
+// new method
+
+static cv::HOGDescriptor hog;
+
+void JNICALL J_OPENCV_FUNC(loadTrainedModel, jstring model) {
+    static bool shouldInit = true;
+    if (shouldInit) {
+        const char* native_str = env->GetStringUTFChars(model, nullptr);
+        hog.load(native_str);
+        shouldInit = false;
+        env->ReleaseStringUTFChars(model, native_str);
+    }
+}
+
+jobject J_OPENCV_FUNC(J_FIND_TIMBER_CONTOUR2, jobject data_yuv420_n12, jint width, jint height, jdouble th) {
+    using namespace std;
+    using namespace cv;
+
+    Mat img_bgr = getMatrixFromYUV420N12(
+            reinterpret_cast<byte*>( env->GetDirectBufferAddress(data_yuv420_n12) ),
+            width, height
+    );
+
+    int h = img_bgr.rows;
+    int w = img_bgr.cols;
+    float x_factor = 2.0f / static_cast<float>(w);
+    float y_factor = 2.0f / static_cast<float>(h);
+
+    vector<Rect> detections;
+    vector<double> weights;
+    hog.detectMultiScale(img_bgr, detections, weights, th);
+
+    jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
+
+    for (const auto& rect : detections) {
+        float radius = rect.width * sqrt(0.40f) / 2.0f;
+        float x = rect.x + rect.width / 2.0f;
+        float y = rect.y + rect.width / 2.0f;
+        float arr[] = {
+                (x - radius) * x_factor - 1.0f, (y - radius) * y_factor - 1.0f,
+                (x + radius) * x_factor - 1.0f, (y - radius) * y_factor - 1.0f,
+                (x + radius) * x_factor - 1.0f, (y + radius) * y_factor - 1.0f,
+                (x - radius) * x_factor - 1.0f, (y + radius) * y_factor - 1.0f
+        };
+        auto* ptr = reinterpret_cast<jfloat*>(arr);
+        jfloatArray jxy = env->NewFloatArray(8);
+        env->SetFloatArrayRegion(jxy, 0, 8, ptr);
+        jobject jcontour = env->NewObject(JC_Contour, JMID_Contour_Ctor, jxy);
+        env->CallBooleanMethod(contour_list, JMID_ArrayList_Add, jcontour);
+    }
+
+    return contour_list;
+}
+
+// old method
 
 static DetectorParam global_param;
 
