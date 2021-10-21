@@ -96,7 +96,7 @@ jobject J_OPENCV_FUNC(J_FIND_TIMBER_CONTOUR2, jobject data_yuv420_n12, jint widt
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
 
     for (const auto& rect : detections) {
-        float radius = rect.width * sqrt(0.40f) / 2.0f;
+        float radius = rect.width * sqrt(0.35f) / 2.0f;
         float x = rect.x + rect.width / 2.0f;
         float y = rect.y + rect.width / 2.0f;
         float arr[] = {
