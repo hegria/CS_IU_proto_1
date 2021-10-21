@@ -17,9 +17,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -74,31 +76,32 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
   boolean installRequested = false;
   boolean isBusy = false;
-  GLSurfaceView glView; // 띄우기 위한 View
-  Session session; // ??
-  Camera camera; // 그냥 카메라
+  GLSurfaceView glView; // surface for drawing OpenGL stuff
+  Session session; // ArCore Session - to use ArCore features, you should keep this around
+  Camera camera; // ArCore camera
   CameraConfig cameraConfig;
   Image image;
   Mat img;
   Plane plane;
 
 
-  PointCloudRenderer pointCloudRenderer; // PointCloud그림
-  PointCollector pointCollector; // 모을거임
+  PointCloudRenderer pointCloudRenderer; // for drawing PointCloud
+  PointCollector pointCollector; // for collecting PointCloud
 
   ExecutorService worker;
   ExecutorService findPlaneworker;
   FindPlaneTask findPlaneTask;
 
-  SimpleDraw forDebugging; // 선택한 점 그리는거
+  SimpleDraw forDebugging; // for drawing simple shapes in OpenGL
   Background background; // background
   DrawText drawText;
 
-  OpenCVJNI jni;
+  private OpenCVJNI jni;
+  private Switch imgProcSwitch;
+
   PrefManager pf;
   GuideLine guideLine;
 
-  // 컨투어 그리기 위한거(디버그용)
 //  ArrayList<ContourForDraw> contourForDraws;
 
   EllipsePool ellipsePool;
@@ -164,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     jni = new OpenCVJNI(this);
     jni.setThreshold(0.5);
-    jni.useHOG(true);
+    jni.useHOG(false);
 
     guideLine = new GuideLine(this);
     pf = new PrefManager(this);
@@ -209,6 +212,10 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
     noticeImg = findViewById(R.id.notice_img);
     progressBar = findViewById(R.id.progressBar);
     progressState = findViewById(R.id.progressState);
+    imgProcSwitch = findViewById(R.id.imgProcSwitch);
+    imgProcSwitch.setOnCheckedChangeListener((CompoundButton unusedButton, boolean isChecked) -> {
+      jni.useHOG(isChecked);
+    });
 
     if(pf.isFirstTimeLaunch1())
       guideLine.gl2();
@@ -515,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         // Fail to access raw image...
       }
     }
-    //한번만해 ㅅㅂ
+
     if (frame.hasDisplayGeometryChanged()) {
       background.transformCoordinate(frame);
     }
