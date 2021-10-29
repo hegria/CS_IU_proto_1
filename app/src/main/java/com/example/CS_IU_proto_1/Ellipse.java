@@ -72,6 +72,8 @@ public class Ellipse implements Parcelable {
         isResult = true;
     }
 
+
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeByte((byte) (istoggled ? 1 : 0));
