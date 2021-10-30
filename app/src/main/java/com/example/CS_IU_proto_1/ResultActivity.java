@@ -239,9 +239,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             @Override
             public void afterTextChanged(Editable s) {
                 //입력끝끝
-                longivity = Float.parseFloat(s.toString());
-                if(longivity != 0){
-                    haslongivity = true;
+                if(!s.toString().isEmpty()) {
+                    longivity = Float.parseFloat(s.toString());
+                    if (longivity != 0) {
+                        haslongivity = true;
+                    }
                 }
             }
        });
@@ -264,8 +266,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     nowellipse.isEdited =false;
                     nowellipse = null;
                     correctionbutton.setText("ADD");
+                    delbutton.setText("DONE");
                     seekBar2.setVisibility(View.INVISIBLE);
-                    delbutton.setVisibility(View.INVISIBLE);
                 }
                 setText();
             }
@@ -304,6 +306,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 isEdit = true;
                 editbutton.setVisibility(View.INVISIBLE);
                 savebutton.setVisibility(View.INVISIBLE);
+                delbutton.setVisibility(View.VISIBLE);
             }
         });
 
@@ -415,6 +418,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                     runOnUiThread(()->{
                                         correctionbutton.setText("Apply");
                                         delbutton.setText("DEL");
+                                        correctionbutton.setVisibility(View.VISIBLE);
                                         seekBar2.setVisibility(View.VISIBLE);
                                         seekBar2.setProgress((int) (nowellipse.size2 * 10));
 
