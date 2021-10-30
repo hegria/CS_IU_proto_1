@@ -22,29 +22,46 @@
         app:srcCompat="@drawable/circle" />
 
     <ImageButton
-        android:id="@+id/btnMeasure"
+        android:id="@+id/btnRecord"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/round_rect_background1"
         android:padding="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
+
         app:layout_constraintEnd_toStartOf="@+id/btnGuide"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/btnMeasure"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.501"
+        app:srcCompat="@drawable/for_record_icon" />
+
+    <ImageButton
+        android:id="@+id/btnMeasure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_rect_background2"
+        android:padding="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnRecord"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.501"
         app:srcCompat="@drawable/for_measure_icon" />
 
     <ImageButton
         android:id="@+id/btnGuide"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/round_rect_background2"
+        android:background="@drawable/round_rect_background0"
         android:padding="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/btnMeasure"
+        app:layout_constraintStart_toEndOf="@+id/btnRecord"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.501"
         app:srcCompat="@drawable/for_guide_icon" />
 
     <TextView
@@ -59,6 +76,20 @@
         app:layout_constraintEnd_toEndOf="@+id/btnMeasure"
         app:layout_constraintStart_toStartOf="@+id/btnMeasure"
         app:layout_constraintTop_toBottomOf="@+id/btnMeasure" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="My Record"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="@+id/btnRecord"
+        app:layout_constraintStart_toStartOf="@+id/btnRecord"
+        app:layout_constraintTop_toBottomOf="@+id/btnRecord" />
+
 
     <TextView
         android:id="@+id/textView2"

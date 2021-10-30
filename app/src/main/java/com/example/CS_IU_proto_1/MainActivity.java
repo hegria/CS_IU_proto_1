@@ -650,6 +650,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       e.printStackTrace();
     }
 
+    progressBar.setProgressTintList(ColorStateList.valueOf(Color.YELLOW));
     plane = null;
     ellipsePool.clear();
 //    contourForDraws.clear();

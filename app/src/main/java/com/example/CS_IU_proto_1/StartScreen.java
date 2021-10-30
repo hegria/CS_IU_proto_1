@@ -23,6 +23,7 @@ public class StartScreen extends AppCompatActivity {
         guideLine = new GuideLine(this);
         ImageButton btnMeasure = findViewById(R.id.btnMeasure);
         ImageButton btnGuide = findViewById(R.id.btnGuide);
+        ImageButton btnRecord = findViewById(R.id.btnRecord);
 
         if(pm.isFirstTimeLaunch1())
             guideLine.gl0();
@@ -34,6 +35,11 @@ public class StartScreen extends AppCompatActivity {
 
         btnGuide.setOnClickListener(l -> {
             Intent intent = new Intent(this, GuideSlide.class);
+            startActivity(intent);
+        });
+
+        btnRecord.setOnClickListener(l -> {
+            Intent intent = new Intent(this, MyRecord.class);
             startActivity(intent);
         });
     }
