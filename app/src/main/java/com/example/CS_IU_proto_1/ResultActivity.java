@@ -1,25 +1,52 @@
 package com.example.CS_IU_proto_1;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
+import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -52,14 +79,22 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     boolean isBusy = false;
     boolean correctionmode = false;
+    boolean isEdit = false;
 
+    ImageButton btnDrawer;
+    DrawerLayout drawerLayout;
+    TextView txtFilename, txtDate, txtAddress;
+    EditText txtSpecies;
     TextView textCont;
     TextView textAvgdia;
+    TextView textvolumn;
     Switch switch1, switch2, switch3;
     RangeSeekBar<Integer> seekBar;
     SeekBar seekBar2;
     Button correctionbutton;
     Button delbutton;
+    Button savebutton;
+    Button editbutton;
     Plane plane;
     Ellipse nowellipse;
     int selected_index;
@@ -76,24 +111,60 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     //가이드라인 진행 상태
     private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2, Editing}
+
     Gl_State gl_state = Gl_State.Idle;
     GuideLine guideLine;
     PrefManager pf;
 
-    @SuppressLint("ClickableViewAccessibility")
+    String filename = "";
+    String datestr = "";
+    String addressstr = "";
+    String speices = "";
+
+
+    //1. file IO
+    //1-1 image save
+    //1-2 make json file
+    //1-a Load 기능
+    //2. edit button / Save button
+    // visibilty 설정
+    //3. Plane text로 변경
+    //4. Doker
+
+    //locaiton
+    LocationManager lm;
+    Location location;
+    Geocoder geocoder;
+
+    //time
+    long now;
+    Date date;
+    SimpleDateFormat dateFormat;
+
+    //Gson
+    Gson gson;
+
+    // 재장 및 부피
+
+    EditText editText;
+    boolean haslongivity = false;
+    float longivity;
+    float volumn;
+
+    @SuppressLint({"ClickableViewAccessibility"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         worker = Executors.newSingleThreadExecutor();
         setContentView(R.layout.activity_result);
 
+
         guideLine = new GuideLine(this);
         pf = new PrefManager(this);
-        if(pf.isFirstTimeLaunch2()) {
+        if (pf.isFirstTimeLaunch2()) {
             guideLine.gl6();
             gl_state = Gl_State.Filtering;
         }
-
 
         // Image랑 Ellipse를 받아내고, 이를 다시 그려내야함.
         // 그려내는 부분에서 차라리 Ellipse를 평면에 정사영 시키는 편이 낫지 않을까?
@@ -117,8 +188,15 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         glView.setWillNotDraw(false);
 
+        btnDrawer = findViewById(R.id.btnDrawer);
+        drawerLayout = findViewById(R.id.drawerLayout);
+        txtFilename = findViewById(R.id.txtFilename);
+        txtAddress = findViewById(R.id.txtAddress);
+        txtDate = findViewById(R.id.txtDate);
+        txtSpecies = findViewById(R.id.txtSpecies);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
+        textvolumn = findViewById(R.id.text_avgDiameter2);
         switch1 = findViewById(R.id.switch1);
         switch2 = findViewById(R.id.switch2);
         switch3 = findViewById(R.id.switch3);
@@ -126,6 +204,67 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         seekBar2 = findViewById(R.id.seekBar2);
         seekBar2.setVisibility(View.INVISIBLE);
         correctionbutton = findViewById(R.id.correction);
+        correctionbutton.setVisibility(View.INVISIBLE);
+
+        editText = findViewById(R.id.editTextTextPersonName);
+
+        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
+        }
+
+        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        geocoder = new Geocoder(this);
+        List<Address> list =null;
+        try{
+            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        addressstr = list.get(0).getAdminArea().toString();
+
+        now = System.currentTimeMillis();
+        date = new Date(now);
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        datestr = dateFormat.format(date);
+        Log.i("a", addressstr);
+        filename = addressstr +"_"+datestr;
+
+
+        txtFilename.setText("파일 이름: " + filename);
+        txtAddress.setText("주소: " + addressstr);
+        txtDate.setText("날짜: " + datestr);
+
+
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                //변화
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                //입력끝끝
+                if(!s.toString().isEmpty()) {
+                    longivity = Float.parseFloat(s.toString());
+                    if (longivity != 0) {
+                        haslongivity = true;
+                    }
+                }
+            }
+       });
 
         correctionbutton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,32 +277,85 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     ellipses.add(nowellipse);
                     selected_index = ellipses.indexOf(nowellipse);
                     correctionbutton.setText("Apply");
+                    delbutton.setText("DEL");
                     seekBar2.setVisibility(View.VISIBLE);
-                    delbutton.setVisibility(View.VISIBLE);
-
                 }else{
                     correctionmode = false;
                     nowellipse.isEdited =false;
                     nowellipse = null;
                     correctionbutton.setText("ADD");
+                    delbutton.setText("DONE");
                     seekBar2.setVisibility(View.INVISIBLE);
-                    delbutton.setVisibility(View.INVISIBLE);
                 }
                 setText();
             }
         });
         delbutton = findViewById(R.id.correction3);
         delbutton.setVisibility(View.INVISIBLE);
+        delbutton.setText("DONE");
 
         delbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                correctionmode = false;
-                nowellipse = null;
-                ellipses.remove(selected_index);
-                correctionbutton.setText("ADD");
-                seekBar2.setVisibility(View.INVISIBLE);
-                delbutton.setVisibility(View.INVISIBLE);
+                if(correctionmode){
+                    //which means del
+                    correctionmode = false;
+                    nowellipse = null;
+                    ellipses.remove(selected_index);
+                    correctionbutton.setText("ADD");
+                    delbutton.setText("DONE");
+                    seekBar2.setVisibility(View.INVISIBLE);
+                    correctionbutton.setVisibility(View.VISIBLE);
+                }else{
+                    //which means done
+
+                    isEdit = false;
+                    delbutton.setVisibility(View.INVISIBLE);
+                    editbutton.setVisibility(View.VISIBLE);
+                    savebutton.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        editbutton= findViewById(R.id.Editbtn);
+        editbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                isEdit = true;
+                editbutton.setVisibility(View.INVISIBLE);
+                savebutton.setVisibility(View.INVISIBLE);
+                delbutton.setVisibility(View.VISIBLE);
+            }
+        });
+
+
+
+        savebutton = findViewById(R.id.SaveButton);
+        savebutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                speices = txtSpecies.getText().toString();
+
+                FileOutputStream fos_img = null;
+                FileOutputStream fos_json = null;
+//                try {
+//                    fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
+//                    image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
+//                } catch (FileNotFoundException e){
+//                    e.printStackTrace();
+//                }
+
+                gson = new Gson();
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.add("plane",gson.toJsonTree(plane).getAsJsonObject());
+                jsonObject.add("ellipses",gson.toJsonTree(ellipses).getAsJsonArray());
+                jsonObject.add("projMX",gson.toJsonTree(projMX).getAsJsonArray());
+                jsonObject.add("viewMat",gson.toJsonTree(viewMX).getAsJsonArray());
+                jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
+                jsonObject.add("offset",gson.toJsonTree(offset).getAsJsonPrimitive());
+                //Log.i("json",jsonObject.toString());
+
+
             }
         });
 
@@ -190,7 +382,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 case MotionEvent.ACTION_UP:
                     long deltatime = event.getEventTime() - event.getDownTime();
                     Log.i("Time",""+deltatime);
-                    if(deltatime<LONG_PRESS_TIME){
+                    if(deltatime<LONG_PRESS_TIME||!isEdit){
 
                         if(!correctionmode){
 
@@ -220,7 +412,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                             nowellipse.movepivot(ray,plane,projMX,viewMX);
                         }
                     }else {
-                        if (!correctionmode) {
+
+                        if (!correctionmode&&isEdit) {
                             worker.execute(() -> {
                                 float minDistanceSq = Float.MAX_VALUE;
                                 int idx = -1;
@@ -244,8 +437,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                     nowellipse.isEdited = true;
                                     runOnUiThread(()->{
                                         correctionbutton.setText("Apply");
+                                        delbutton.setText("DEL");
+                                        correctionbutton.setVisibility(View.VISIBLE);
                                         seekBar2.setVisibility(View.VISIBLE);
-                                        delbutton.setVisibility(View.VISIBLE);
                                         seekBar2.setProgress((int) (nowellipse.size2 * 10));
 
                                     });
@@ -348,6 +542,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
             }
         });
+
+        btnDrawer.setOnClickListener(v -> {
+            if (!drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                drawerLayout.openDrawer(Gravity.RIGHT) ;
+            }else
+                drawerLayout.closeDrawer(Gravity.RIGHT); ;
+        });
     }
 
     @Override
@@ -442,10 +643,14 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     void setText(){
         int count = 0;
         float dia = 0;
+        volumn = 0;
         for (Ellipse ellipse : ellipses) {
             if(ellipse.istoggled){
                 count++;
                 dia += ellipse.size;
+                if(haslongivity){
+                    volumn += ellipse.size*ellipse.size*Math.PI*longivity;
+                }
             }
         }
         if(count != 0)
@@ -455,6 +660,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         runOnUiThread(() -> {
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
+            if(haslongivity){
+                textvolumn.setText(String.format("부피 : %.2fcm³",volumn));
+            }
         });
     }
 
@@ -462,6 +670,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(event.getAction() == MotionEvent.ACTION_UP) {
+            if (drawerLayout.isDrawerOpen(Gravity.RIGHT))
+                drawerLayout.closeDrawer(Gravity.RIGHT) ;
             switch (gl_state){
                 case Filtering:
                     guideLine.gl7();

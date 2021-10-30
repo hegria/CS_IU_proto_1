@@ -25,6 +25,12 @@ struct DetectorParam {
 
     // {param-cnt} parameters for filtering contours
     double cnt_filter_th = 3.0;	// not bounded
+
+
+    bool  size_combine_filtering = false;
+    double overflow_th = 2;
+
+    double combine_th = 2;
 };
 
 using Contour = std::vector<cv::Point>;
@@ -56,6 +62,9 @@ private:
     void filterTimberCandidate(cv::Mat& dst_bin, const cv::Mat& src_hsv) const;
     int segmentAreas(cv::Mat& dst_32SC1, const cv::Mat& src_hsv) const;
     void filterContours(std::vector<Contour>& dst, const std::vector<Contour>& src_bin, int w, int h, double th) const;
+    std::vector<Contour> removeOverflow(std::vector<Contour>& dst, const std::vector<Contour>& src, int w, int h) const;
+    void divideMergedContour(std::vector<Contour>& dst, std::vector<Contour>& src, int w, int h) const;
+    void filterContours2(std::vector<Contour>& dst, const std::vector<Contour>& src, int w, int h) const; //roi + 너무크거나 작은 contour 제거
 
 };
 
