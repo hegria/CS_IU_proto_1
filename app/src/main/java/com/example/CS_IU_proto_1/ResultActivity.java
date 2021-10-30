@@ -18,16 +18,19 @@ import android.os.Parcel;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -78,6 +81,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     boolean correctionmode = false;
     boolean isEdit = false;
 
+    ImageButton btnDrawer;
+    DrawerLayout drawerLayout;
+    TextView txtFilename, txtDate, txtAddress;
+    EditText txtSpecies;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
@@ -109,10 +116,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     GuideLine guideLine;
     PrefManager pf;
 
-    String filename;
-    String datestr;
-    String addressstr;
-    String speices;
+    String filename = "";
+    String datestr = "";
+    String addressstr = "";
+    String speices = "";
 
 
     //1. file IO
@@ -181,6 +188,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
         glView.setWillNotDraw(false);
 
+        btnDrawer = findViewById(R.id.btnDrawer);
+        drawerLayout = findViewById(R.id.drawerLayout);
+        txtFilename = findViewById(R.id.txtFilename);
+        txtAddress = findViewById(R.id.txtAddress);
+        txtDate = findViewById(R.id.txtDate);
+        txtSpecies = findViewById(R.id.txtSpecies);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
         textvolumn = findViewById(R.id.text_avgDiameter2);
@@ -207,22 +220,27 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
         }
 
-        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        geocoder = new Geocoder(this);
-        List<Address> list =null;
-        try{
-            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-        addressstr = list.get(0).getAdminArea().toString();
+//        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//        geocoder = new Geocoder(this);
+//        List<Address> list =null;
+//        try{
+//            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+//        } catch (IOException e){
+//            e.printStackTrace();
+//        }
+//        addressstr = list.get(0).getAdminArea().toString();
+//
+//        now = System.currentTimeMillis();
+//        date = new Date(now);
+//        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+//        datestr = dateFormat.format(date);
+//        Log.i("a", addressstr);
+//        filename = addressstr +"_"+datestr;
 
-        now = System.currentTimeMillis();
-        date = new Date(now);
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        datestr = dateFormat.format(date);
-        Log.i("a", addressstr);
-        filename = addressstr +"_"+datestr;
+
+        txtFilename.setText("파일 이름: " + filename);
+        txtAddress.setText("주소: " + addressstr);
+        txtDate.setText("날짜: " + datestr);
 
 
         editText.addTextChangedListener(new TextWatcher() {
@@ -316,6 +334,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         savebutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                speices = txtSpecies.getText().toString();
+
                 FileOutputStream fos_img = null;
                 FileOutputStream fos_json = null;
 //                try {
@@ -522,6 +542,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
             }
         });
+
+        btnDrawer.setOnClickListener(v -> {
+            if (!drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                drawerLayout.openDrawer(Gravity.RIGHT) ;
+            }else
+                drawerLayout.closeDrawer(Gravity.RIGHT); ;
+        });
     }
 
     @Override
@@ -643,6 +670,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(event.getAction() == MotionEvent.ACTION_UP) {
+            if (drawerLayout.isDrawerOpen(Gravity.RIGHT))
+                drawerLayout.closeDrawer(Gravity.RIGHT) ;
             switch (gl_state){
                 case Filtering:
                     guideLine.gl7();
