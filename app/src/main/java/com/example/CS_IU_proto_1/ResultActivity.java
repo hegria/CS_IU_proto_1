@@ -220,22 +220,22 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
         }
 
-//        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//        geocoder = new Geocoder(this);
-//        List<Address> list =null;
-//        try{
-//            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-//        } catch (IOException e){
-//            e.printStackTrace();
-//        }
-//        addressstr = list.get(0).getAdminArea().toString();
-//
-//        now = System.currentTimeMillis();
-//        date = new Date(now);
-//        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-//        datestr = dateFormat.format(date);
-//        Log.i("a", addressstr);
-//        filename = addressstr +"_"+datestr;
+        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        geocoder = new Geocoder(this);
+        List<Address> list =null;
+        try{
+            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        addressstr = list.get(0).getAdminArea().toString();
+
+        now = System.currentTimeMillis();
+        date = new Date(now);
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        datestr = dateFormat.format(date);
+        Log.i("a", addressstr);
+        filename = addressstr +"_"+datestr;
 
 
         txtFilename.setText("파일 이름: " + filename);

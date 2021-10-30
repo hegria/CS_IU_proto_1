@@ -223,7 +223,7 @@
 
         <ScrollView
             android:id="@+id/drawer"
-            android:layout_width="500px"
+            android:layout_width="450px"
             android:layout_height="match_parent"
             android:layout_gravity="right"
             android:background="#FFF4C8"
