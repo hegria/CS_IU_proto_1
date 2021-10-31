@@ -34,7 +34,7 @@
                     android:background="#1F6121"
                     android:padding="10dp"
                     android:text="Information"
-                    android:textSize="18sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <ImageButton
@@ -128,7 +128,7 @@
                 android:background="#194559"
                 android:padding="10dp"
                 android:text="Filtering"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
 
@@ -223,7 +223,7 @@
 
         <ScrollView
             android:id="@+id/drawer"
-            android:layout_width="450px"
+            android:layout_width="500px"
             android:layout_height="match_parent"
             android:layout_gravity="right"
             android:background="#FFF4C8"
@@ -232,34 +232,52 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_gravity="center"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/txtFilename"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
-                    android:text="파일 이름: "
-                    android:textColor="#000000"
-                    android:textSize="14sp" />
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/txtFilename"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="파일 이름: "
+                        android:textColor="#000000"
+                        android:textSize="12sp" />
+
+                    <EditText
+                        android:id="@+id/txtFilename2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:textSize="10sp"
+                        android:textColor="#000000"
+                        android:inputType="text"
+                        android:text="" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/txtDate"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
+                    android:padding="8dp"
                     android:text="날짜: "
                     android:textColor="#000000"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
 
                 <TextView
                     android:id="@+id/txtAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="5dp"
+                    android:padding="8dp"
                     android:text="위치: "
                     android:textColor="#000000"
-                    android:textSize="14sp" />
+                    android:textSize="12sp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -271,9 +289,10 @@
                         android:id="@+id/txtSpeciesTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:padding="8dp"
                         android:text="수종: "
                         android:textColor="#000000"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                     <EditText
                         android:id="@+id/txtSpecies"
@@ -282,10 +301,10 @@
                         android:backgroundTint="#000000"
                         android:ems="10"
                         android:hint="수종을 입력하세요."
-                        android:inputType="textMultiLine|textPersonName"
+                        android:inputType="text"
                         android:textColor="#000000"
                         android:textColorHint="#4C4B4B"
-                        android:textSize="14sp" />
+                        android:textSize="12sp" />
 
                 </LinearLayout>
 

@@ -14,7 +14,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class MyRecord extends AppCompatActivity {
 
@@ -26,20 +35,33 @@ public class MyRecord extends AppCompatActivity {
         setContentView(R.layout.activity_my_record);
 
 
-
-
+        File mydir = this.getFilesDir();
+        File[] listFiles = mydir.listFiles();
+        Gson gson = new Gson();
+        ArrayList<JsonObject> jsonObjects = new ArrayList<JsonObject>();
         // 리사이클러뷰에 표시할 데이터 리스트 생성.
         ArrayList<Data> list = new ArrayList<>();
 
-        //Data 넣기
-        list.add(new Data("10월 8일", "name1", "수원시 영통구 어쩌고 저쩌고 어쩌고 저쩌고 어쩌고 저쩌고 어쩌고 저쩌고 어쩌고 저쩌고"));
-        list.add(new Data("10월 9일", "name2", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 10일", "name3", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 11일", "name4", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 12일", "name5", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 13일", "name6", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 14일", "name7", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 15일", "name8", "수원시 영통구 어쩌고 저쩌고"));
+        for (int i = 1; i< Objects.requireNonNull(listFiles).length; i++){
+            String filename = listFiles[i].getName();
+            if(filename.substring(filename.lastIndexOf(".")+1,filename.length()).equals("json")){
+                try {
+                    JsonReader jsonReader = new JsonReader(new InputStreamReader(openFileInput(filename),"UTF-8"));
+                    jsonReader.setLenient(true);
+                    JsonObject tempjson = gson.fromJson(jsonReader,JsonObject.class);
+
+
+                    list.add(new Data(tempjson.get("date").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("location").getAsString()));
+
+                    jsonObjects.add(tempjson);
+
+                } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
 
         // 리사이클러뷰에 LinearLayoutManager 객체 지정.
         RecyclerView recyclerView = findViewById(R.id.recyclerView) ;
@@ -139,8 +161,8 @@ public class MyRecord extends AppCompatActivity {
         // onBindViewHolder() - position에 해당하는 데이터를 뷰홀더의 아이템뷰에 표시.
         @Override
         public void onBindViewHolder(CustomAdapter.ViewHolder holder, int position) {
-            holder.comp1.setText(mData.get(position).date);
-            holder.comp2.setText(mData.get(position).filename);
+            holder.comp2.setText(mData.get(position).date);
+            holder.comp1.setText(mData.get(position).filename);
             holder.comp3.setText(mData.get(position).addr);
         }
 

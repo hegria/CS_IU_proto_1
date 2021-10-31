@@ -29,6 +29,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -36,13 +37,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,7 +88,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
-    TextView txtFilename, txtDate, txtAddress;
+    TextView txtDate, txtAddress;
+    EditText txtFilename;
     EditText txtSpecies;
     TextView textCont;
     TextView textAvgdia;
@@ -190,7 +196,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         btnDrawer = findViewById(R.id.btnDrawer);
         drawerLayout = findViewById(R.id.drawerLayout);
-        txtFilename = findViewById(R.id.txtFilename);
+        txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress);
         txtDate = findViewById(R.id.txtDate);
         txtSpecies = findViewById(R.id.txtSpecies);
@@ -238,7 +244,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         filename = addressstr +"_"+datestr;
 
 
-        txtFilename.setText("파일 이름: " + filename);
+        txtFilename.setText(filename);
         txtAddress.setText("주소: " + addressstr);
         txtDate.setText("날짜: " + datestr);
 
@@ -324,6 +330,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 isEdit = true;
                 editbutton.setVisibility(View.INVISIBLE);
                 savebutton.setVisibility(View.INVISIBLE);
+                correctionbutton.setVisibility(View.VISIBLE);
                 delbutton.setVisibility(View.VISIBLE);
             }
         });
@@ -335,15 +342,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             @Override
             public void onClick(View v) {
                 speices = txtSpecies.getText().toString();
+                filename = txtFilename.getText().toString();
 
                 FileOutputStream fos_img = null;
-                FileOutputStream fos_json = null;
-//                try {
-//                    fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
-//                    image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
-//                } catch (FileNotFoundException e){
-//                    e.printStackTrace();
-//                }
 
                 gson = new Gson();
                 JsonObject jsonObject = new JsonObject();
@@ -352,9 +353,23 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.add("projMX",gson.toJsonTree(projMX).getAsJsonArray());
                 jsonObject.add("viewMat",gson.toJsonTree(viewMX).getAsJsonArray());
                 jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
-                jsonObject.add("offset",gson.toJsonTree(offset).getAsJsonPrimitive());
-                //Log.i("json",jsonObject.toString());
+                jsonObject.addProperty("offset",offset);
+                jsonObject.addProperty("speice",speices);
+                jsonObject.addProperty("date",datestr);
+                jsonObject.addProperty("location",addressstr);
+                jsonObject.addProperty("long",longivity);
 
+                String s = gson.toJson(jsonObject);
+                try {
+                    // 파일 이름 변경 되었을 때 예외 처리
+                    JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput(filename+".json", Context.MODE_PRIVATE),"UTF-8"));
+                    gson.toJson(jsonObject,jsonWriter);
+                    fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
+                    image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
+                    jsonWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
             }
         });
