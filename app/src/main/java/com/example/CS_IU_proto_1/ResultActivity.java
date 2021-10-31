@@ -155,7 +155,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     EditText editText;
     boolean haslongivity = false;
-    float longivity;
+    float longivity = 0;
     float volumn;
 
     @SuppressLint({"ClickableViewAccessibility"})
@@ -268,6 +268,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     longivity = Float.parseFloat(s.toString());
                     if (longivity != 0) {
                         haslongivity = true;
+                        setText();
                     }
                 }
             }
@@ -342,8 +343,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         savebutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 speices = txtSpecies.getText().toString();
                 filename = txtFilename.getText().toString();
+                if(speices.isEmpty()){
+                    Toast.makeText(ResultActivity.this, "수종을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                }
+                if(longivity ==0){
+                    Toast.makeText(ResultActivity.this, "재장을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                }
 
                 FileOutputStream fos_img = null;
 
