@@ -27,6 +27,7 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -367,10 +368,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
                     image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
                     jsonWriter.close();
+                    Toast.makeText(getApplicationContext(), "저장되었습니다.", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
+                    Toast.makeText(getApplicationContext(), "저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                 }
-
             }
         });
 
