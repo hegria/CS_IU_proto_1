@@ -158,8 +158,8 @@ public class MyRecord extends AppCompatActivity {
             //파일 열기
             if(popupMode == 1){
 
+                //파일 로드
                 /*
-                파일 로드
 
 
                  */
@@ -168,23 +168,21 @@ public class MyRecord extends AppCompatActivity {
             }
             //파일 삭제
             else{
-                boolean isDeleted = listFiles[selected].delete();
+                //파일 삭제
                 /*
-                파일 삭제
 
 
                  */
 
-                if(isDeleted) {
-                    list.remove(selected);
-                    adapter.notifyDataSetChanged();
-                    //파일 없으면 파일 없다고 띄우기
-                    if (list.size() == 0)
-                        noFileText.setVisibility(View.VISIBLE);
-                    Toast.makeText(this, "삭제되었습니다.", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(this, "삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
-                }
+                //여기는 그냥 핸드폰 화면에 보이는 거 삭제하는 코드 (내부 데이터까지는 X)
+                list.remove(selected);
+                adapter.notifyDataSetChanged();
+                //파일 없으면 파일 없다고 띄우기
+                if (list.size() == 0)
+                    noFileText.setVisibility(View.VISIBLE);
+                Toast.makeText(this, "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+
+
             }
             popupLayout.setVisibility(View.GONE);
         });
