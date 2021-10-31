@@ -2,6 +2,7 @@ package com.example.CS_IU_proto_1;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -12,7 +13,10 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -28,11 +32,26 @@ import java.util.Objects;
 public class MyRecord extends AppCompatActivity {
 
     boolean isScroll = false;
+    int popupMode = 1;
+    int selected = -1;
+
+    ConstraintLayout popupLayout;
+    Button btnOk, btnCancel;
+    ImageButton btnDelete;
+    TextView popupText, noFileText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_record);
+
+
+        popupLayout = findViewById(R.id.popUpLayout);
+        btnOk = findViewById(R.id.btnOpen);
+        btnCancel = findViewById(R.id.btnCancel);
+        btnDelete = findViewById(R.id.btnDelete);
+        popupText = findViewById(R.id.txtPopUpText);
+        noFileText = findViewById(R.id.txtNoFile);
 
 
         File mydir = this.getFilesDir();
@@ -61,7 +80,9 @@ public class MyRecord extends AppCompatActivity {
             }
         }
 
-
+        //파일 없으면 파일 없다고 띄우기
+        if(list.size() == 0)
+            noFileText.setVisibility(View.VISIBLE);
 
         // 리사이클러뷰에 LinearLayoutManager 객체 지정.
         RecyclerView recyclerView = findViewById(R.id.recyclerView) ;
@@ -88,11 +109,21 @@ public class MyRecord extends AppCompatActivity {
 
                 if(e.getAction() == MotionEvent.ACTION_UP) {
                     View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
-                    int position = recyclerView.getChildAdapterPosition(child);
+                    int pos = recyclerView.getChildAdapterPosition(child);
 
                     //여기에서 리스트 안에서 몇번째 아이템 선택됐는지 알 수 있음
                     if(!isScroll) {
-                        Log.d("테스트", "Position: " + position);
+                        Log.d("테스트", "Position: " + pos);
+                        Log.d("테스트", "Length: " + list.size());
+
+                        if(pos != -1){
+                            selected = pos;
+                            popupMode = 1;
+                            btnOk.setText("열기");
+                            btnDelete.setVisibility(View.VISIBLE);
+                            popupText.setText(list.get(selected).filename + " 을 여시겠습니까?");
+                            popupLayout.setVisibility(View.VISIBLE);
+                        }
                     }
                 }
                 return false;
@@ -107,6 +138,55 @@ public class MyRecord extends AppCompatActivity {
             public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
 
             }
+        });
+
+        //삭제 창으로 변환
+        btnDelete.setOnClickListener(l -> {
+            popupMode = 2;
+            popupText.setText(list.get(selected).filename + " 을 삭제하시겠습니까?");
+            btnOk.setText("삭제");
+            btnDelete.setVisibility(View.GONE);
+        });
+
+        //취소
+        btnCancel.setOnClickListener(l -> {
+            popupLayout.setVisibility(View.GONE);
+        });
+
+        //파일 열기 또는 파일 삭제
+        btnOk.setOnClickListener(l -> {
+            //파일 열기
+            if(popupMode == 1){
+
+                /*
+                파일 로드
+
+
+                 */
+
+                Toast.makeText(this, "파일이 성공적으로 열렸습니다.", Toast.LENGTH_SHORT).show();
+            }
+            //파일 삭제
+            else{
+                boolean isDeleted = listFiles[selected].delete();
+                /*
+                파일 삭제
+
+
+                 */
+
+                if(isDeleted) {
+                    list.remove(selected);
+                    adapter.notifyDataSetChanged();
+                    //파일 없으면 파일 없다고 띄우기
+                    if (list.size() == 0)
+                        noFileText.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(this, "삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            popupLayout.setVisibility(View.GONE);
         });
 
     }
