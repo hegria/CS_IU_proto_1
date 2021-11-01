@@ -18,6 +18,10 @@ public class Myutil {
         // 예외 처리 하기
         float[] output = new float[3];
 
+        if(plane == null)
+            return output;
+
+
         float parameter = (plane.dval - plane.normal[0]*ray.origin[0] - plane.normal[1]*ray.origin[1] -plane.normal[2]*ray.origin[2])
                 / (plane.normal[0]*ray.dir[0]+plane.normal[1]*ray.dir[1]+plane.normal[2]*ray.dir[2]);
 

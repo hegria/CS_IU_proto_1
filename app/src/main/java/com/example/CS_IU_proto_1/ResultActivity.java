@@ -10,11 +10,11 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Parcel;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -27,22 +27,22 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
-import org.json.JSONObject;
 
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -83,7 +83,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
-    TextView txtFilename, txtDate, txtAddress;
+    TextView txtDate;
+    EditText txtAddress;
+    EditText txtFilename;
     EditText txtSpecies;
     TextView textCont;
     TextView textAvgdia;
@@ -103,6 +105,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     ExecutorService worker;
     EllipsePool ellipsePool;
 
+    long backKeyPressedTime;
 
     //for Long touch
     static int LONG_PRESS_TIME = 300;
@@ -146,10 +149,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     // 재장 및 부피
 
-    EditText editText;
+    EditText editLongivity;
     boolean haslongivity = false;
-    float longivity;
+    float longivity = 0;
     float volumn;
+
+    int from;
 
     @SuppressLint({"ClickableViewAccessibility"})
     @Override
@@ -157,6 +162,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         super.onCreate(savedInstanceState);
         worker = Executors.newSingleThreadExecutor();
         setContentView(R.layout.activity_result);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
+        }
 
 
         guideLine = new GuideLine(this);
@@ -170,6 +185,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         // 그려내는 부분에서 차라리 Ellipse를 평면에 정사영 시키는 편이 낫지 않을까?
         // Background 같은경우도 새로운 자료형을 만들어내야함( Image를 Bitmap을 통해서 그려낼 수 있는
         Intent intent = getIntent();
+        from = intent.getIntExtra("from",0);
+        //1은 그냥 2는 로딩
         ellipses = intent.getParcelableArrayListExtra("Ellipse");
         plane = intent.getParcelableExtra("plane");
         projMX = intent.getFloatArrayExtra("projMat");
@@ -177,8 +194,65 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         cameratrans = intent.getFloatArrayExtra("cameratrans");
         offset = intent.getFloatExtra("offset",0);
         byte[] byteArray = intent.getByteArrayExtra("image");
-
         image = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+
+
+        editLongivity = findViewById(R.id.editTextTextPersonName);
+        txtSpecies = findViewById(R.id.txtSpecies);
+
+        switch (from){
+            case 1:
+                lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+
+                location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                if(location == null){
+                    location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+                if(location == null){
+                    addressstr = "";
+                    Toast.makeText(this, "주소를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
+                }else{
+
+                    geocoder = new Geocoder(this);
+                    List<Address> list =null;
+                    try{
+
+                        list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+                    } catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    addressstr = list.get(0).getAdminArea().toString();
+                }
+
+                now = System.currentTimeMillis();
+                date = new Date(now);
+                dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+                datestr = dateFormat.format(date);
+                Log.i("a", addressstr);
+                filename = addressstr +"_"+datestr;
+                break;
+            case 2:
+                haslongivity = true;
+                speices = intent.getStringExtra("speices");
+                datestr = intent.getStringExtra("date");
+                addressstr = intent.getStringExtra("location");
+                longivity = intent.getFloatExtra("long",0);
+                filename = intent.getStringExtra("filename");
+                // now date
+                Log.i("ass",""+longivity);
+                CharSequence cs = Float.toString(longivity);
+                editLongivity.setText(cs);
+                txtSpecies.setText(speices);
+                break;
+            default:
+                break;
+        }
+
+
+
+
         Log.i("img",""+byteArray.length);
         glView = (GLSurfaceView) findViewById(R.id.subsurface);
         glView.setPreserveEGLContextOnPause(true);
@@ -190,10 +264,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         btnDrawer = findViewById(R.id.btnDrawer);
         drawerLayout = findViewById(R.id.drawerLayout);
-        txtFilename = findViewById(R.id.txtFilename);
-        txtAddress = findViewById(R.id.txtAddress);
+        txtFilename = findViewById(R.id.txtFilename2);
+        txtAddress = findViewById(R.id.txtAddress2);
         txtDate = findViewById(R.id.txtDate);
-        txtSpecies = findViewById(R.id.txtSpecies);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
         textvolumn = findViewById(R.id.text_avgDiameter2);
@@ -206,44 +279,15 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         correctionbutton = findViewById(R.id.correction);
         correctionbutton.setVisibility(View.INVISIBLE);
 
-        editText = findViewById(R.id.editTextTextPersonName);
-
-        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
-        }
-
-        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        geocoder = new Geocoder(this);
-        List<Address> list =null;
-        try{
-            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-        addressstr = list.get(0).getAdminArea().toString();
-
-        now = System.currentTimeMillis();
-        date = new Date(now);
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        datestr = dateFormat.format(date);
-        Log.i("a", addressstr);
-        filename = addressstr +"_"+datestr;
 
 
-        txtFilename.setText("파일 이름: " + filename);
-        txtAddress.setText("주소: " + addressstr);
-        txtDate.setText("날짜: " + datestr);
+
+        txtFilename.setText(filename);
+        txtAddress.setText(addressstr);
+        txtDate.setText("날짜:   " + datestr);
 
 
-        editText.addTextChangedListener(new TextWatcher() {
+        editLongivity.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -261,6 +305,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     longivity = Float.parseFloat(s.toString());
                     if (longivity != 0) {
                         haslongivity = true;
+                        setText();
                     }
                 }
             }
@@ -324,36 +369,95 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 isEdit = true;
                 editbutton.setVisibility(View.INVISIBLE);
                 savebutton.setVisibility(View.INVISIBLE);
+                correctionbutton.setVisibility(View.VISIBLE);
                 delbutton.setVisibility(View.VISIBLE);
             }
         });
 
+        txtAddress.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(!s.toString().isEmpty()){
+                    addressstr = s.toString();
+                    filename = s.toString() +"_"+datestr;
+                    txtFilename.setText(filename);
+                }
+            }
+        });
 
 
         savebutton = findViewById(R.id.SaveButton);
         savebutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 speices = txtSpecies.getText().toString();
+                filename = txtFilename.getText().toString();
+                if(addressstr.isEmpty()){
+                    Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(speices.isEmpty()){
+                    Toast.makeText(ResultActivity.this, "수종을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(longivity ==0){
+                    Toast.makeText(ResultActivity.this, "재장을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 FileOutputStream fos_img = null;
-                FileOutputStream fos_json = null;
-//                try {
-//                    fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
-//                    image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
-//                } catch (FileNotFoundException e){
-//                    e.printStackTrace();
-//                }
 
                 gson = new Gson();
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.add("plane",gson.toJsonTree(plane).getAsJsonObject());
                 jsonObject.add("ellipses",gson.toJsonTree(ellipses).getAsJsonArray());
                 jsonObject.add("projMX",gson.toJsonTree(projMX).getAsJsonArray());
-                jsonObject.add("viewMat",gson.toJsonTree(viewMX).getAsJsonArray());
+                jsonObject.add("viewMX",gson.toJsonTree(viewMX).getAsJsonArray());
                 jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
-                jsonObject.add("offset",gson.toJsonTree(offset).getAsJsonPrimitive());
-                //Log.i("json",jsonObject.toString());
+                jsonObject.addProperty("offset",offset);
+                jsonObject.addProperty("speice",speices);
+                jsonObject.addProperty("date",datestr);
+                jsonObject.addProperty("location",addressstr);
+                jsonObject.addProperty("long",longivity);
+                File file = getBaseContext().getFileStreamPath(filename+".json");
+                if(file.exists()){
+                    try {
+                        file.delete();
+                        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput(filename+".json", Context.MODE_PRIVATE),"UTF-8"));
+                        gson.toJson(jsonObject,jsonWriter);
+                        jsonWriter.close();
+                    } catch (IOException e) {
+                        Toast.makeText(getApplicationContext(), "저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                    Toast.makeText(getApplicationContext(), "저장되었습니다.", Toast.LENGTH_SHORT).show();
+
+                }else{
+                    try {
+                        // 파일 이름 변경 되었을 때 예외 처리
+                        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput(filename+".json", Context.MODE_PRIVATE),"UTF-8"));
+                        gson.toJson(jsonObject,jsonWriter);
+                        fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
+                        image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
+                        jsonWriter.close();
+                        Toast.makeText(getApplicationContext(), "저장되었습니다.", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        Toast.makeText(getApplicationContext(), "저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                }
 
 
             }
@@ -403,9 +507,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                 }
                                 if(idx != -1){
                                     ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
+                                    setText();
                                 }
                             });
-                            setText();
                         }else{
                             //button으로 넘겨야함.
                             Ray ray = Myutil.GenerateRay(xPx,yPx,screenWidth,screenHeight,projMX,viewMX,cameratrans);
@@ -696,5 +800,23 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         }
         return true;
+    }
+
+
+    @Override
+    public void onBackPressed() {
+            //1번째 백버튼 클릭
+            if(System.currentTimeMillis()>backKeyPressedTime+2000){
+                backKeyPressedTime = System.currentTimeMillis();
+                Toast.makeText(this, "한번 더 눌러 메인 화면으로 이동", Toast.LENGTH_SHORT).show();
+            }
+            //2번째 백버튼 클릭 (종료)
+            else{
+                Intent intent = new Intent(this, StartScreen.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+
+
     }
 }

@@ -2,23 +2,52 @@ package com.example.CS_IU_proto_1;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Objects;
+
+import javax.xml.transform.Result;
 
 public class MyRecord extends AppCompatActivity {
 
     boolean isScroll = false;
+    int popupMode = 1;
+    int selected = -1;
+
+    ConstraintLayout popupLayout;
+    Button btnOk, btnCancel;
+    ImageButton btnDelete;
+    TextView popupText, noFileText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,20 +55,47 @@ public class MyRecord extends AppCompatActivity {
         setContentView(R.layout.activity_my_record);
 
 
+        popupLayout = findViewById(R.id.popUpLayout);
+        btnOk = findViewById(R.id.btnOpen);
+        btnCancel = findViewById(R.id.btnCancel);
+        btnDelete = findViewById(R.id.btnDelete);
+        popupText = findViewById(R.id.txtPopUpText);
+        noFileText = findViewById(R.id.txtNoFile);
 
 
+        File mydir = this.getFilesDir();
+        File[] listFiles = mydir.listFiles();
+        Gson gson = new Gson();
+        ArrayList<JsonObject> jsonObjects = new ArrayList<JsonObject>();
         // 리사이클러뷰에 표시할 데이터 리스트 생성.
         ArrayList<Data> list = new ArrayList<>();
 
-        //Data 넣기
-        list.add(new Data("10월 8일", "name1", "수원시 영통구 어쩌고 저쩌고 어쩌고 저쩌고 어쩌고 저쩌고 어쩌고 저쩌고 어쩌고 저쩌고"));
-        list.add(new Data("10월 9일", "name2", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 10일", "name3", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 11일", "name4", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 12일", "name5", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 13일", "name6", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 14일", "name7", "수원시 영통구 어쩌고 저쩌고"));
-        list.add(new Data("10월 15일", "name8", "수원시 영통구 어쩌고 저쩌고"));
+        for (int i = 1; i< Objects.requireNonNull(listFiles).length; i++){
+            String filename = listFiles[i].getName();
+            if(filename.substring(filename.lastIndexOf(".")+1,filename.length()).equals("json")){
+                try {
+                    JsonReader jsonReader = new JsonReader(new InputStreamReader(openFileInput(filename),"UTF-8"));
+                    jsonReader.setLenient(true);
+                    JsonObject tempjson = gson.fromJson(jsonReader,JsonObject.class);
+
+
+                    list.add(new Data(tempjson.get("date").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("location").getAsString()));
+
+                    jsonObjects.add(tempjson);
+
+                } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                Log.i("i th", ""+i);
+
+                // "i + 1"
+            }
+
+        }
+
+        //파일 없으면 파일 없다고 띄우기
+        if(list.size() == 0)
+            noFileText.setVisibility(View.VISIBLE);
 
         // 리사이클러뷰에 LinearLayoutManager 객체 지정.
         RecyclerView recyclerView = findViewById(R.id.recyclerView) ;
@@ -66,11 +122,18 @@ public class MyRecord extends AppCompatActivity {
 
                 if(e.getAction() == MotionEvent.ACTION_UP) {
                     View child = recyclerView.findChildViewUnder(e.getX(), e.getY());
-                    int position = recyclerView.getChildAdapterPosition(child);
+                    int pos = recyclerView.getChildAdapterPosition(child);
 
                     //여기에서 리스트 안에서 몇번째 아이템 선택됐는지 알 수 있음
-                    if(!isScroll) {
-                        Log.d("테스트", "Position: " + position);
+                    if(!isScroll && popupLayout.getVisibility() != View.VISIBLE) {
+                        if(pos != -1){
+                            selected = pos;
+                            popupMode = 1;
+                            btnOk.setText("열기");
+                            btnDelete.setVisibility(View.VISIBLE);
+                            popupText.setText(list.get(selected).filename + " 을 여시겠습니까?");
+                            popupLayout.setVisibility(View.VISIBLE);
+                        }
                     }
                 }
                 return false;
@@ -85,6 +148,98 @@ public class MyRecord extends AppCompatActivity {
             public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
 
             }
+        });
+
+        //삭제 창으로 변환
+        btnDelete.setOnClickListener(l -> {
+            popupMode = 2;
+            popupText.setText(list.get(selected).filename + " 을 삭제하시겠습니까?");
+            btnOk.setText("삭제");
+            btnDelete.setVisibility(View.GONE);
+        });
+
+        //취소
+        btnCancel.setOnClickListener(l -> {
+            popupLayout.setVisibility(View.GONE);
+        });
+
+        //파일 열기 또는 파일 삭제
+        btnOk.setOnClickListener(l -> {
+            //파일 열기
+            if(popupMode == 1){
+
+                /*
+                파일 로드
+
+
+                 */
+                JsonObject nowobject = jsonObjects.get(selected);
+                Type type = new TypeToken<ArrayList<Ellipse>>() {}.getType();
+                Plane plane = gson.fromJson(nowobject.getAsJsonObject("plane"),Plane.class);
+                ArrayList<Ellipse> ellipses = gson.fromJson(nowobject.getAsJsonArray("ellipses"),type);
+                float[] projMX = gson.fromJson(nowobject.getAsJsonArray("projMX"),float[].class);
+                float[] viewMX = gson.fromJson(nowobject.getAsJsonArray("viewMX"),float[].class);
+                float[] cameratrans = gson.fromJson(nowobject.getAsJsonArray("cameratrans"),float[].class);
+                float offset = nowobject.get("offset").getAsFloat();
+                String speice = nowobject.get("speice").getAsString();
+                String date = nowobject.get("date").getAsString();
+                String location = nowobject.get("location").getAsString();
+                float longivity = nowobject.get("long").getAsFloat();
+                String filename = list.get(selected).filename;
+
+                Intent intent = new Intent(MyRecord.this, ResultActivity.class);
+                intent.putExtra("from",2);
+                intent.putParcelableArrayListExtra("Ellipse",ellipses);
+                intent.putExtra("plane",plane);
+                intent.putExtra("projMat",projMX);
+                intent.putExtra("viewMat",viewMX);
+                intent.putExtra("cameratrans",cameratrans);
+                intent.putExtra("offset",offset);
+
+                try {
+                    InputStream inputStream = openFileInput(filename+".JPG");
+                    Bitmap image = BitmapFactory.decodeStream(inputStream);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    image.compress(Bitmap.CompressFormat.JPEG, 100,stream);
+                    byte[] bytes = stream.toByteArray();
+                    intent.putExtra("image",bytes);
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                intent.putExtra("speices",speice);
+                intent.putExtra("date",date);
+                intent.putExtra("location",location);
+                intent.putExtra("long",longivity);
+                intent.putExtra("filename",filename);
+                startActivity(intent);
+                //bitmap 열고 압축해서 다시 주기
+
+
+
+                // make intent!!
+
+                Toast.makeText(this, "파일이 성공적으로 열렸습니다.", Toast.LENGTH_SHORT).show();
+            }
+            //파일 삭제
+            else{
+                boolean isDeleted = listFiles[selected*2].delete();
+
+
+                if(isDeleted) {
+                    listFiles[selected*2+1].delete();
+                    jsonObjects.remove(selected);
+                    list.remove(selected);
+                    adapter.notifyDataSetChanged();
+                    //파일 없으면 파일 없다고 띄우기
+                    if (list.size() == 0)
+                        noFileText.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(this, "삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            popupLayout.setVisibility(View.GONE);
         });
 
     }
@@ -139,8 +294,8 @@ public class MyRecord extends AppCompatActivity {
         // onBindViewHolder() - position에 해당하는 데이터를 뷰홀더의 아이템뷰에 표시.
         @Override
         public void onBindViewHolder(CustomAdapter.ViewHolder holder, int position) {
-            holder.comp1.setText(mData.get(position).date);
-            holder.comp2.setText(mData.get(position).filename);
+            holder.comp2.setText(mData.get(position).date);
+            holder.comp1.setText(mData.get(position).filename);
             holder.comp3.setText(mData.get(position).addr);
         }
 
