@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -38,6 +39,7 @@ import com.google.gson.stream.JsonWriter;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -81,7 +83,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
-    TextView txtDate, txtAddress;
+    TextView txtDate;
+    EditText txtAddress;
     EditText txtFilename;
     EditText txtSpecies;
     TextView textCont;
@@ -201,14 +204,25 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 }
 
                 location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                geocoder = new Geocoder(this);
-                List<Address> list =null;
-                try{
-                    list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-                } catch (IOException e){
-                    e.printStackTrace();
+
+                if(location == null){
+                    location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 }
-                addressstr = list.get(0).getAdminArea().toString();
+                if(location == null){
+                    addressstr = "";
+                    Toast.makeText(this, "주소를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
+                }else{
+
+                    geocoder = new Geocoder(this);
+                    List<Address> list =null;
+                    try{
+
+                        list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+                    } catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    addressstr = list.get(0).getAdminArea().toString();
+                }
 
                 now = System.currentTimeMillis();
                 date = new Date(now);
@@ -249,7 +263,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         btnDrawer = findViewById(R.id.btnDrawer);
         drawerLayout = findViewById(R.id.drawerLayout);
         txtFilename = findViewById(R.id.txtFilename2);
-        txtAddress = findViewById(R.id.txtAddress);
+        txtAddress = findViewById(R.id.txtAddress2);
         txtDate = findViewById(R.id.txtDate);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
@@ -267,7 +281,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
         txtFilename.setText(filename);
-        txtAddress.setText("주소: " + addressstr);
+        txtAddress.setText(addressstr);
         txtDate.setText("날짜: " + datestr);
 
 
@@ -358,6 +372,26 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
+        txtAddress.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(!s.toString().isEmpty()){
+                    addressstr = s.toString();
+                    filename = s.toString() +"_"+datestr;
+                    txtFilename.setText(filename);
+                }
+            }
+        });
 
 
         savebutton = findViewById(R.id.SaveButton);
@@ -368,11 +402,17 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
                 speices = txtSpecies.getText().toString();
                 filename = txtFilename.getText().toString();
+                if(addressstr.isEmpty()){
+                    Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(speices.isEmpty()){
                     Toast.makeText(ResultActivity.this, "수종을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
                 if(longivity ==0){
                     Toast.makeText(ResultActivity.this, "재장을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
                 FileOutputStream fos_img = null;
@@ -389,20 +429,35 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.addProperty("date",datestr);
                 jsonObject.addProperty("location",addressstr);
                 jsonObject.addProperty("long",longivity);
-
-                String s = gson.toJson(jsonObject);
-                try {
-                    // 파일 이름 변경 되었을 때 예외 처리
-                    JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput(filename+".json", Context.MODE_PRIVATE),"UTF-8"));
-                    gson.toJson(jsonObject,jsonWriter);
-                    fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
-                    image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
-                    jsonWriter.close();
+                File file = getBaseContext().getFileStreamPath(filename+".json");
+                if(file.exists()){
+                    try {
+                        file.delete();
+                        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput(filename+".json", Context.MODE_PRIVATE),"UTF-8"));
+                        gson.toJson(jsonObject,jsonWriter);
+                        jsonWriter.close();
+                    } catch (IOException e) {
+                        Toast.makeText(getApplicationContext(), "저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
                     Toast.makeText(getApplicationContext(), "저장되었습니다.", Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    Toast.makeText(getApplicationContext(), "저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
-                    e.printStackTrace();
+
+                }else{
+                    try {
+                        // 파일 이름 변경 되었을 때 예외 처리
+                        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput(filename+".json", Context.MODE_PRIVATE),"UTF-8"));
+                        gson.toJson(jsonObject,jsonWriter);
+                        fos_img = openFileOutput(filename+".JPG", Context.MODE_PRIVATE);
+                        image.compress(Bitmap.CompressFormat.JPEG,100,fos_img);
+                        jsonWriter.close();
+                        Toast.makeText(getApplicationContext(), "저장되었습니다.", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        Toast.makeText(getApplicationContext(), "저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
                 }
+
+
             }
         });
 
