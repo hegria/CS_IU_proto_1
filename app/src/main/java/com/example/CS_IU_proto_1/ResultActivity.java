@@ -14,7 +14,6 @@ import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Parcel;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -30,25 +29,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonWriter;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
-import org.json.JSONObject;
 
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -153,10 +145,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     // 재장 및 부피
 
-    EditText editText;
+    EditText editLongivity;
     boolean haslongivity = false;
     float longivity = 0;
     float volumn;
+
+    int from;
 
     @SuppressLint({"ClickableViewAccessibility"})
     @Override
@@ -177,6 +171,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         // 그려내는 부분에서 차라리 Ellipse를 평면에 정사영 시키는 편이 낫지 않을까?
         // Background 같은경우도 새로운 자료형을 만들어내야함( Image를 Bitmap을 통해서 그려낼 수 있는
         Intent intent = getIntent();
+        from = intent.getIntExtra("from",0);
+        //1은 그냥 2는 로딩
         ellipses = intent.getParcelableArrayListExtra("Ellipse");
         plane = intent.getParcelableExtra("plane");
         projMX = intent.getFloatArrayExtra("projMat");
@@ -184,8 +180,63 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         cameratrans = intent.getFloatArrayExtra("cameratrans");
         offset = intent.getFloatExtra("offset",0);
         byte[] byteArray = intent.getByteArrayExtra("image");
-
         image = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+
+
+        editLongivity = findViewById(R.id.editTextTextPersonName);
+        txtSpecies = findViewById(R.id.txtSpecies);
+
+        switch (from){
+            case 1:
+                lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
+                }
+
+                location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                geocoder = new Geocoder(this);
+                List<Address> list =null;
+                try{
+                    list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
+                } catch (IOException e){
+                    e.printStackTrace();
+                }
+                addressstr = list.get(0).getAdminArea().toString();
+
+                now = System.currentTimeMillis();
+                date = new Date(now);
+                dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+                datestr = dateFormat.format(date);
+                Log.i("a", addressstr);
+                filename = addressstr +"_"+datestr;
+                break;
+            case 2:
+                haslongivity = true;
+                speices = intent.getStringExtra("speices");
+                datestr = intent.getStringExtra("date");
+                addressstr = intent.getStringExtra("location");
+                longivity = intent.getFloatExtra("long",0);
+                filename = intent.getStringExtra("filename");
+                // now date
+                Log.i("ass",""+longivity);
+                CharSequence cs = Float.toString(longivity);
+                editLongivity.setText(cs);
+                txtSpecies.setText(speices);
+                break;
+            default:
+                break;
+        }
+
+
+
+
         Log.i("img",""+byteArray.length);
         glView = (GLSurfaceView) findViewById(R.id.subsurface);
         glView.setPreserveEGLContextOnPause(true);
@@ -200,7 +251,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress);
         txtDate = findViewById(R.id.txtDate);
-        txtSpecies = findViewById(R.id.txtSpecies);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
         textvolumn = findViewById(R.id.text_avgDiameter2);
@@ -213,36 +263,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         correctionbutton = findViewById(R.id.correction);
         correctionbutton.setVisibility(View.INVISIBLE);
 
-        editText = findViewById(R.id.editTextTextPersonName);
 
-        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
-        }
-
-        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        geocoder = new Geocoder(this);
-        List<Address> list =null;
-        try{
-            list = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-        addressstr = list.get(0).getAdminArea().toString();
-
-        now = System.currentTimeMillis();
-        date = new Date(now);
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
-        datestr = dateFormat.format(date);
-        Log.i("a", addressstr);
-        filename = addressstr +"_"+datestr;
 
 
         txtFilename.setText(filename);
@@ -250,7 +271,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         txtDate.setText("날짜: " + datestr);
 
 
-        editText.addTextChangedListener(new TextWatcher() {
+        editLongivity.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -361,7 +382,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.add("plane",gson.toJsonTree(plane).getAsJsonObject());
                 jsonObject.add("ellipses",gson.toJsonTree(ellipses).getAsJsonArray());
                 jsonObject.add("projMX",gson.toJsonTree(projMX).getAsJsonArray());
-                jsonObject.add("viewMat",gson.toJsonTree(viewMX).getAsJsonArray());
+                jsonObject.add("viewMX",gson.toJsonTree(viewMX).getAsJsonArray());
                 jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
                 jsonObject.addProperty("offset",offset);
                 jsonObject.addProperty("speice",speices);

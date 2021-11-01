@@ -7,6 +7,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,14 +23,20 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Objects;
+
+import javax.xml.transform.Result;
 
 public class MyRecord extends AppCompatActivity {
 
@@ -77,7 +86,11 @@ public class MyRecord extends AppCompatActivity {
                 } catch (FileNotFoundException | UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
+                Log.i("i th", ""+i);
+
+                // "i + 1"
             }
+
         }
 
         //파일 없으면 파일 없다고 띄우기
@@ -163,19 +176,62 @@ public class MyRecord extends AppCompatActivity {
 
 
                  */
+                JsonObject nowobject = jsonObjects.get(selected);
+                Type type = new TypeToken<ArrayList<Ellipse>>() {}.getType();
+                Plane plane = gson.fromJson(nowobject.getAsJsonObject("plane"),Plane.class);
+                ArrayList<Ellipse> ellipses = gson.fromJson(nowobject.getAsJsonArray("ellipses"),type);
+                float[] projMX = gson.fromJson(nowobject.getAsJsonArray("projMX"),float[].class);
+                float[] viewMX = gson.fromJson(nowobject.getAsJsonArray("viewMX"),float[].class);
+                float[] cameratrans = gson.fromJson(nowobject.getAsJsonArray("cameratrans"),float[].class);
+                float offset = nowobject.get("offset").getAsFloat();
+                String speice = nowobject.get("speice").getAsString();
+                String date = nowobject.get("date").getAsString();
+                String location = nowobject.get("location").getAsString();
+                float longivity = nowobject.get("long").getAsFloat();
+                String filename = list.get(selected).filename;
+
+                Intent intent = new Intent(MyRecord.this, ResultActivity.class);
+                intent.putExtra("from",2);
+                intent.putParcelableArrayListExtra("Ellipse",ellipses);
+                intent.putExtra("plane",plane);
+                intent.putExtra("projMat",projMX);
+                intent.putExtra("viewMat",viewMX);
+                intent.putExtra("cameratrans",cameratrans);
+                intent.putExtra("offset",offset);
+
+                try {
+                    InputStream inputStream = openFileInput(filename+".JPG");
+                    Bitmap image = BitmapFactory.decodeStream(inputStream);
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    image.compress(Bitmap.CompressFormat.JPEG, 100,stream);
+                    byte[] bytes = stream.toByteArray();
+                    intent.putExtra("image",bytes);
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                intent.putExtra("speices",speice);
+                intent.putExtra("date",date);
+                intent.putExtra("location",location);
+                intent.putExtra("long",longivity);
+                intent.putExtra("filename",filename);
+                startActivity(intent);
+                //bitmap 열고 압축해서 다시 주기
+
+
+
+                // make intent!!
 
                 Toast.makeText(this, "파일이 성공적으로 열렸습니다.", Toast.LENGTH_SHORT).show();
             }
             //파일 삭제
             else{
-                boolean isDeleted = listFiles[selected].delete();
-                /*
-                파일 삭제
+                boolean isDeleted = listFiles[selected*2].delete();
 
-
-                 */
 
                 if(isDeleted) {
+                    listFiles[selected*2+1].delete();
+                    jsonObjects.remove(selected);
                     list.remove(selected);
                     adapter.notifyDataSetChanged();
                     //파일 없으면 파일 없다고 띄우기

@@ -491,6 +491,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
               //Ellipse와 Image파일을 넘겨야함.
 
               Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+              intent.putExtra("from",1);
               intent.putParcelableArrayListExtra("Ellipse",ellipses);
               intent.putExtra("plane",plane);
               intent.putExtra("projMat",snapprojMX);
