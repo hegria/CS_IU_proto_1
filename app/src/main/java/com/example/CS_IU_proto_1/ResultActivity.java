@@ -507,9 +507,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                 }
                                 if(idx != -1){
                                     ellipses.get(idx).istoggled = !ellipses.get(idx).istoggled;
+                                    setText();
                                 }
                             });
-                            setText();
                         }else{
                             //button으로 넘겨야함.
                             Ray ray = Myutil.GenerateRay(xPx,yPx,screenWidth,screenHeight,projMX,viewMX,cameratrans);
