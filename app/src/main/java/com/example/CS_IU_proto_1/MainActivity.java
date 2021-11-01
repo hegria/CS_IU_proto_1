@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if(state == State.Idle) {
         if(pf.isFirstTimeLaunch1())
           guideLine.gl3_1();
-        progressBar.setProgressTintList(ColorStateList.valueOf(Color.YELLOW));
+        progressBar.setProgressTintList(ColorStateList.valueOf(0xFFFF9933));
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
         noticeImg.setVisibility(View.VISIBLE);
@@ -239,6 +239,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         TextView glText = findViewById(R.id.gl_text);
         glText.setVisibility(View.GONE);
         initAll();
+        noticeImg.setVisibility(View.VISIBLE);
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
       }
@@ -652,8 +653,9 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       e.printStackTrace();
     }
 
+    noticeImg.setImageResource(R.drawable.light_off);
     noticeImg.setVisibility(View.INVISIBLE);
-    progressBar.setProgressTintList(ColorStateList.valueOf(Color.YELLOW));
+    progressBar.setProgressTintList(ColorStateList.valueOf(0xFFFF9933));
     plane = null;
     ellipsePool.clear();
 //    contourForDraws.clear();

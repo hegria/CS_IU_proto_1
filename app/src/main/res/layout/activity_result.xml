@@ -225,7 +225,7 @@
         <ScrollView
             android:id="@+id/drawer"
             android:layout_width="500px"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:background="#FFF4C8"
             android:gravity="center">
@@ -233,8 +233,21 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
                 android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center"
+                    android:text="추가 정보"
+                    android:textColor="#212240"
+                    android:textSize="20sp"
+                    android:textStyle="bold">
+
+                </TextView>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -293,11 +306,11 @@
                         android:layout_weight="1"
                         android:backgroundTint="#000000"
                         android:ems="10"
+                        android:hint="주소를 입력하세요."
                         android:inputType="text"
                         android:text=""
-                        android:hint="주소를 입력하세요."
-                        android:textColorHint="#4C4B4B"
                         android:textColor="#000000"
+                        android:textColorHint="#4C4B4B"
                         android:textSize="10sp" />
                 </LinearLayout>
 

@@ -105,6 +105,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     ExecutorService worker;
     EllipsePool ellipsePool;
 
+    long backKeyPressedTime;
 
     //for Long touch
     static int LONG_PRESS_TIME = 300;
@@ -282,7 +283,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         txtFilename.setText(filename);
         txtAddress.setText(addressstr);
-        txtDate.setText("날짜: " + datestr);
+        txtDate.setText("날짜:   " + datestr);
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
@@ -798,5 +799,23 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         }
         return true;
+    }
+
+
+    @Override
+    public void onBackPressed() {
+            //1번째 백버튼 클릭
+            if(System.currentTimeMillis()>backKeyPressedTime+2000){
+                backKeyPressedTime = System.currentTimeMillis();
+                Toast.makeText(this, "한번 더 눌러 메인 화면으로 이동", Toast.LENGTH_SHORT).show();
+            }
+            //2번째 백버튼 클릭 (종료)
+            else{
+                Intent intent = new Intent(this, StartScreen.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+            }
+
+
     }
 }

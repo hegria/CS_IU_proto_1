@@ -125,10 +125,7 @@ public class MyRecord extends AppCompatActivity {
                     int pos = recyclerView.getChildAdapterPosition(child);
 
                     //여기에서 리스트 안에서 몇번째 아이템 선택됐는지 알 수 있음
-                    if(!isScroll) {
-                        Log.d("테스트", "Position: " + pos);
-                        Log.d("테스트", "Length: " + list.size());
-
+                    if(!isScroll && popupLayout.getVisibility() != View.VISIBLE) {
                         if(pos != -1){
                             selected = pos;
                             popupMode = 1;
