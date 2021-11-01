@@ -228,7 +228,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
                 now = System.currentTimeMillis();
                 date = new Date(now);
-                dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+                dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
                 Log.i("a", addressstr);
                 filename = addressstr +"_"+datestr;
