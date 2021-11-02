@@ -225,7 +225,7 @@
         <ScrollView
             android:id="@+id/drawer"
             android:layout_width="500px"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="right"
             android:background="#FFF4C8"
             android:gravity="center">
@@ -295,7 +295,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:padding="8dp"
-                        android:text="위치 : "
+                        android:text="촬영장소 : "
                         android:textColor="#000000"
                         android:textSize="12sp" />
 
@@ -306,12 +306,13 @@
                         android:layout_weight="1"
                         android:backgroundTint="#000000"
                         android:ems="10"
-                        android:hint="주소를 입력하세요."
+                        android:hint="촬영 장소를 입력하세요."
                         android:inputType="text"
                         android:text=""
                         android:textColor="#000000"
                         android:textColorHint="#4C4B4B"
-                        android:textSize="10sp" />
+                        android:textSize="11sp" />
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -336,6 +337,35 @@
                         android:ems="10"
                         android:hint="수종을 입력하세요."
                         android:inputType="text"
+                        android:textColor="#000000"
+                        android:textColorHint="#4C4B4B"
+                        android:textSize="12sp" />
+
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/txtHuman"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp"
+                        android:text="검척자 : "
+                        android:textColor="#000000"
+                        android:textSize="12sp" />
+
+                    <EditText
+                        android:id="@+id/txtHuman2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:backgroundTint="#000000"
+                        android:ems="10"
+                        android:hint="검척자를 입력하세요."
+                        android:inputType="text"
+                        android:text=""
                         android:textColor="#000000"
                         android:textColorHint="#4C4B4B"
                         android:textSize="12sp" />

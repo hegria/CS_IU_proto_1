@@ -87,6 +87,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     EditText txtAddress;
     EditText txtFilename;
     EditText txtSpecies;
+    EditText txtHuman;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
@@ -122,7 +123,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String filename = "";
     String datestr = "";
     String addressstr = "";
+    String locationstr = "";
     String speices = "";
+    String human = "";
 
 
     //1. file IO
@@ -199,6 +202,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         editLongivity = findViewById(R.id.editTextTextPersonName);
         txtSpecies = findViewById(R.id.txtSpecies);
+        txtHuman = findViewById(R.id.txtHuman2);
 
         switch (from){
             case 1:
@@ -211,7 +215,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 }
                 if(location == null){
-                    addressstr = "";
+                    locationstr = "";
                     Toast.makeText(this, "주소를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
                 }else{
 
@@ -223,7 +227,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     } catch (IOException e){
                         e.printStackTrace();
                     }
-                    addressstr = list.get(0).getAdminArea().toString();
+                    locationstr = list.get(0).getAdminArea().toString();
                 }
 
                 now = System.currentTimeMillis();
@@ -240,11 +244,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 addressstr = intent.getStringExtra("location");
                 longivity = intent.getFloatExtra("long",0);
                 filename = intent.getStringExtra("filename");
+                human = intent.getStringExtra("human");
                 // now date
                 Log.i("ass",""+longivity);
                 CharSequence cs = Float.toString(longivity);
                 editLongivity.setText(cs);
                 txtSpecies.setText(speices);
+                txtHuman.setText(human);
                 break;
             default:
                 break;
@@ -283,7 +289,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
         txtFilename.setText(filename);
-        txtAddress.setText(addressstr);
         txtDate.setText("날짜:   " + datestr);
 
 
@@ -374,7 +379,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
-        txtAddress.addTextChangedListener(new TextWatcher() {
+        txtSpecies.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -388,7 +393,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             @Override
             public void afterTextChanged(Editable s) {
                 if(!s.toString().isEmpty()){
-                    addressstr = s.toString();
+                    speices = s.toString();
                     filename = s.toString() +"_"+datestr;
                     txtFilename.setText(filename);
                 }
@@ -404,6 +409,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
                 speices = txtSpecies.getText().toString();
                 filename = txtFilename.getText().toString();
+                human = txtHuman.getText().toString();
                 if(addressstr.isEmpty()){
                     Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
@@ -414,6 +420,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 }
                 if(longivity ==0){
                     Toast.makeText(ResultActivity.this, "재장을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(human.isEmpty()){
+                    Toast.makeText(ResultActivity.this, "검척자의 이름을 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -431,6 +441,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.addProperty("date",datestr);
                 jsonObject.addProperty("location",addressstr);
                 jsonObject.addProperty("long",longivity);
+                jsonObject.addProperty("human",human);
                 File file = getBaseContext().getFileStreamPath(filename+".json");
                 if(file.exists()){
                     try {
