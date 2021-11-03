@@ -23,7 +23,7 @@ public class DrawText {
     Paint textPaint;
     Canvas canvas;
 
-    final int textSize = 32;
+    final int textSize = 36;
 
     ArrayList<Ellipseinfo> ellipses;
 

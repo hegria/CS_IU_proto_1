@@ -80,7 +80,7 @@ public class MyRecord extends AppCompatActivity {
                     JsonObject tempjson = gson.fromJson(jsonReader,JsonObject.class);
 
 
-                    list.add(new Data(tempjson.get("location").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("human").getAsString()));
+                    list.add(new Data(tempjson.get("space").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("human").getAsString()));
                     order.add(i);
                     jsonObjects.add(tempjson);
 
@@ -186,6 +186,7 @@ public class MyRecord extends AppCompatActivity {
                 String speice = nowobject.get("speice").getAsString();
                 String date = nowobject.get("date").getAsString();
                 String location = nowobject.get("location").getAsString();
+                String address = nowobject.get("space").getAsString();
                 float longivity = nowobject.get("long").getAsFloat();
                 String human = nowobject.get("human").getAsString();
                 String filename = list.get(selected).filename;
@@ -220,6 +221,7 @@ public class MyRecord extends AppCompatActivity {
                 intent.putExtra("speices",speice);
                 intent.putExtra("date",date);
                 intent.putExtra("location",location);
+                intent.putExtra("space",address);
                 intent.putExtra("long",longivity);
                 intent.putExtra("filename",filename);
                 intent.putExtra("human",human);

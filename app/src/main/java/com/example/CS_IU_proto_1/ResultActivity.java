@@ -88,6 +88,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     EditText txtFilename;
     EditText txtSpecies;
     EditText txtHuman;
+    EditText txtlocation;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
@@ -216,7 +217,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 }
                 if(location == null){
                     locationstr = "";
-                    Toast.makeText(this, "주소를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "위치를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
                 }else{
 
                     geocoder = new Geocoder(this);
@@ -227,7 +228,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     } catch (IOException e){
                         e.printStackTrace();
                     }
-                    locationstr = list.get(0).getAdminArea().toString();
+                    if(list.get(0).getLocality()==null){
+                        locationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
+                    }else{
+                        locationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                    }
                 }
 
                 now = System.currentTimeMillis();
@@ -235,13 +240,14 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
                 Log.i("a", addressstr);
-                filename = addressstr +"_"+datestr;
+                filename = locationstr +"_"+datestr;
                 break;
             case 2:
                 haslongivity = true;
                 speices = intent.getStringExtra("speices");
                 datestr = intent.getStringExtra("date");
-                addressstr = intent.getStringExtra("location");
+                locationstr = intent.getStringExtra("location");
+                addressstr = intent.getStringExtra("space");
                 longivity = intent.getFloatExtra("long",0);
                 filename = intent.getStringExtra("filename");
                 human = intent.getStringExtra("human");
@@ -272,6 +278,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         drawerLayout = findViewById(R.id.drawerLayout);
         txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress2);
+        txtlocation = findViewById(R.id.txtlocation2);
         txtDate = findViewById(R.id.txtDate);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
@@ -290,6 +297,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         txtFilename.setText(filename);
         txtDate.setText("날짜:   " + datestr);
+        txtlocation.setText(locationstr);
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
@@ -379,7 +387,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
-        txtSpecies.addTextChangedListener(new TextWatcher() {
+        txtlocation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -393,7 +401,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             @Override
             public void afterTextChanged(Editable s) {
                 if(!s.toString().isEmpty()){
-                    speices = s.toString();
+                    locationstr = s.toString();
                     filename = s.toString() +"_"+datestr;
                     txtFilename.setText(filename);
                 }
@@ -410,8 +418,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 speices = txtSpecies.getText().toString();
                 filename = txtFilename.getText().toString();
                 human = txtHuman.getText().toString();
+                addressstr = txtAddress.getText().toString();
+
                 if(addressstr.isEmpty()){
-                    Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ResultActivity.this,"촬영 장소를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(speices.isEmpty()){
@@ -424,6 +434,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 }
                 if(human.isEmpty()){
                     Toast.makeText(ResultActivity.this, "검척자의 이름을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(locationstr.isEmpty()){
+                    Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -439,7 +453,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.addProperty("offset",offset);
                 jsonObject.addProperty("speice",speices);
                 jsonObject.addProperty("date",datestr);
-                jsonObject.addProperty("location",addressstr);
+                jsonObject.addProperty("location",locationstr);
+                jsonObject.addProperty("space",addressstr);
                 jsonObject.addProperty("long",longivity);
                 jsonObject.addProperty("human",human);
                 File file = getBaseContext().getFileStreamPath(filename+".json");
