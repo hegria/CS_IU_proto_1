@@ -425,6 +425,8 @@
         android:max="300"
         android:min="10"
         android:progress="20"
+        android:thumb="@drawable/seek_thumb"
+        android:progressDrawable="@drawable/seekbar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/correction"
         app:layout_constraintStart_toEndOf="@+id/drawerLayout"
