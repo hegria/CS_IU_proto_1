@@ -381,7 +381,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                         ellipses.remove(temp_index);
                         isAlready = false;
                     }
-                    ellipses.remove(selected_index);
+                    ellipses.remove(selected_index-1);
                     correctionbutton.setText("ADD");
                     delbutton.setText("DONE");
                     seekBar2.setVisibility(View.INVISIBLE);
