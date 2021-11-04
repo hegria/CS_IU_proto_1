@@ -5,12 +5,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 //Local
-public class Ellipse implements Parcelable {
+public class Ellipse implements Parcelable, Cloneable {
     boolean istoggled = true;
     boolean isCircle = false;
     boolean isResult = false;
     public boolean isEdited = false;
+
+
 
     float yrad;
     float xrad;
@@ -208,4 +212,9 @@ public class Ellipse implements Parcelable {
 
     }
 
+    @NonNull
+    @Override
+    protected Ellipse clone() throws CloneNotSupportedException {
+        return (Ellipse) super.clone();
+    }
 }
