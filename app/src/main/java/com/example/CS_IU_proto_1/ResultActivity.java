@@ -79,6 +79,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     boolean isBusy = false;
     boolean correctionmode = false;
+    boolean isAlready = false;
     boolean isEdit = false;
 
     ImageButton btnDrawer;
@@ -101,7 +102,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Button editbutton;
     Plane plane;
     Ellipse nowellipse;
+    Ellipse tempellipse;
     int selected_index;
+    int temp_index;
 
     BackgroundImage backgroundImage;
     ExecutorService worker;
@@ -218,6 +221,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 if(location == null){
                     locationstr = "";
                     Toast.makeText(this, "위치를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    filename = locationstr +"_"+datestr;
                 }else{
 
                     geocoder = new Geocoder(this);
@@ -233,6 +237,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     }else{
                         locationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
                     }
+                    filename = locationstr +"_"+datestr;
+                    locationstr = list.get(0).getAddressLine(0);
                 }
 
                 now = System.currentTimeMillis();
@@ -240,7 +246,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
                 Log.i("a", addressstr);
-                filename = locationstr +"_"+datestr;
+
                 break;
             case 2:
                 haslongivity = true;
@@ -324,6 +330,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
        });
 
+
+        // add button
         correctionbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -337,8 +345,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     correctionbutton.setText("Apply");
                     delbutton.setText("DEL");
                     seekBar2.setVisibility(View.VISIBLE);
+
                 }else{
                     correctionmode = false;
+
+                    if(isAlready){
+                        tempellipse = null;
+                        ellipses.remove(temp_index);
+                        isAlready = false;
+                    }
+
                     nowellipse.isEdited =false;
                     nowellipse = null;
                     correctionbutton.setText("ADD");
@@ -359,6 +375,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     //which means del
                     correctionmode = false;
                     nowellipse = null;
+
+                    if(isAlready){
+                        tempellipse = null;
+                        ellipses.remove(temp_index);
+                        isAlready = false;
+                    }
                     ellipses.remove(selected_index);
                     correctionbutton.setText("ADD");
                     delbutton.setText("DONE");
@@ -562,8 +584,18 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                 if (idx != -1) {
                                     // TODO 여길 바꿔야함.
                                     correctionmode = true;
+                                    isAlready = true;
                                     selected_index = idx;
-                                    nowellipse = ellipses.get(idx);
+                                    tempellipse = ellipses.get(idx);
+                                    try {
+                                        nowellipse = tempellipse.clone();
+                                    } catch (CloneNotSupportedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    tempellipse.istoggled = false;
+                                    ellipses.add(nowellipse);
+                                    selected_index = ellipses.indexOf(nowellipse);
+                                    temp_index = idx;
                                     nowellipse.isEdited = true;
                                     runOnUiThread(()->{
                                         correctionbutton.setText("Apply");
@@ -719,13 +751,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             glView.queueEvent(() -> {
                 ellipsePool.clear();
                 drawText.clearEllipses();
-                for (Ellipse ellipse : ellipses) {
+                for (int i =0 ; i<ellipses.size();i++) {
                     if(ellipsePool.isFull())
-                        ellipsePool.addEllipse(ellipse);
+                        ellipsePool.addEllipse(ellipses.get(i));
                     else
-                        ellipsePool.setEllipse(ellipse);
-                    if(ellipse.istoggled) {
-                        drawText.setEllipses(ellipse);
+                        ellipsePool.setEllipse(ellipses.get(i));
+                    if(ellipses.get(i).istoggled) {
+                        drawText.setEllipses(ellipses.get(i));
                     }
                 }
                 drawText.setTexture(width, height);
@@ -831,8 +863,19 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     @Override
     public void onBackPressed() {
+            if(isAlready ==true){
+                nowellipse = null;
+                ellipses.remove(selected_index);
+                tempellipse.istoggled = true;
+                correctionmode =false;
+                isAlready = false;
+                correctionbutton.setText("ADD");
+                delbutton.setText("DONE");
+                seekBar2.setVisibility(View.INVISIBLE);
+                Toast.makeText(this, "원상 복구 되었습니다.", Toast.LENGTH_SHORT).show();
+            }
             //1번째 백버튼 클릭
-            if(System.currentTimeMillis()>backKeyPressedTime+2000){
+            else if(System.currentTimeMillis()>backKeyPressedTime+2000){
                 backKeyPressedTime = System.currentTimeMillis();
                 Toast.makeText(this, "한번 더 눌러 메인 화면으로 이동", Toast.LENGTH_SHORT).show();
             }
