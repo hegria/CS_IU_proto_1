@@ -138,6 +138,10 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
-        android:textSize="14sp" />
+        android:background="@drawable/round_rect_background4"
+        android:padding="5dp"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:visibility="invisible" />
 
 </RelativeLayout>

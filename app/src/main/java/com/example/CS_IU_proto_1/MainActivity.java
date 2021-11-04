@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
           Toast.makeText(MainActivity.this,"측정을 시작합니다.",Toast.LENGTH_SHORT).show();
           recordButton.setImageResource(R.drawable.for_capture_button);
           noticeImg.setImageResource(R.drawable.timber);
-          progressBar.setMax(50);
+          progressBar.setMax(100);
         });
         state = State.FoundSurface;
         plane = _plane;
@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
       if(state == State.Idle) {
         if(pf.isFirstTimeLaunch1())
           guideLine.gl3_1();
-        progressBar.setProgressTintList(ColorStateList.valueOf(0xFFFF9933));
+        progressBar.setProgressTintList(ColorStateList.valueOf(0xFFECAF34));
         recordButton.setImageResource(R.drawable.for_stop_button);
         state = State.PointCollecting;
         noticeImg.setVisibility(View.VISIBLE);
@@ -550,21 +550,27 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
         //거리 조절 알림
         float distance = Myutil.calcDistance(camera.getPose().getTranslation(), plane.normal, plane.dval);
-//        Log.d("테스트","distance2: " + distance);
-        runOnUiThread(()->progressBar.setProgress(20 - (int)(distance*100)));
-        if(distance>0.1){
+        float min_dist = 0.0f, max_dist = 2.0f;
+        int progress_val = 100 - ((int)(distance*20)+30);
+        Log.d("테스트", "val: " + progress_val);
+        runOnUiThread(()->progressBar.setProgress(progress_val));
+        if(distance>max_dist){
+          runOnUiThread(() -> {
+            if(progressState.getVisibility() == View.INVISIBLE)
+              progressState.setVisibility(View.VISIBLE);
+            progressState.setText("너무 멀어요");
+            progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
+          });
+        }else if(distance<min_dist){
             runOnUiThread(() -> {
-              progressState.setText("너무 멀어요");
-              progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
-            });
-        }else if(distance<-0.1){
-            runOnUiThread(() -> {
+              if(progressState.getVisibility() == View.INVISIBLE)
+                progressState.setVisibility(View.VISIBLE);
               progressState.setText("너무 가까워요");
               progressBar.setProgressTintList(ColorStateList.valueOf(Color.RED));
             });
         }else{
           runOnUiThread(()-> {
-            progressState.setText("");
+            progressState.setVisibility(View.INVISIBLE);
             progressBar.setProgressTintList(ColorStateList.valueOf(Color.GREEN));
           });
         }
@@ -577,6 +583,8 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         pointCloudRenderer.draw(viewMX, projMX);
         int testRst = pointCollector.filteringTest();
         runOnUiThread(()-> {
+          if(progressState.getVisibility() == View.INVISIBLE)
+            progressState.setVisibility(View.VISIBLE);
           if(testRst >= 100) {
             noticeImg.setImageResource(R.drawable.light_on);
             progressBar.setProgress(100);
@@ -655,7 +663,7 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     noticeImg.setImageResource(R.drawable.light_off);
     noticeImg.setVisibility(View.INVISIBLE);
-    progressBar.setProgressTintList(ColorStateList.valueOf(0xFFFF9933));
+    progressBar.setProgressTintList(ColorStateList.valueOf(0xFFECAF34));
     plane = null;
     ellipsePool.clear();
 //    contourForDraws.clear();
