@@ -23,7 +23,7 @@
             android:layout_marginTop="20dp"
             android:paddingLeft="40dp"
             android:paddingRight="40dp"
-            android:text="기능3-1. Add 버튼을 눌러 정중앙에 목재를 추가한 후, 스크롤바로 크기를 조절하거나"
+            android:text="기능3-1. Edit 모드에서 Add 버튼을 눌러 정중앙에 목재를 추가한 후, 스크롤바로 크기를 조절하거나"
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="18dp"

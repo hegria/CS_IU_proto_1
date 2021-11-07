@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#DBD1E4"
+    android:background="#FBEBFF"
     android:orientation="horizontal">
 
     <androidx.drawerlayout.widget.DrawerLayout
@@ -372,6 +372,7 @@
                         android:textSize="12sp" />
 
                 </LinearLayout>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -425,8 +426,8 @@
         android:max="300"
         android:min="10"
         android:progress="20"
-        android:thumb="@drawable/seek_thumb"
         android:progressDrawable="@drawable/seekbar"
+        android:thumb="@drawable/seek_thumb"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/correction"
         app:layout_constraintStart_toEndOf="@+id/drawerLayout"
@@ -465,8 +466,8 @@
 
     <Button
         android:id="@+id/correction"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="88dp"
+        android:layout_height="50dp"
         android:layout_marginEnd="20dp"
         android:text="Add"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -481,7 +482,7 @@
         android:layout_marginTop="32dp"
         android:layout_marginEnd="70dp"
         android:layout_marginBottom="32dp"
-        android:background="#F2EADE7B"
+        android:background="#F2FFDAC9"
         android:translationZ="90dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -539,9 +540,10 @@
             android:id="@+id/gl_text5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#DF9CF8"
+            android:background="#F8F39C"
             android:padding="3dp"
             android:text=""
+            android:textColor="#000000"
             android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"

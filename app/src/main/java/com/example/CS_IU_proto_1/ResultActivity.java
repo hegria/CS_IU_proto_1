@@ -118,7 +118,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     long starttime = 0;
 
     //가이드라인 진행 상태
-    private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2, Editing}
+    private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2, Editing, SAVING1, SAVING2, SAVING3}
 
     Gl_State gl_state = Gl_State.Idle;
     GuideLine guideLine;
@@ -853,7 +853,19 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     gl_state = Gl_State.Editing;
                     break;
                 case Editing:
-                    guideLine.gl10();
+                    guideLine.gl10_1();
+                    gl_state = Gl_State.SAVING1;
+                    break;
+                case SAVING1:
+                    guideLine.gl10_2();
+                    gl_state = Gl_State.SAVING2;
+                    break;
+                case SAVING2:
+                    guideLine.gl10_3();
+                    gl_state = Gl_State.SAVING3;
+                    break;
+                case SAVING3:
+                    guideLine.gl11();
                     pf.setFirstTimeLaunch2(false);
                     break;
             }

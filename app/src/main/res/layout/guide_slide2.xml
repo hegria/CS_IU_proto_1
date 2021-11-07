@@ -23,7 +23,7 @@
             android:layout_marginTop="20dp"
             android:paddingLeft="40dp"
             android:paddingRight="40dp"
-            android:text="2. 하얀 점이 많이 인식되도록 좌우로 천천히 움직인 후 정지 버튼을 눌러주세요."
+            android:text="2. 전구가 노란불이 될 떄까지 좌우로 천천히 움직인 후 정지 버튼을 눌러주세요."
             android:textAlignment="center"
             android:textColor="@color/black"
             android:textSize="18dp"
