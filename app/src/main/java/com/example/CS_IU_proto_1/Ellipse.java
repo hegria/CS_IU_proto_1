@@ -5,12 +5,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 //Local
-public class Ellipse implements Parcelable {
+public class Ellipse implements Parcelable, Cloneable {
     boolean istoggled = true;
     boolean isCircle = false;
     boolean isResult = false;
     public boolean isEdited = false;
+
+
 
     float yrad;
     float xrad;
@@ -76,6 +80,7 @@ public class Ellipse implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        setmodelmats();
         dest.writeByte((byte) (istoggled ? 1 : 0));
         dest.writeFloatArray(worldpivot);
         dest.writeFloatArray(xaxis);
@@ -135,6 +140,14 @@ public class Ellipse implements Parcelable {
         }
     }
 
+    public void setmodelmats(){
+
+        modelmat0 = modelmat[0];
+        modelmat1 = modelmat[1];
+        modelmat2 = modelmat[2];
+        modelmat3 = modelmat[3];
+    }
+
     public void setRottation(Plane plane){
         if(!isResult) {
             worldpivot = plane.transintoworld(pivot);
@@ -163,6 +176,10 @@ public class Ellipse implements Parcelable {
                 {xrad*plane.xvec[2],yrad*plane.yvec[2],plane.normal[2],worldpivot[2]},
                 {0,0,0,1}
         };
+        modelmat0 = modelmat[0];
+        modelmat1 = modelmat[1];
+        modelmat2 = modelmat[2];
+        modelmat3 = modelmat[3];
         Log.i("circlepivot", Float.toString(worldpivot[0])+Float.toString(worldpivot[1])+Float.toString(worldpivot[2]));
 
     }
@@ -195,4 +212,9 @@ public class Ellipse implements Parcelable {
 
     }
 
+    @NonNull
+    @Override
+    protected Ellipse clone() throws CloneNotSupportedException {
+        return (Ellipse) super.clone();
+    }
 }

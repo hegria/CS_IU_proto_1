@@ -79,6 +79,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     boolean isBusy = false;
     boolean correctionmode = false;
+    boolean isAlready = false;
     boolean isEdit = false;
 
     ImageButton btnDrawer;
@@ -87,6 +88,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     EditText txtAddress;
     EditText txtFilename;
     EditText txtSpecies;
+    EditText txtHuman;
+    EditText txtlocation;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
@@ -99,7 +102,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Button editbutton;
     Plane plane;
     Ellipse nowellipse;
+    Ellipse tempellipse;
     int selected_index;
+    int temp_index;
 
     BackgroundImage backgroundImage;
     ExecutorService worker;
@@ -113,7 +118,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     long starttime = 0;
 
     //가이드라인 진행 상태
-    private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2, Editing}
+    private enum Gl_State {Idle, Filtering, VisibilityControl, Adding1, Adding2, Editing, SAVING1, SAVING2, SAVING3}
 
     Gl_State gl_state = Gl_State.Idle;
     GuideLine guideLine;
@@ -122,7 +127,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String filename = "";
     String datestr = "";
     String addressstr = "";
+    String locationstr = "";
     String speices = "";
+    String human = "";
 
 
     //1. file IO
@@ -199,6 +206,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         editLongivity = findViewById(R.id.editTextTextPersonName);
         txtSpecies = findViewById(R.id.txtSpecies);
+        txtHuman = findViewById(R.id.txtHuman2);
 
         switch (from){
             case 1:
@@ -211,8 +219,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 }
                 if(location == null){
-                    addressstr = "";
-                    Toast.makeText(this, "주소를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    locationstr = "";
+                    Toast.makeText(this, "위치를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    filename = locationstr +"_"+datestr;
                 }else{
 
                     geocoder = new Geocoder(this);
@@ -223,28 +232,37 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     } catch (IOException e){
                         e.printStackTrace();
                     }
-                    addressstr = list.get(0).getAdminArea().toString();
+                    if(list.get(0).getLocality()==null){
+                        locationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
+                    }else{
+                        locationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                    }
+                    filename = locationstr +"_"+datestr;
+                    locationstr = list.get(0).getAddressLine(0);
                 }
 
                 now = System.currentTimeMillis();
                 date = new Date(now);
-                dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+                dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
                 Log.i("a", addressstr);
-                filename = addressstr +"_"+datestr;
+
                 break;
             case 2:
                 haslongivity = true;
                 speices = intent.getStringExtra("speices");
                 datestr = intent.getStringExtra("date");
-                addressstr = intent.getStringExtra("location");
+                locationstr = intent.getStringExtra("location");
+                addressstr = intent.getStringExtra("space");
                 longivity = intent.getFloatExtra("long",0);
                 filename = intent.getStringExtra("filename");
+                human = intent.getStringExtra("human");
                 // now date
                 Log.i("ass",""+longivity);
                 CharSequence cs = Float.toString(longivity);
                 editLongivity.setText(cs);
                 txtSpecies.setText(speices);
+                txtHuman.setText(human);
                 break;
             default:
                 break;
@@ -266,6 +284,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         drawerLayout = findViewById(R.id.drawerLayout);
         txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress2);
+        txtlocation = findViewById(R.id.txtlocation2);
         txtDate = findViewById(R.id.txtDate);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
@@ -283,8 +302,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
         txtFilename.setText(filename);
-        txtAddress.setText(addressstr);
         txtDate.setText("날짜:   " + datestr);
+        txtlocation.setText(locationstr);
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
@@ -311,6 +330,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
        });
 
+
+        // add button
         correctionbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -324,8 +345,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     correctionbutton.setText("Apply");
                     delbutton.setText("DEL");
                     seekBar2.setVisibility(View.VISIBLE);
+
                 }else{
                     correctionmode = false;
+
+                    if(isAlready){
+                        tempellipse = null;
+                        ellipses.remove(temp_index);
+                        isAlready = false;
+                    }
+
                     nowellipse.isEdited =false;
                     nowellipse = null;
                     correctionbutton.setText("ADD");
@@ -346,6 +375,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     //which means del
                     correctionmode = false;
                     nowellipse = null;
+
+                    if(isAlready){
+                        tempellipse = null;
+                        ellipses.remove(temp_index);
+                        isAlready = false;
+                        selected_index -= 1;
+                    }
                     ellipses.remove(selected_index);
                     correctionbutton.setText("ADD");
                     delbutton.setText("DONE");
@@ -374,7 +410,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
-        txtAddress.addTextChangedListener(new TextWatcher() {
+        txtlocation.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -388,7 +424,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             @Override
             public void afterTextChanged(Editable s) {
                 if(!s.toString().isEmpty()){
-                    addressstr = s.toString();
+                    locationstr = s.toString();
                     filename = s.toString() +"_"+datestr;
                     txtFilename.setText(filename);
                 }
@@ -404,8 +440,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
                 speices = txtSpecies.getText().toString();
                 filename = txtFilename.getText().toString();
+                human = txtHuman.getText().toString();
+                addressstr = txtAddress.getText().toString();
+
                 if(addressstr.isEmpty()){
-                    Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ResultActivity.this,"촬영 장소를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(speices.isEmpty()){
@@ -414,6 +453,14 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 }
                 if(longivity ==0){
                     Toast.makeText(ResultActivity.this, "재장을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(human.isEmpty()){
+                    Toast.makeText(ResultActivity.this, "검척자의 이름을 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(locationstr.isEmpty()){
+                    Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -429,8 +476,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.addProperty("offset",offset);
                 jsonObject.addProperty("speice",speices);
                 jsonObject.addProperty("date",datestr);
-                jsonObject.addProperty("location",addressstr);
+                jsonObject.addProperty("location",locationstr);
+                jsonObject.addProperty("space",addressstr);
                 jsonObject.addProperty("long",longivity);
+                jsonObject.addProperty("human",human);
                 File file = getBaseContext().getFileStreamPath(filename+".json");
                 if(file.exists()){
                     try {
@@ -536,8 +585,18 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                                 if (idx != -1) {
                                     // TODO 여길 바꿔야함.
                                     correctionmode = true;
+                                    isAlready = true;
                                     selected_index = idx;
-                                    nowellipse = ellipses.get(idx);
+                                    tempellipse = ellipses.get(idx);
+                                    try {
+                                        nowellipse = tempellipse.clone();
+                                    } catch (CloneNotSupportedException e) {
+                                        e.printStackTrace();
+                                    }
+                                    tempellipse.istoggled = false;
+                                    ellipses.add(nowellipse);
+                                    selected_index = ellipses.indexOf(nowellipse);
+                                    temp_index = idx;
                                     nowellipse.isEdited = true;
                                     runOnUiThread(()->{
                                         correctionbutton.setText("Apply");
@@ -693,13 +752,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             glView.queueEvent(() -> {
                 ellipsePool.clear();
                 drawText.clearEllipses();
-                for (Ellipse ellipse : ellipses) {
+                for (int i =0 ; i<ellipses.size();i++) {
                     if(ellipsePool.isFull())
-                        ellipsePool.addEllipse(ellipse);
+                        ellipsePool.addEllipse(ellipses.get(i));
                     else
-                        ellipsePool.setEllipse(ellipse);
-                    if(ellipse.istoggled) {
-                        drawText.setEllipses(ellipse);
+                        ellipsePool.setEllipse(ellipses.get(i));
+                    if(ellipses.get(i).istoggled) {
+                        drawText.setEllipses(ellipses.get(i));
                     }
                 }
                 drawText.setTexture(width, height);
@@ -794,7 +853,19 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     gl_state = Gl_State.Editing;
                     break;
                 case Editing:
-                    guideLine.gl10();
+                    guideLine.gl10_1();
+                    gl_state = Gl_State.SAVING1;
+                    break;
+                case SAVING1:
+                    guideLine.gl10_2();
+                    gl_state = Gl_State.SAVING2;
+                    break;
+                case SAVING2:
+                    guideLine.gl10_3();
+                    gl_state = Gl_State.SAVING3;
+                    break;
+                case SAVING3:
+                    guideLine.gl11();
                     pf.setFirstTimeLaunch2(false);
                     break;
             }
@@ -805,8 +876,19 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     @Override
     public void onBackPressed() {
+            if(isAlready ==true){
+                nowellipse = null;
+                ellipses.remove(selected_index);
+                tempellipse.istoggled = true;
+                correctionmode =false;
+                isAlready = false;
+                correctionbutton.setText("ADD");
+                delbutton.setText("DONE");
+                seekBar2.setVisibility(View.INVISIBLE);
+                Toast.makeText(this, "원상 복구 되었습니다.", Toast.LENGTH_SHORT).show();
+            }
             //1번째 백버튼 클릭
-            if(System.currentTimeMillis()>backKeyPressedTime+2000){
+            else if(System.currentTimeMillis()>backKeyPressedTime+2000){
                 backKeyPressedTime = System.currentTimeMillis();
                 Toast.makeText(this, "한번 더 눌러 메인 화면으로 이동", Toast.LENGTH_SHORT).show();
             }

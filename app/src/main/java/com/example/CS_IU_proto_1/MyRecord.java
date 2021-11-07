@@ -69,6 +69,7 @@ public class MyRecord extends AppCompatActivity {
         ArrayList<JsonObject> jsonObjects = new ArrayList<JsonObject>();
         // 리사이클러뷰에 표시할 데이터 리스트 생성.
         ArrayList<Data> list = new ArrayList<>();
+        ArrayList<Integer> order = new ArrayList<>();
 
         for (int i = 1; i< Objects.requireNonNull(listFiles).length; i++){
             String filename = listFiles[i].getName();
@@ -79,8 +80,8 @@ public class MyRecord extends AppCompatActivity {
                     JsonObject tempjson = gson.fromJson(jsonReader,JsonObject.class);
 
 
-                    list.add(new Data(tempjson.get("date").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("location").getAsString()));
-
+                    list.add(new Data(tempjson.get("space").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("human").getAsString()));
+                    order.add(i);
                     jsonObjects.add(tempjson);
 
                 } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -173,6 +174,7 @@ public class MyRecord extends AppCompatActivity {
 
 
                  */
+
                 JsonObject nowobject = jsonObjects.get(selected);
                 Type type = new TypeToken<ArrayList<Ellipse>>() {}.getType();
                 Plane plane = gson.fromJson(nowobject.getAsJsonObject("plane"),Plane.class);
@@ -184,7 +186,9 @@ public class MyRecord extends AppCompatActivity {
                 String speice = nowobject.get("speice").getAsString();
                 String date = nowobject.get("date").getAsString();
                 String location = nowobject.get("location").getAsString();
+                String address = nowobject.get("space").getAsString();
                 float longivity = nowobject.get("long").getAsFloat();
+                String human = nowobject.get("human").getAsString();
                 String filename = list.get(selected).filename;
 
                 Intent intent = new Intent(MyRecord.this, ResultActivity.class);
@@ -196,11 +200,18 @@ public class MyRecord extends AppCompatActivity {
                 intent.putExtra("cameratrans",cameratrans);
                 intent.putExtra("offset",offset);
 
+
                 try {
                     InputStream inputStream = openFileInput(filename+".JPG");
                     Bitmap image = BitmapFactory.decodeStream(inputStream);
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    image.compress(Bitmap.CompressFormat.JPEG, 100,stream);
+                    if((listFiles[order.get(selected)+1].length()/1024)>=500 ){
+
+                        image.compress(Bitmap.CompressFormat.JPEG, 30,stream);
+                    }else{
+
+                        image.compress(Bitmap.CompressFormat.JPEG, 100,stream);
+                    }
                     byte[] bytes = stream.toByteArray();
                     intent.putExtra("image",bytes);
 
@@ -210,8 +221,10 @@ public class MyRecord extends AppCompatActivity {
                 intent.putExtra("speices",speice);
                 intent.putExtra("date",date);
                 intent.putExtra("location",location);
+                intent.putExtra("space",address);
                 intent.putExtra("long",longivity);
                 intent.putExtra("filename",filename);
+                intent.putExtra("human",human);
                 startActivity(intent);
                 //bitmap 열고 압축해서 다시 주기
 
@@ -223,11 +236,11 @@ public class MyRecord extends AppCompatActivity {
             }
             //파일 삭제
             else{
-                boolean isDeleted = listFiles[selected*2].delete();
+                boolean isDeleted = listFiles[order.get(selected)].delete();
 
 
                 if(isDeleted) {
-                    listFiles[selected*2+1].delete();
+                    listFiles[order.get(selected)+1].delete();
                     jsonObjects.remove(selected);
                     list.remove(selected);
                     adapter.notifyDataSetChanged();

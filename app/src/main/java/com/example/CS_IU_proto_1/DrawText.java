@@ -23,7 +23,7 @@ public class DrawText {
     Paint textPaint;
     Canvas canvas;
 
-    final int textSize = 32;
+    final int textSize = 40;
 
     ArrayList<Ellipseinfo> ellipses;
 
@@ -104,10 +104,11 @@ public class DrawText {
 
         textPaint.setTextSize(textSize);
         textPaint.setAntiAlias(true);
-        textPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+        textPaint.setTypeface(Typeface.create(Typeface.MONOSPACE, Typeface.BOLD));
         textPaint.setStyle(Paint.Style.FILL);
-        textPaint.setColor(Color.GREEN);
+        textPaint.setColor(Color.RED);
         textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setLetterSpacing(-0.2f);
     }
 
     public void setEllipses(Ellipse ellipse){
