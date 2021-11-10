@@ -128,6 +128,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String datestr = "";
     String addressstr = "";
     String locationstr = "";
+    String templocationstr = "";
     String speices = "";
     String human = "";
 
@@ -221,7 +222,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 if(location == null){
                     locationstr = "";
                     Toast.makeText(this, "위치를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
-                    filename = locationstr +"_"+datestr;
+
                 }else{
 
                     geocoder = new Geocoder(this);
@@ -233,11 +234,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                         e.printStackTrace();
                     }
                     if(list.get(0).getLocality()==null){
-                        locationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
+                        templocationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
                     }else{
-                        locationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                        templocationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
                     }
-                    filename = locationstr +"_"+datestr;
                     locationstr = list.get(0).getAddressLine(0);
                 }
 
@@ -245,6 +245,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 date = new Date(now);
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
+                filename = templocationstr +"_"+datestr;
                 Log.i("a", addressstr);
 
                 break;
@@ -304,6 +305,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         txtFilename.setText(filename);
         txtDate.setText("날짜:   " + datestr);
         txtlocation.setText(locationstr);
+        txtAddress.setText(addressstr);
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
