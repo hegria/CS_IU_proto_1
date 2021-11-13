@@ -34,12 +34,14 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import javax.xml.transform.Result;
 
 public class MyRecord extends AppCompatActivity {
 
+    private TimberinfoDB timberinfoDB = null;
     boolean isScroll = false;
     int popupMode = 1;
     int selected = -1;
@@ -54,6 +56,7 @@ public class MyRecord extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_record);
 
+        timberinfoDB = TimberinfoDB.getInstance(this);
 
         popupLayout = findViewById(R.id.popUpLayout);
         btnOk = findViewById(R.id.btnOpen);
@@ -71,6 +74,8 @@ public class MyRecord extends AppCompatActivity {
         ArrayList<Data> list = new ArrayList<>();
         ArrayList<Integer> order = new ArrayList<>();
 
+        //Json에서 데이터 읽기 (기존거)
+        /*
         for (int i = 1; i< Objects.requireNonNull(listFiles).length; i++){
             String filename = listFiles[i].getName();
             if(filename.substring(filename.lastIndexOf(".")+1,filename.length()).equals("json")){
@@ -91,8 +96,16 @@ public class MyRecord extends AppCompatActivity {
 
                 // "i + 1"
             }
+        }*/
 
+        //DB에서 데이터 읽기 (새로운거)
+        List<Timberinfo> timberList;
+        timberList = timberinfoDB.getInstance(getApplicationContext()).timberinfoDao().getAll();
+        for(int i = 0; i < timberList.size(); i++){
+            list.add(new Data(timberList.get(i).space, timberList.get(i).filename, timberList.get(i).human));
         }
+
+
 
         //파일 없으면 파일 없다고 띄우기
         if(list.size() == 0)
@@ -169,12 +182,8 @@ public class MyRecord extends AppCompatActivity {
             //파일 열기
             if(popupMode == 1){
 
+                //Json에서 데이터 받아오기 (기존거)
                 /*
-                파일 로드
-
-
-                 */
-
                 JsonObject nowobject = jsonObjects.get(selected);
                 Type type = new TypeToken<ArrayList<Ellipse>>() {}.getType();
                 Plane plane = gson.fromJson(nowobject.getAsJsonObject("plane"),Plane.class);
@@ -189,7 +198,11 @@ public class MyRecord extends AppCompatActivity {
                 String address = nowobject.get("space").getAsString();
                 float longivity = nowobject.get("long").getAsFloat();
                 String human = nowobject.get("human").getAsString();
-                String filename = list.get(selected).filename;
+                String filename = list.get(selected).filename;*/
+
+                //DB에서 데이터 받아오기 (기존거) - 일부만 작성
+                String speice = timberList.get(selected).spiece;
+                String location = timberList.get(selected).location;
 
                 Intent intent = new Intent(MyRecord.this, ResultActivity.class);
                 intent.putExtra("from",2);
@@ -240,8 +253,14 @@ public class MyRecord extends AppCompatActivity {
 
 
                 if(isDeleted) {
+                    //Json에서 데이터 삭제 (기존거)
+                    /*
                     listFiles[order.get(selected)+1].delete();
-                    jsonObjects.remove(selected);
+                    jsonObjects.remove(selected);*/
+
+                    //DB에서 데이터 삭제 (새로운거)
+                    timberinfoDB.getInstance(getApplicationContext()).timberinfoDao().delete(timberList.get(selected));
+
                     list.remove(selected);
                     adapter.notifyDataSetChanged();
                     //파일 없으면 파일 없다고 띄우기
