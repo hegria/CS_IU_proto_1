@@ -20,4 +20,7 @@ public interface TimberinfoDao {
 
     @Delete
     void delete(Timberinfo timberinfo);
+
+    @Query("DELETE FROM timberinfo WHERE filename = :filename")
+    void delete(String filename);
 }

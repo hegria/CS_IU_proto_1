@@ -2,9 +2,11 @@ package com.example.CS_IU_proto_1;
 
 import android.content.Context;
 
+import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
+@Database(entities = {Timberinfo.class}, version = 1)
 public abstract class TimberinfoDB extends RoomDatabase {
     private  static TimberinfoDB INSTANCE = null;
 

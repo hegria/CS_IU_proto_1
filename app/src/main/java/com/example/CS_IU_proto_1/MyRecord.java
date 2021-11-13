@@ -50,6 +50,7 @@ public class MyRecord extends AppCompatActivity {
     Button btnOk, btnCancel;
     ImageButton btnDelete;
     TextView popupText, noFileText;
+    List<Timberinfo> timberList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +76,7 @@ public class MyRecord extends AppCompatActivity {
         ArrayList<Integer> order = new ArrayList<>();
 
         //Json에서 데이터 읽기 (기존거)
-        /*
+
         for (int i = 1; i< Objects.requireNonNull(listFiles).length; i++){
             String filename = listFiles[i].getName();
             if(filename.substring(filename.lastIndexOf(".")+1,filename.length()).equals("json")){
@@ -85,7 +86,7 @@ public class MyRecord extends AppCompatActivity {
                     JsonObject tempjson = gson.fromJson(jsonReader,JsonObject.class);
 
 
-                    list.add(new Data(tempjson.get("space").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("human").getAsString()));
+                    //list.add(new Data(tempjson.get("space").getAsString(),filename.substring(0,filename.lastIndexOf(".")),tempjson.get("human").getAsString()));
                     order.add(i);
                     jsonObjects.add(tempjson);
 
@@ -96,20 +97,33 @@ public class MyRecord extends AppCompatActivity {
 
                 // "i + 1"
             }
-        }*/
-
-        //DB에서 데이터 읽기 (새로운거)
-        List<Timberinfo> timberList;
-        timberList = timberinfoDB.getInstance(getApplicationContext()).timberinfoDao().getAll();
-        for(int i = 0; i < timberList.size(); i++){
-            list.add(new Data(timberList.get(i).space, timberList.get(i).filename, timberList.get(i).human));
         }
 
+        //DB에서 데이터 읽기 (새로운거)
+        class InsertRunnable implements Runnable{
+            @Override
+            public void run() {
 
+                timberList = timberinfoDB.getInstance(getApplicationContext()).timberinfoDao().getAll();
+                for(int i = 0; i < timberList.size(); i++){
+                    list.add(new Data(timberList.get(i).space, timberList.get(i).filename, timberList.get(i).human));
+                }
+            }
+        }
+        InsertRunnable insertRunnable = new InsertRunnable();
+        Thread t = new Thread(insertRunnable);
+        t.start();
 
-        //파일 없으면 파일 없다고 띄우기
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if(list.size() == 0)
             noFileText.setVisibility(View.VISIBLE);
+
+        //파일 없으면 파일 없다고 띄우기
 
         // 리사이클러뷰에 LinearLayoutManager 객체 지정.
         RecyclerView recyclerView = findViewById(R.id.recyclerView) ;
@@ -183,7 +197,7 @@ public class MyRecord extends AppCompatActivity {
             if(popupMode == 1){
 
                 //Json에서 데이터 받아오기 (기존거)
-                /*
+
                 JsonObject nowobject = jsonObjects.get(selected);
                 Type type = new TypeToken<ArrayList<Ellipse>>() {}.getType();
                 Plane plane = gson.fromJson(nowobject.getAsJsonObject("plane"),Plane.class);
@@ -192,17 +206,23 @@ public class MyRecord extends AppCompatActivity {
                 float[] viewMX = gson.fromJson(nowobject.getAsJsonArray("viewMX"),float[].class);
                 float[] cameratrans = gson.fromJson(nowobject.getAsJsonArray("cameratrans"),float[].class);
                 float offset = nowobject.get("offset").getAsFloat();
-                String speice = nowobject.get("speice").getAsString();
-                String date = nowobject.get("date").getAsString();
-                String location = nowobject.get("location").getAsString();
-                String address = nowobject.get("space").getAsString();
-                float longivity = nowobject.get("long").getAsFloat();
-                String human = nowobject.get("human").getAsString();
-                String filename = list.get(selected).filename;*/
+
+//                String speice = nowobject.get("speice").getAsString();
+//                String date = nowobject.get("date").getAsString();
+//                String location = nowobject.get("location").getAsString();
+//                String address = nowobject.get("space").getAsString();
+//                float longivity = nowobject.get("long").getAsFloat();
+//                String human = nowobject.get("human").getAsString();
+                String filename = list.get(selected).filename;
 
                 //DB에서 데이터 받아오기 (기존거) - 일부만 작성
                 String speice = timberList.get(selected).spiece;
                 String location = timberList.get(selected).location;
+                String date = timberList.get(selected).date;
+                String address = timberList.get(selected).space;
+                float longivity = timberList.get(selected).longivity;
+                String human = timberList.get(selected).human;
+                String tag = timberList.get(selected).tag;
 
                 Intent intent = new Intent(MyRecord.this, ResultActivity.class);
                 intent.putExtra("from",2);
@@ -238,6 +258,7 @@ public class MyRecord extends AppCompatActivity {
                 intent.putExtra("long",longivity);
                 intent.putExtra("filename",filename);
                 intent.putExtra("human",human);
+                intent.putExtra("tag",tag);
                 startActivity(intent);
                 //bitmap 열고 압축해서 다시 주기
 
@@ -254,9 +275,9 @@ public class MyRecord extends AppCompatActivity {
 
                 if(isDeleted) {
                     //Json에서 데이터 삭제 (기존거)
-                    /*
+
                     listFiles[order.get(selected)+1].delete();
-                    jsonObjects.remove(selected);*/
+                    jsonObjects.remove(selected);
 
                     //DB에서 데이터 삭제 (새로운거)
                     timberinfoDB.getInstance(getApplicationContext()).timberinfoDao().delete(timberList.get(selected));

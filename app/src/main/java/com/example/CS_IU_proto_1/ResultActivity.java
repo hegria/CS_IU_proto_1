@@ -90,6 +90,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     EditText txtSpecies;
     EditText txtHuman;
     EditText txtlocation;
+    EditText txtTag;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
@@ -105,6 +106,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Ellipse tempellipse;
     int selected_index;
     int temp_index;
+    float nowdiameter;
+    int nowcount;
+    float nowvol;
 
     BackgroundImage backgroundImage;
     ExecutorService worker;
@@ -131,6 +135,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String templocationstr = "";
     String speices = "";
     String human = "";
+    String tag = "";
 
 
     //1. file IO
@@ -153,6 +158,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     SimpleDateFormat dateFormat;
 
     private TimberinfoDB timberinfoDB = null;
+    private Context context;
 
     //Gson
     Gson gson;
@@ -184,6 +190,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         }
 
         timberinfoDB = TimberinfoDB.getInstance(this);
+        context = getApplicationContext();
 
 
         guideLine = new GuideLine(this);
@@ -262,8 +269,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 longivity = intent.getFloatExtra("long",0);
                 filename = intent.getStringExtra("filename");
                 human = intent.getStringExtra("human");
+                tag = intent.getStringExtra("tag");
                 // now date
-                Log.i("ass",""+longivity);
                 CharSequence cs = Float.toString(longivity);
                 editLongivity.setText(cs);
                 txtSpecies.setText(speices);
@@ -290,6 +297,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress2);
         txtlocation = findViewById(R.id.txtlocation2);
+        txtTag = findViewById(R.id.txtTagedit);
         txtDate = findViewById(R.id.txtDate);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
@@ -310,6 +318,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         txtDate.setText("날짜:   " + datestr);
         txtlocation.setText(locationstr);
         txtAddress.setText(addressstr);
+        txtTag.setText(tag);
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
@@ -448,6 +457,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 filename = txtFilename.getText().toString();
                 human = txtHuman.getText().toString();
                 addressstr = txtAddress.getText().toString();
+                tag = txtTag.getText().toString();
 
                 if(addressstr.isEmpty()){
                     Toast.makeText(ResultActivity.this,"촬영 장소를 입력해 주세요.", Toast.LENGTH_SHORT).show();
@@ -469,6 +479,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if(tag.isEmpty()){
+                    Toast.makeText(ResultActivity.this,"태그를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 FileOutputStream fos_img = null;
 
@@ -480,12 +494,39 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.add("viewMX",gson.toJsonTree(viewMX).getAsJsonArray());
                 jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
                 jsonObject.addProperty("offset",offset);
-                jsonObject.addProperty("speice",speices);
-                jsonObject.addProperty("date",datestr);
-                jsonObject.addProperty("location",locationstr);
-                jsonObject.addProperty("space",addressstr);
-                jsonObject.addProperty("long",longivity);
-                jsonObject.addProperty("human",human);
+
+                // TODO 이미 info가 있는지 확인해야함.
+
+                Timberinfo timberinfo = new Timberinfo();
+                timberinfo.filename = filename;
+                timberinfo.spiece = speices;
+                timberinfo.date =datestr;
+                timberinfo.location = locationstr;
+                timberinfo.space = addressstr;
+                timberinfo.longivity = longivity;
+                timberinfo.human = human;
+                timberinfo.count = nowcount;
+                timberinfo.avgDiameter = nowdiameter;
+                timberinfo.volumn = nowvol;
+                timberinfo.tag = tag;
+
+
+                class InsertRunnable implements Runnable{
+                    Timberinfo timberinfo;
+                    public InsertRunnable(Timberinfo _timberinfo){
+                        timberinfo = _timberinfo;
+                    }
+                    @Override
+                    public void run() {
+                        TimberinfoDB.getInstance(context).timberinfoDao().delete(filename);
+                        TimberinfoDB.getInstance(context).timberinfoDao().insertAll(timberinfo);
+                    }
+                }
+                InsertRunnable insertRunnable = new InsertRunnable(timberinfo);
+                Thread t = new Thread(insertRunnable);
+                t.start();
+
+
                 File file = getBaseContext().getFileStreamPath(filename+".json");
                 if(file.exists()){
                     try {
@@ -826,11 +867,15 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             dia /= count;
         int finalCount = count;
         float finalDia = dia;
+        float finalVolumn = volumn;
+        nowcount = count;
+        nowdiameter = dia;
+        nowvol = volumn;
         runOnUiThread(() -> {
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
             if(haslongivity){
-                textvolumn.setText(String.format("부피 : %.2fcm³",volumn));
+                textvolumn.setText(String.format("부피 : %.2fcm³",finalVolumn));
             }
         });
     }
