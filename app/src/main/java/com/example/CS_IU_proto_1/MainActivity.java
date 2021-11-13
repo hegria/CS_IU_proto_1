@@ -553,7 +553,6 @@ public class MainActivity extends AppCompatActivity implements GLSurfaceView.Ren
         float min_dist = 0.5f, max_dist = 2.0f;
         float a = 80.0f/3.0f, b = 50.0f/3.0f;
         int progress_val = 100 - (int)((distance*a)+b);
-        Log.d("테스트", "val: " + progress_val);
         runOnUiThread(()->progressBar.setProgress(progress_val));
         if(distance>max_dist){
           runOnUiThread(() -> {
