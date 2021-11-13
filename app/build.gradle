@@ -53,4 +53,8 @@ dependencies {
     implementation 'org.florescu.android.rangeseekbar:rangeseekbar-library:0.3.0'
     implementation 'com.github.bumptech.glide:glide:3.7.0'
     implementation 'com.google.code.gson:gson:2.8.7'
+    def room_version = "2.3.0"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
 }

@@ -152,6 +152,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Date date;
     SimpleDateFormat dateFormat;
 
+    private TimberinfoDB timberinfoDB = null;
+
     //Gson
     Gson gson;
 
@@ -180,6 +182,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             // for ActivityCompat#requestPermissions for more details.
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
         }
+
+        timberinfoDB = TimberinfoDB.getInstance(this);
 
 
         guideLine = new GuideLine(this);
