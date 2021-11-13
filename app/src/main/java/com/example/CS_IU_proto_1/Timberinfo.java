@@ -39,4 +39,7 @@ public class Timberinfo {
     @ColumnInfo(name="tag")
     public String tag;
 
+    @ColumnInfo(name="avgDia")
+    public float avgDiameter;
+
 }
