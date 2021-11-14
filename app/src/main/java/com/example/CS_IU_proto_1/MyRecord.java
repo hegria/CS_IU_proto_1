@@ -53,6 +53,7 @@ public class MyRecord extends AppCompatActivity {
     ImageButton btnDelete;
     TextView popupText, noFileText;
     List<Timberinfo> timberList;
+    File[] listFiles;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,7 @@ public class MyRecord extends AppCompatActivity {
 
 
         File mydir = this.getFilesDir();
-        File[] listFiles = mydir.listFiles();
+        listFiles = mydir.listFiles();
         Gson gson = new Gson();
         ArrayList<JsonObject> jsonObjects = new ArrayList<JsonObject>();
         // 리사이클러뷰에 표시할 데이터 리스트 생성.
@@ -338,9 +339,19 @@ public class MyRecord extends AppCompatActivity {
 
                 if(isDeleted) {
                     //Json에서 데이터 삭제 (기존거)
-
-                    listFiles[order.get(current_tinfo_idx)+1].delete();
+                    int curidx = order.get(current_tinfo_idx);
+                    listFiles = mydir.listFiles();
+                    listFiles[order.get(current_tinfo_idx)].delete();
+                    listFiles = mydir.listFiles();
                     jsonObjects.remove(current_tinfo_idx);
+                    order.remove(current_tinfo_idx);
+                    for(int i =0; i<order.size();i++){
+                        int temp = order.get(i);
+                        if(temp>= curidx){
+                            order.set(i, temp-2);
+                        }
+                    }
+
 
                     //DB에서 데이터 삭제 (새로운거)
                     class DeleteRunnable implements Runnable{
