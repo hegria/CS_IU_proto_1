@@ -44,6 +44,7 @@ public class MyRecord extends AppCompatActivity {
     boolean isScroll_tag = false;
     int popupMode = 1;
     ArrayList<Index> idx;
+    int last_tag_idx = -1;
     int current_tag_idx = -1;
     int current_item_idx = -1;
     int current_tinfo_idx = -1;
@@ -182,7 +183,15 @@ public class MyRecord extends AppCompatActivity {
                                 if(timberList.get(i).tag.equals(tag_list.get(pos))) {
                                     idx.get(i).inTag = pos;
                                     idx.get(i).inItem = list.size();
-                                    list.add(new Data(timberList.get(i).space, timberList.get(i).filename, timberList.get(i).human));
+                                    list.add(new Data(
+                                            timberList.get(i).filename,
+                                            timberList.get(i).date,
+                                            timberList.get(i).space,
+                                            timberList.get(i).human,
+                                            timberList.get(i).spiece,
+                                            String.valueOf(timberList.get(i).count),
+                                            String.format("%.1f", timberList.get(i).avgDiameter)
+                                    ));
                                 }
                             }
                             if (list.size() == 0)
@@ -394,14 +403,16 @@ public class MyRecord extends AppCompatActivity {
     }
 
     private class Data{
-        String date;
-        String filename;
-        String addr;
+        String filename, date, addr, person, species, number, avDiameter;
 
-        Data(String _date, String _filename, String _addr){
-            date = _date;
+        Data(String _filename, String _date, String _addr, String _person, String _species, String _number, String _avDiameter){
             filename = _filename;
+            date = _date;
             addr = _addr;
+            person = _person;
+            species = _species;
+            number = _number;
+            avDiameter = _avDiameter;
         }
     }
 
@@ -471,7 +482,7 @@ public class MyRecord extends AppCompatActivity {
 
         // 아이템 뷰를 저장하는 뷰홀더 클래스.
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView comp1, comp2, comp3;
+            TextView comp1, comp2, comp3, comp4, comp5, comp6, comp7;
 
             ViewHolder(View itemView) {
                 super(itemView) ;
@@ -480,6 +491,10 @@ public class MyRecord extends AppCompatActivity {
                 comp1 = itemView.findViewById(R.id.component1) ;
                 comp2 = itemView.findViewById(R.id.component2) ;
                 comp3 = itemView.findViewById(R.id.component3) ;
+                comp4 = itemView.findViewById(R.id.component4) ;
+                comp5 = itemView.findViewById(R.id.component5) ;
+                comp6 = itemView.findViewById(R.id.component6) ;
+                comp7 = itemView.findViewById(R.id.component7) ;
             }
         }
 
@@ -503,9 +518,13 @@ public class MyRecord extends AppCompatActivity {
         // onBindViewHolder() - position에 해당하는 데이터를 뷰홀더의 아이템뷰에 표시.
         @Override
         public void onBindViewHolder(CustomAdapter.ViewHolder holder, int position) {
-            holder.comp2.setText(mData.get(position).date);
             holder.comp1.setText(mData.get(position).filename);
+            holder.comp2.setText(mData.get(position).date);
             holder.comp3.setText(mData.get(position).addr);
+            holder.comp4.setText(mData.get(position).person);
+            holder.comp5.setText("수종 [" + mData.get(position).species + "]");
+            holder.comp6.setText("개수 [" +mData.get(position).number + "]");
+            holder.comp7.setText("평균직경 [" + mData.get(position).avDiameter + "]");
         }
 
         // getItemCount() - 전체 데이터 갯수 리턴.
