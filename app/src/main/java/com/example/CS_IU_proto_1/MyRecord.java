@@ -34,6 +34,9 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,8 +52,16 @@ public class MyRecord extends AppCompatActivity {
     int current_item_idx = -1;
     int current_tinfo_idx = -1;
 
+    //1이면 오름차순, -1이면 내림차순
+    int tag_sort_type = 1;
+    int filename_sort_type = 1;
+    int date_sort_type = 1;
+    int place_sort_type = 1;
+    int person_sort_type = 1;
+
     ConstraintLayout popupLayout;
     Button btnOk, btnCancel;
+    Button btnFileSort, btnPersonSort, btnDateSort, btnPlaceSort, btnTagSort;
     ImageButton btnDelete;
     TextView popupText, noFileText;
     List<Timberinfo> timberList;
@@ -70,6 +81,11 @@ public class MyRecord extends AppCompatActivity {
         btnDelete = findViewById(R.id.btnDelete);
         popupText = findViewById(R.id.txtPopUpText);
         noFileText = findViewById(R.id.txtNoFile);
+        btnFileSort = findViewById(R.id.btnFileSort);
+        btnDateSort = findViewById(R.id.btnDateSort);
+        btnPlaceSort = findViewById(R.id.btnPlaceSort);
+        btnPersonSort = findViewById(R.id.btnPersonSort);
+        btnTagSort = findViewById(R.id.btnTagSort);
 
 
         File mydir = this.getFilesDir();
@@ -117,6 +133,7 @@ public class MyRecord extends AppCompatActivity {
                     if(!tag_list.contains(timberList.get(i).tag))
                         tag_list.add(timberList.get(i).tag);
                 }
+                Collections.sort(tag_list);
             }
         }
         InsertRunnable insertRunnable = new InsertRunnable();
@@ -196,8 +213,10 @@ public class MyRecord extends AppCompatActivity {
                             }
                             if (list.size() == 0)
                                 noFileText.setVisibility(View.VISIBLE);
-                            else
+                            else {
                                 noFileText.setVisibility(View.INVISIBLE);
+                                list.sort(new CompFilename(filename_sort_type));
+                            }
                             adapter.notifyDataSetChanged();
                         }
                     }
@@ -247,6 +266,59 @@ public class MyRecord extends AppCompatActivity {
             public void onTouchEvent(@NonNull RecyclerView rv, @NonNull MotionEvent e) {}
             @Override
             public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {}
+        });
+
+        //정렬 기능
+        btnTagSort.setOnClickListener(l -> {
+            tag_sort_type *= -1;
+            if(tag_sort_type == 1) {
+                Collections.sort(tag_list);
+                btnTagSort.setText("태그 ⇑");
+            } else {
+                Collections.sort(tag_list, Collections.reverseOrder());
+                btnTagSort.setText("태그 ⇓");
+            }
+            adapter_tag.notifyDataSetChanged();
+        });
+
+        btnFileSort.setOnClickListener(l -> {
+            filename_sort_type *= -1;
+            if(filename_sort_type == 1)
+                btnFileSort.setText("파일 이름 ⇑");
+            else
+                btnFileSort.setText("파일 이름 ⇓");
+            list.sort(new CompFilename(filename_sort_type));
+            adapter.notifyDataSetChanged();
+        });
+
+        btnDateSort.setOnClickListener(l -> {
+            date_sort_type *= -1;
+            if(date_sort_type == 1)
+                btnDateSort.setText("날짜 ⇑");
+            else
+                btnDateSort.setText("날짜 ⇓");
+            list.sort(new CompDate(date_sort_type));
+            adapter.notifyDataSetChanged();
+        });
+
+        btnPlaceSort.setOnClickListener(l -> {
+            place_sort_type *= -1;
+            if(place_sort_type == 1)
+                btnPlaceSort.setText("촬영 장소 ⇑");
+            else
+                btnPlaceSort.setText("촬영 장소 ⇓");
+            list.sort(new CompPlace(place_sort_type));
+            adapter.notifyDataSetChanged();
+        });
+
+        btnPersonSort.setOnClickListener(l -> {
+            person_sort_type *= -1;
+            if(person_sort_type == 1)
+                btnPersonSort.setText("검척자 ⇑");
+            else
+                btnPersonSort.setText("검척자 ⇓");
+            list.sort(new CompPerson(person_sort_type));
+            adapter.notifyDataSetChanged();
         });
 
 
@@ -400,6 +472,54 @@ public class MyRecord extends AppCompatActivity {
             popupLayout.setVisibility(View.GONE);
         });
 
+    }
+
+    private class CompFilename implements Comparator<Data> {
+        //1이면 오름차순, -1이면 내림차순
+        int type;
+        CompFilename(int _type){
+            type = _type;
+        }
+        @Override
+        public int compare(Data f1, Data f2) {
+            return type * (f1.filename.compareTo(f2.filename));
+        }
+    }
+
+    private class CompDate implements Comparator<Data> {
+        //1이면 오름차순, -1이면 내림차순
+        int type;
+        CompDate(int _type){
+            type = _type;
+        }
+        @Override
+        public int compare(Data f1, Data f2) {
+            return type * (f1.date.compareTo(f2.date));
+        }
+    }
+
+    private class CompPlace implements Comparator<Data> {
+        //1이면 오름차순, -1이면 내림차순
+        int type;
+        CompPlace(int _type){
+            type = _type;
+        }
+        @Override
+        public int compare(Data f1, Data f2) {
+            return type * (f1.addr.compareTo(f2.addr));
+        }
+    }
+
+    private class CompPerson implements Comparator<Data> {
+        //1이면 오름차순, -1이면 내림차순
+        int type;
+        CompPerson(int _type){
+            type = _type;
+        }
+        @Override
+        public int compare(Data f1, Data f2) {
+            return type * (f1.person.compareTo(f2.person));
+        }
     }
 
     private class Data{
