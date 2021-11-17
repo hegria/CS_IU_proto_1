@@ -25,12 +25,15 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -67,6 +70,8 @@ public class MyRecord extends AppCompatActivity {
     List<Timberinfo> timberList;
     File[] listFiles;
 
+    File file2;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,6 +107,9 @@ public class MyRecord extends AppCompatActivity {
         for (int i = 1; i< Objects.requireNonNull(listFiles).length; i++){
             String filename = listFiles[i].getName();
             if(filename.substring(filename.lastIndexOf(".")+1,filename.length()).equals("json")){
+                if(filename.equals("_mytags.json")){
+                    continue;
+                }
                 try {
                     JsonReader jsonReader = new JsonReader(new InputStreamReader(openFileInput(filename),"UTF-8"));
                     jsonReader.setLenient(true);
@@ -320,6 +328,20 @@ public class MyRecord extends AppCompatActivity {
             list.sort(new CompPerson(person_sort_type));
             adapter.notifyDataSetChanged();
         });
+        file2 = getBaseContext().getFileStreamPath("_mytags.json");
+        if(file2.exists()){
+            file2.delete();
+
+
+        }
+        try {
+            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
+            Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
+            gson.toJson(tag_list,listtype,jsonWriter);
+            jsonWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
 
@@ -463,6 +485,20 @@ public class MyRecord extends AppCompatActivity {
                         noFileText.setVisibility(View.VISIBLE);
                         tag_list.remove(current_tag_idx);
                         adapter_tag.notifyDataSetChanged();
+                        file2 = getBaseContext().getFileStreamPath("_mytags.json");
+                        if(file2.exists()){
+                            file2.delete();
+
+
+                        }
+                        try {
+                            JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
+                            Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
+                            gson.toJson(tag_list,listtype,jsonWriter);
+                            jsonWriter.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                     Toast.makeText(this, "삭제되었습니다.", Toast.LENGTH_SHORT).show();
                 }else{

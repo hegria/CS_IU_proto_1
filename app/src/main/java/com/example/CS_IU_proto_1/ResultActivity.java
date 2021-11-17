@@ -21,6 +21,9 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -35,14 +38,20 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -82,6 +91,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     boolean isAlready = false;
     boolean isEdit = false;
 
+    ArrayList<String> taglist;
+
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
     TextView txtDate;
@@ -90,7 +101,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     EditText txtSpecies;
     EditText txtHuman;
     EditText txtlocation;
-    EditText txtTag;
+    AutoCompleteTextView txtTag;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
@@ -216,6 +227,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         image = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
 
 
+
         editLongivity = findViewById(R.id.editTextTextPersonName);
         txtSpecies = findViewById(R.id.txtSpecies);
         txtHuman = findViewById(R.id.txtHuman2);
@@ -311,7 +323,23 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         correctionbutton = findViewById(R.id.correction);
         correctionbutton.setVisibility(View.INVISIBLE);
 
+        txtTag.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
 
+        gson = new Gson();
+        File file = getBaseContext().getFileStreamPath("_mytags.json");
+        if(file.exists()){
+            try {
+                JsonReader jsonReader = new JsonReader(new InputStreamReader(openFileInput("_mytags.json"),"UTF-8"));
+                jsonReader.setLenient(true);
+                Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
+                taglist = gson.fromJson(jsonReader,listtype);
+                txtTag.setAdapter(new ArrayAdapter<String>(this,R.layout.support_simple_spinner_dropdown_item,taglist));
+            } catch (UnsupportedEncodingException | FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }else{
+            taglist = new ArrayList<>();
+        }
 
 
         txtFilename.setText(filename);
@@ -483,10 +511,28 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     Toast.makeText(ResultActivity.this,"태그를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if(!taglist.contains(tag)){
+                    taglist.add(tag);
+                    File file2 = getBaseContext().getFileStreamPath("_mytags.json");
+                    if(file2.exists()){
+                        file2.delete();
+
+
+                    }
+                    try {
+                        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
+                        Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
+                        gson.toJson(taglist,listtype,jsonWriter);
+                        jsonWriter.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
 
                 FileOutputStream fos_img = null;
 
-                gson = new Gson();
+
+
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.add("plane",gson.toJsonTree(plane).getAsJsonObject());
                 jsonObject.add("ellipses",gson.toJsonTree(ellipses).getAsJsonArray());
@@ -554,6 +600,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                         e.printStackTrace();
                     }
                 }
+
 
 
             }

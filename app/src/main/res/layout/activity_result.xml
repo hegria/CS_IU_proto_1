@@ -416,13 +416,14 @@
                         android:textColor="#000000"
                         android:textSize="12sp" />
 
-                    <EditText
+                    <AutoCompleteTextView
                         android:id="@+id/txtTagedit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:backgroundTint="#000000"
                         android:ems="10"
                         android:hint="태그를 입력하세요."
+                        android:completionThreshold="0"
                         android:inputType="text"
                         android:textColor="#000000"
                         android:textColorHint="#4C4B4B"
