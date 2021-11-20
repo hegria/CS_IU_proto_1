@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,7 +38,6 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -64,7 +64,8 @@ public class MyRecord extends AppCompatActivity {
 
     ConstraintLayout popupLayout;
     Button btnOk, btnCancel;
-    Button btnFileSort, btnPersonSort, btnDateSort, btnPlaceSort, btnTagSort;
+    Button btnTagSort;
+    TextView infoDate, infoPlace, infoPerson, infoTotalCnt, infoAvgDia, infoTotalVol, infoSpecies;
     ImageButton btnDelete;
     TextView popupText, noFileText;
     List<Timberinfo> timberList;
@@ -86,10 +87,13 @@ public class MyRecord extends AppCompatActivity {
         btnDelete = findViewById(R.id.btnDelete);
         popupText = findViewById(R.id.txtPopUpText);
         noFileText = findViewById(R.id.txtNoFile);
-        btnFileSort = findViewById(R.id.btnFileSort);
-        btnDateSort = findViewById(R.id.btnDateSort);
-        btnPlaceSort = findViewById(R.id.btnPlaceSort);
-        btnPersonSort = findViewById(R.id.btnPersonSort);
+        infoDate = findViewById(R.id.infoDate);
+        infoPlace = findViewById(R.id.infoPlace);
+        infoPerson = findViewById(R.id.infoPerson);
+        infoTotalCnt = findViewById(R.id.infoTotalCnt);
+        infoAvgDia = findViewById(R.id.infoAvgDia);
+        infoTotalVol = findViewById(R.id.infoTotalVol);
+        infoSpecies = findViewById(R.id.infoSpecies);
         btnTagSort = findViewById(R.id.btnTagSort);
 
 
@@ -164,7 +168,9 @@ public class MyRecord extends AppCompatActivity {
 
         // 리사이클러뷰에 LinearLayoutManager 객체 지정.
         RecyclerView recyclerView = findViewById(R.id.recyclerView) ;
-        recyclerView.setLayoutManager(new LinearLayoutManager(this)) ;
+        LinearLayoutManager lm= new LinearLayoutManager(this);
+        lm.setOrientation(LinearLayoutManager.HORIZONTAL);
+        recyclerView.setLayoutManager(lm) ;
 
         // 리사이클러뷰에 SimpleTextAdapter 객체 지정.
         CustomAdapter adapter = new CustomAdapter(list) ;
@@ -204,26 +210,48 @@ public class MyRecord extends AppCompatActivity {
                         if(pos != -1){
                             list.clear();
                             current_tag_idx = pos;
+                            int totalNum = 0;
+                            float totalDia = 0.0f;
+                            float totalVol = 0.0f;
+
                             for(int i = 0; i < timberList.size(); i++){
                                 if(timberList.get(i).tag.equals(tag_list.get(pos))) {
                                     idx.get(i).inTag = pos;
                                     idx.get(i).inItem = list.size();
+
+                                    //전체 정보 세팅1
+                                    if(i == 0) {
+                                        infoDate.setText("날짜: " + timberList.get(i).date);
+                                        infoPlace.setText("장소: " + timberList.get(i).space);
+                                        infoPerson.setText("검척자: " + timberList.get(i).human);
+                                        infoSpecies.setText("수종: " + timberList.get(i).spiece);
+                                    }
+
+                                    totalNum += timberList.get(i).count;
+                                    totalDia += timberList.get(i).avgDiameter;
+                                    totalVol += timberList.get(i).volumn;
+
                                     list.add(new Data(
                                             timberList.get(i).filename,
-                                            timberList.get(i).date,
-                                            timberList.get(i).space,
-                                            timberList.get(i).human,
-                                            timberList.get(i).spiece,
                                             String.valueOf(timberList.get(i).count),
-                                            String.format("%.1f", timberList.get(i).avgDiameter)
+                                            String.format("%.1f", timberList.get(i).avgDiameter),
+                                            String.format("%.1f", timberList.get(i).volumn)
                                     ));
                                 }
                             }
+
+
+
                             if (list.size() == 0)
                                 noFileText.setVisibility(View.VISIBLE);
                             else {
                                 noFileText.setVisibility(View.INVISIBLE);
                                 list.sort(new CompFilename(filename_sort_type));
+
+                                //전체 정보 세팅2
+                                infoTotalCnt.setText("전체 개수: " + totalNum);
+                                infoAvgDia.setText("평균 직경: " + String.format("%.1f", (totalDia/list.size())));
+                                infoTotalVol.setText("전체 부피: " + String.format("%.1f", totalVol));
                             }
                             adapter.notifyDataSetChanged();
                         }
@@ -289,50 +317,9 @@ public class MyRecord extends AppCompatActivity {
             adapter_tag.notifyDataSetChanged();
         });
 
-        btnFileSort.setOnClickListener(l -> {
-            filename_sort_type *= -1;
-            if(filename_sort_type == 1)
-                btnFileSort.setText("파일 이름 ⇑");
-            else
-                btnFileSort.setText("파일 이름 ⇓");
-            list.sort(new CompFilename(filename_sort_type));
-            adapter.notifyDataSetChanged();
-        });
-
-        btnDateSort.setOnClickListener(l -> {
-            date_sort_type *= -1;
-            if(date_sort_type == 1)
-                btnDateSort.setText("날짜 ⇑");
-            else
-                btnDateSort.setText("날짜 ⇓");
-            list.sort(new CompDate(date_sort_type));
-            adapter.notifyDataSetChanged();
-        });
-
-        btnPlaceSort.setOnClickListener(l -> {
-            place_sort_type *= -1;
-            if(place_sort_type == 1)
-                btnPlaceSort.setText("촬영 장소 ⇑");
-            else
-                btnPlaceSort.setText("촬영 장소 ⇓");
-            list.sort(new CompPlace(place_sort_type));
-            adapter.notifyDataSetChanged();
-        });
-
-        btnPersonSort.setOnClickListener(l -> {
-            person_sort_type *= -1;
-            if(person_sort_type == 1)
-                btnPersonSort.setText("검척자 ⇑");
-            else
-                btnPersonSort.setText("검척자 ⇓");
-            list.sort(new CompPerson(person_sort_type));
-            adapter.notifyDataSetChanged();
-        });
         file2 = getBaseContext().getFileStreamPath("_mytags.json");
         if(file2.exists()){
             file2.delete();
-
-
         }
         try {
             JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
@@ -522,53 +509,14 @@ public class MyRecord extends AppCompatActivity {
         }
     }
 
-    private class CompDate implements Comparator<Data> {
-        //1이면 오름차순, -1이면 내림차순
-        int type;
-        CompDate(int _type){
-            type = _type;
-        }
-        @Override
-        public int compare(Data f1, Data f2) {
-            return type * (f1.date.compareTo(f2.date));
-        }
-    }
-
-    private class CompPlace implements Comparator<Data> {
-        //1이면 오름차순, -1이면 내림차순
-        int type;
-        CompPlace(int _type){
-            type = _type;
-        }
-        @Override
-        public int compare(Data f1, Data f2) {
-            return type * (f1.addr.compareTo(f2.addr));
-        }
-    }
-
-    private class CompPerson implements Comparator<Data> {
-        //1이면 오름차순, -1이면 내림차순
-        int type;
-        CompPerson(int _type){
-            type = _type;
-        }
-        @Override
-        public int compare(Data f1, Data f2) {
-            return type * (f1.person.compareTo(f2.person));
-        }
-    }
-
     private class Data{
-        String filename, date, addr, person, species, number, avDiameter;
+        String filename, number, avDiameter, volume;
 
-        Data(String _filename, String _date, String _addr, String _person, String _species, String _number, String _avDiameter){
+        Data(String _filename, String _number, String _avDiameter, String _volume){
             filename = _filename;
-            date = _date;
-            addr = _addr;
-            person = _person;
-            species = _species;
             number = _number;
             avDiameter = _avDiameter;
+            volume = _volume;
         }
     }
 
@@ -638,7 +586,8 @@ public class MyRecord extends AppCompatActivity {
 
         // 아이템 뷰를 저장하는 뷰홀더 클래스.
         public class ViewHolder extends RecyclerView.ViewHolder {
-            TextView comp1, comp2, comp3, comp4, comp5, comp6, comp7;
+            ImageView comp1;
+            TextView comp2, comp3, comp4, comp5;
 
             ViewHolder(View itemView) {
                 super(itemView) ;
@@ -649,8 +598,6 @@ public class MyRecord extends AppCompatActivity {
                 comp3 = itemView.findViewById(R.id.component3) ;
                 comp4 = itemView.findViewById(R.id.component4) ;
                 comp5 = itemView.findViewById(R.id.component5) ;
-                comp6 = itemView.findViewById(R.id.component6) ;
-                comp7 = itemView.findViewById(R.id.component7) ;
             }
         }
 
@@ -674,13 +621,11 @@ public class MyRecord extends AppCompatActivity {
         // onBindViewHolder() - position에 해당하는 데이터를 뷰홀더의 아이템뷰에 표시.
         @Override
         public void onBindViewHolder(CustomAdapter.ViewHolder holder, int position) {
-            holder.comp1.setText(mData.get(position).filename);
-            holder.comp2.setText(mData.get(position).date);
-            holder.comp3.setText(mData.get(position).addr);
-            holder.comp4.setText(mData.get(position).person);
-            holder.comp5.setText("수종 [" + mData.get(position).species + "]");
-            holder.comp6.setText("개수 [" +mData.get(position).number + "]");
-            holder.comp7.setText("평균직경 [" + mData.get(position).avDiameter + "]");
+            //holder.comp1.setImageResource(이미지);
+            holder.comp2.setText(mData.get(position).filename + "_" + (position+1));
+            holder.comp3.setText("개수: " +mData.get(position).number);
+            holder.comp4.setText("평균직경: " + mData.get(position).avDiameter);
+            holder.comp5.setText("평균부피: " + mData.get(position).volume);
         }
 
         // getItemCount() - 전체 데이터 갯수 리턴.
