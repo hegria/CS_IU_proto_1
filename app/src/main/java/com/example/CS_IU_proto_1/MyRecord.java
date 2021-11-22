@@ -445,14 +445,17 @@ public class MyRecord extends AppCompatActivity {
             }
             //파일 삭제
             else{
-                boolean isDeleted = listFiles[order.get(current_tinfo_idx)].delete();
+
+                String filename = list.get(current_item_idx).filename;
+                File myfile = getBaseContext().getFileStreamPath(filename+".json");
+                boolean isDeleted = myfile.delete();
 
 
                 if(isDeleted) {
                     //Json에서 데이터 삭제 (기존거)
                     int curidx = order.get(current_tinfo_idx);
-                    listFiles = mydir.listFiles();
-                    listFiles[order.get(current_tinfo_idx)].delete();
+                    myfile = getBaseContext().getFileStreamPath(filename+".JPG");
+                    myfile.delete();
                     listFiles = mydir.listFiles();
                     jsonObjects.remove(current_tinfo_idx);
                     order.remove(current_tinfo_idx);

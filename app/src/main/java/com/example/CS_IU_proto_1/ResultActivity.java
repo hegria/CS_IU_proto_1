@@ -417,7 +417,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 String tempstr = s.toString();
                 if(!tempstr.isEmpty()){
                     if(taglist.contains(tempstr)){
-                        txtlocation.setText(grouplist.get(tempstr).location);
+                        if(txtlocation.getText().toString().isEmpty()){
+                            txtlocation.setText(grouplist.get(tempstr).location);
+                        }
                         txtHuman.setText(grouplist.get(tempstr).human);
                         txtSpecies.setText(grouplist.get(tempstr).spices);
                         filename = tempstr+"_"+grouplist.get(tempstr).maxnum;
