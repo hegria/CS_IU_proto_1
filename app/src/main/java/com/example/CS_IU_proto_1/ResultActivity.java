@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -55,7 +54,10 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -92,12 +94,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     boolean isEdit = false;
 
     ArrayList<String> taglist;
+    Map<String, GroupInfo> grouplist;
 
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
     TextView txtDate;
     EditText txtAddress;
-    EditText txtFilename;
+//    EditText txtFilename;
     EditText txtSpecies;
     EditText txtHuman;
     EditText txtlocation;
@@ -105,6 +108,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
+    TextView textnum;
     Switch switch1, switch2, switch3;
     RangeSeekBar<Integer> seekBar;
     SeekBar seekBar2;
@@ -146,7 +150,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String templocationstr = "";
     String speices = "";
     String human = "";
-    String tag = "";
+    String group = "";
+    String num = "";
 
 
     //1. file IO
@@ -256,19 +261,21 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     } catch (IOException e){
                         e.printStackTrace();
                     }
-                    if(list.get(0).getLocality()==null){
-                        templocationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
-                    }else{
-                        templocationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                    if(!list.isEmpty()) {
+                        if (list.get(0).getLocality() == null) {
+                            templocationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
+                        } else {
+                            templocationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                        }
+                        locationstr = list.get(0).getAddressLine(0);
                     }
-                    locationstr = list.get(0).getAddressLine(0);
                 }
 
                 now = System.currentTimeMillis();
                 date = new Date(now);
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
-                filename = templocationstr +"_"+datestr;
+                //filename = templocationstr +"_"+datestr;
                 Log.i("a", addressstr);
 
                 break;
@@ -281,12 +288,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 longivity = intent.getFloatExtra("long",0);
                 filename = intent.getStringExtra("filename");
                 human = intent.getStringExtra("human");
-                tag = intent.getStringExtra("tag");
+                group = intent.getStringExtra("tag");
                 // now date
                 CharSequence cs = Float.toString(longivity);
                 editLongivity.setText(cs);
                 txtSpecies.setText(speices);
                 txtHuman.setText(human);
+                num = filename.split("_")[filename.split("_").length-1];
                 break;
             default:
                 break;
@@ -306,7 +314,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         btnDrawer = findViewById(R.id.btnDrawer);
         drawerLayout = findViewById(R.id.drawerLayout);
-        txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress2);
         txtlocation = findViewById(R.id.txtlocation2);
         txtTag = findViewById(R.id.txtTagedit);
@@ -319,6 +326,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         switch3 = findViewById(R.id.switch3);
         seekBar = findViewById(R.id.seekBar);
         seekBar2 = findViewById(R.id.seekBar2);
+        textnum = findViewById(R.id.txtTag2);
         seekBar2.setVisibility(View.INVISIBLE);
         correctionbutton = findViewById(R.id.correction);
         correctionbutton.setVisibility(View.INVISIBLE);
@@ -331,22 +339,68 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             try {
                 JsonReader jsonReader = new JsonReader(new InputStreamReader(openFileInput("_mytags.json"),"UTF-8"));
                 jsonReader.setLenient(true);
-                Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
-                taglist = gson.fromJson(jsonReader,listtype);
-                txtTag.setAdapter(new ArrayAdapter<String>(this,R.layout.support_simple_spinner_dropdown_item,taglist));
+                Type listtype = new TypeToken<Map<String, GroupInfo>>() {}.getType();
+                grouplist = gson.fromJson(jsonReader,listtype);
+                if(grouplist!=null){
+                    Set<String> a= grouplist.keySet();
+                    taglist = new ArrayList<>(a);
+                    txtTag.setAdapter(new ArrayAdapter<String>(this,R.layout.support_simple_spinner_dropdown_item,taglist));
+                }else{
+                    taglist = new ArrayList<>();
+                    grouplist = new HashMap<>();
+                }
+
             } catch (UnsupportedEncodingException | FileNotFoundException e) {
                 e.printStackTrace();
             }
         }else{
             taglist = new ArrayList<>();
+            grouplist = new HashMap<>();
         }
 
 
-        txtFilename.setText(filename);
+//        txtFilename.setText(filename);
         txtDate.setText("날짜:   " + datestr);
         txtlocation.setText(locationstr);
         txtAddress.setText(addressstr);
-        txtTag.setText(tag);
+        txtTag.setText(group);
+        textnum.setText(num);
+
+        txtTag.setOnFocusChangeListener((v, hasfocus) -> {
+            if(hasfocus){
+                txtTag.showDropDown();
+            }
+        });
+
+        txtTag.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String tempstr = s.toString();
+                if(!tempstr.isEmpty()){
+                    if(taglist.contains(tempstr)){
+                        txtlocation.setText(grouplist.get(tempstr).location);
+                        txtHuman.setText(grouplist.get(tempstr).human);
+                        txtSpecies.setText(grouplist.get(tempstr).spices);
+                        filename = tempstr+"_"+grouplist.get(tempstr).maxnum;
+                        textnum.setText(Integer.toString(grouplist.get(tempstr).maxnum));
+                        txtAddress.setText(grouplist.get(tempstr).address);
+                    }else{
+                        textnum.setText("1");
+                        filename = tempstr+"_1";
+                    }
+                }
+            }
+        });
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
@@ -468,8 +522,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             public void afterTextChanged(Editable s) {
                 if(!s.toString().isEmpty()){
                     locationstr = s.toString();
-                    filename = s.toString() +"_"+datestr;
-                    txtFilename.setText(filename);
+                    //filename = s.toString() +"_"+datestr;
+                    //txtFilename.setText(filename);
                 }
             }
         });
@@ -482,10 +536,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
                 speices = txtSpecies.getText().toString();
-                filename = txtFilename.getText().toString();
                 human = txtHuman.getText().toString();
                 addressstr = txtAddress.getText().toString();
-                tag = txtTag.getText().toString();
+                group = txtTag.getText().toString();
 
                 if(addressstr.isEmpty()){
                     Toast.makeText(ResultActivity.this,"촬영 장소를 입력해 주세요.", Toast.LENGTH_SHORT).show();
@@ -507,27 +560,37 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(tag.isEmpty()){
+                if(group.isEmpty()){
                     Toast.makeText(ResultActivity.this,"태그를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if(!taglist.contains(tag)){
-                    taglist.add(tag);
-                    File file2 = getBaseContext().getFileStreamPath("_mytags.json");
-                    if(file2.exists()){
-                        file2.delete();
+                if(!taglist.contains(group)) {
+                    GroupInfo groupInfo = new GroupInfo();
+                    groupInfo.location = locationstr;
+                    groupInfo.address = addressstr;
+                    groupInfo.human = human;
+                    groupInfo.spices = speices;
+                    groupInfo.maxnum = 2;
 
+                    grouplist.put(group, groupInfo);
+                }else{
+                    grouplist.get(group).maxnum = grouplist.get(group).maxnum +1;
 
-                    }
-                    try {
-                        JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
-                        Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
-                        gson.toJson(taglist,listtype,jsonWriter);
-                        jsonWriter.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
+
+                File file2 = getBaseContext().getFileStreamPath("_mytags.json");
+                if(file2.exists()){
+                    file2.delete();
+                }
+                try {
+                    JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
+                    Type listtype = new TypeToken<Map<String,GroupInfo>>() {}.getType();
+                    gson.toJson(grouplist,listtype,jsonWriter);
+                    jsonWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
 
                 FileOutputStream fos_img = null;
 
@@ -554,7 +617,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 timberinfo.count = nowcount;
                 timberinfo.avgDiameter = nowdiameter;
                 timberinfo.volumn = nowvol;
-                timberinfo.tag = tag;
+                timberinfo.tag = group;
 
 
                 class InsertRunnable implements Runnable{
@@ -999,4 +1062,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
     }
+}
+class GroupInfo{
+    String location;
+    String human;
+    String spices;
+    String address;
+    int maxnum;
 }

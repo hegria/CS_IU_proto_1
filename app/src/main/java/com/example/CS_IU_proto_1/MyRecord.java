@@ -40,7 +40,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class MyRecord extends AppCompatActivity {
@@ -72,6 +74,7 @@ public class MyRecord extends AppCompatActivity {
     File[] listFiles;
 
     File file2;
+    Map<String, GroupInfo> groupInfoMap = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +115,18 @@ public class MyRecord extends AppCompatActivity {
             String filename = listFiles[i].getName();
             if(filename.substring(filename.lastIndexOf(".")+1,filename.length()).equals("json")){
                 if(filename.equals("_mytags.json")){
+                    JsonReader jsonReader = null;
+                    try {
+                        jsonReader = new JsonReader(new InputStreamReader(openFileInput("_mytags.json"),"UTF-8"));
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    jsonReader.setLenient(true);
+                    Type listtype = new TypeToken<HashMap<String, GroupInfo>>() {}.getType();
+                    groupInfoMap = gson.fromJson(jsonReader,listtype);
+
                     continue;
                 }
                 try {
@@ -323,8 +338,8 @@ public class MyRecord extends AppCompatActivity {
         }
         try {
             JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
-            Type listtype = new TypeToken<ArrayList<String>>() {}.getType();
-            gson.toJson(tag_list,listtype,jsonWriter);
+            Type listtype = new TypeToken<Map<String,GroupInfo>>() {}.getType();
+            gson.toJson(groupInfoMap,listtype,jsonWriter);
             jsonWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -470,13 +485,13 @@ public class MyRecord extends AppCompatActivity {
                     //파일 없으면 파일 없다고 띄우기
                     if (list.size() == 0) {
                         noFileText.setVisibility(View.VISIBLE);
+                        String temptag = tag_list.get(current_tag_idx);
+                        groupInfoMap.remove(temptag);
                         tag_list.remove(current_tag_idx);
                         adapter_tag.notifyDataSetChanged();
                         file2 = getBaseContext().getFileStreamPath("_mytags.json");
                         if(file2.exists()){
                             file2.delete();
-
-
                         }
                         try {
                             JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
@@ -511,12 +526,20 @@ public class MyRecord extends AppCompatActivity {
 
     private class Data{
         String filename, number, avDiameter, volume;
+        Bitmap img;
 
         Data(String _filename, String _number, String _avDiameter, String _volume){
             filename = _filename;
             number = _number;
             avDiameter = _avDiameter;
             volume = _volume;
+            InputStream inputStream = null;
+            try {
+                inputStream = openFileInput(filename+".JPG");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            img = BitmapFactory.decodeStream(inputStream);
         }
     }
 
@@ -621,8 +644,8 @@ public class MyRecord extends AppCompatActivity {
         // onBindViewHolder() - position에 해당하는 데이터를 뷰홀더의 아이템뷰에 표시.
         @Override
         public void onBindViewHolder(CustomAdapter.ViewHolder holder, int position) {
-            //holder.comp1.setImageResource(이미지);
-            holder.comp2.setText(mData.get(position).filename + "_" + (position+1));
+            holder.comp1.setImageBitmap(mData.get(position).img);
+            holder.comp2.setText(mData.get(position).filename);
             holder.comp3.setText("개수: " +mData.get(position).number);
             holder.comp4.setText("평균직경: " + mData.get(position).avDiameter);
             holder.comp5.setText("평균부피: " + mData.get(position).volume);
