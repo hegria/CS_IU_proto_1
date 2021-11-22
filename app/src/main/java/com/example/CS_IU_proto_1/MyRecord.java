@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -65,6 +66,7 @@ public class MyRecord extends AppCompatActivity {
     int person_sort_type = 1;
 
     ConstraintLayout popupLayout;
+    LinearLayout totalInfoLayout;
     Button btnOk, btnCancel;
     Button btnTagSort;
     TextView infoDate, infoPlace, infoPerson, infoTotalCnt, infoAvgDia, infoTotalVol, infoSpecies;
@@ -98,6 +100,7 @@ public class MyRecord extends AppCompatActivity {
         infoTotalVol = findViewById(R.id.infoTotalVol);
         infoSpecies = findViewById(R.id.infoSpecies);
         btnTagSort = findViewById(R.id.btnTagSort);
+        totalInfoLayout = findViewById(R.id.totalInfoLayout);
 
 
         File mydir = this.getFilesDir();
@@ -236,7 +239,7 @@ public class MyRecord extends AppCompatActivity {
 
                                     //전체 정보 세팅1
                                     if(i == 0) {
-                                        infoDate.setText("날짜: " + timberList.get(i).date);
+                                        infoDate.setText("일시: " + timberList.get(i).date);
                                         infoPlace.setText("장소: " + timberList.get(i).space);
                                         infoPerson.setText("검척자: " + timberList.get(i).human);
                                         infoSpecies.setText("수종: " + timberList.get(i).spiece);
@@ -257,10 +260,13 @@ public class MyRecord extends AppCompatActivity {
 
 
 
-                            if (list.size() == 0)
+                            if (list.size() == 0) {
                                 noFileText.setVisibility(View.VISIBLE);
+                                totalInfoLayout.setVisibility(View.INVISIBLE);
+                            }
                             else {
                                 noFileText.setVisibility(View.INVISIBLE);
+                                totalInfoLayout.setVisibility(View.VISIBLE);
                                 list.sort(new CompFilename(filename_sort_type));
 
                                 //전체 정보 세팅2
@@ -485,6 +491,7 @@ public class MyRecord extends AppCompatActivity {
                     //파일 없으면 파일 없다고 띄우기
                     if (list.size() == 0) {
                         noFileText.setVisibility(View.VISIBLE);
+                        totalInfoLayout.setVisibility(View.INVISIBLE);
                         String temptag = tag_list.get(current_tag_idx);
                         groupInfoMap.remove(temptag);
                         tag_list.remove(current_tag_idx);

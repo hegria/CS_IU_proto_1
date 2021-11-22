@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/border_background4"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toStartOf="@+id/linearLayout4"
+        app:layout_constraintEnd_toStartOf="@+id/totalInfoLayout"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -24,17 +24,18 @@
             android:layout_weight="1"
             android:background="#00FFFFFF"
             android:gravity="center"
-            android:text="태그 ⇑"
+            android:text="그룹명 ⇑"
             android:textColor="#000000"
             android:textStyle="bold" />
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/linearLayout4"
+        android:id="@+id/totalInfoLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/border_background5"
         android:orientation="vertical"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/linearLayout2"
@@ -151,7 +152,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/recyclerView_tag"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout4"
+        app:layout_constraintTop_toBottomOf="@+id/totalInfoLayout"
         app:layout_constraintVertical_bias="0.0">
 
     </androidx.recyclerview.widget.RecyclerView>
@@ -227,6 +228,6 @@
         app:layout_constraintBottom_toBottomOf="@+id/recyclerView"
         app:layout_constraintEnd_toEndOf="@+id/recyclerView"
         app:layout_constraintStart_toStartOf="@+id/recyclerView"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout4" />
+        app:layout_constraintTop_toTopOf="@+id/totalInfoLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

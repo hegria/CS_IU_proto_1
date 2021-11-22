@@ -1059,8 +1059,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }
-
-
     }
 }
 class GroupInfo{

@@ -57,7 +57,8 @@
             android:configChanges="screenSize|orientation"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:windowSoftInputMode="adjustNothing"/>
 
         <meta-data
             android:name="com.google.ar.core"
