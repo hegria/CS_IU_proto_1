@@ -15,12 +15,16 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -31,6 +35,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -129,7 +135,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     ExecutorService worker;
     EllipsePool ellipsePool;
 
+    //키보드 수동 제어
+    InputMethodManager inputMethodManager;
+
     long backKeyPressedTime;
+    boolean tagFirstPressed = false;
 
     //for Long touch
     static int LONG_PRESS_TIME = 300;
@@ -332,6 +342,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         correctionbutton.setVisibility(View.INVISIBLE);
 
         txtTag.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+
 
         gson = new Gson();
         File file = getBaseContext().getFileStreamPath("_mytags.json");
@@ -366,9 +378,26 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         txtTag.setText(group);
         textnum.setText(num);
 
-        txtTag.setOnFocusChangeListener((v, hasfocus) -> {
-            if(hasfocus){
-                txtTag.showDropDown();
+        int inType = txtTag.getInputType();
+
+        txtTag.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    if(!tagFirstPressed) {
+                        Toast.makeText(getApplicationContext(), "한번 더 터치하여 직접 입력", Toast.LENGTH_SHORT).show();
+                        //드랍다운 메뉴는 보여주고
+                        txtTag.showDropDown();
+                        //키보드 숨기기
+                        txtTag.setInputType(InputType.TYPE_NULL);
+                        tagFirstPressed = true;
+                    }else{
+                        //키보드 보이기
+                        txtTag.setInputType(inType);
+                        tagFirstPressed = false;
+                    }
+                }
+                return false;
             }
         });
 
@@ -866,8 +895,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         btnDrawer.setOnClickListener(v -> {
             if (!drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
                 drawerLayout.openDrawer(Gravity.RIGHT) ;
-            }else
-                drawerLayout.closeDrawer(Gravity.RIGHT); ;
+            }else {
+                drawerLayout.closeDrawer(Gravity.RIGHT);
+                tagFirstPressed = false;
+            }
+
         });
     }
 
@@ -994,8 +1026,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(event.getAction() == MotionEvent.ACTION_UP) {
-            if (drawerLayout.isDrawerOpen(Gravity.RIGHT))
-                drawerLayout.closeDrawer(Gravity.RIGHT) ;
+            if (drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                drawerLayout.closeDrawer(Gravity.RIGHT);
+                tagFirstPressed = false;
+            }
             switch (gl_state){
                 case Filtering:
                     guideLine.gl7();
@@ -1047,6 +1081,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 delbutton.setText("DONE");
                 seekBar2.setVisibility(View.INVISIBLE);
                 Toast.makeText(this, "원상 복구 되었습니다.", Toast.LENGTH_SHORT).show();
+            }else if (drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                drawerLayout.closeDrawer(Gravity.RIGHT);
+                tagFirstPressed = false;
             }
             //1번째 백버튼 클릭
             else if(System.currentTimeMillis()>backKeyPressedTime+2000){
@@ -1060,6 +1097,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 startActivity(intent);
             }
     }
+
+
+
+
 }
 class GroupInfo{
     String location;
