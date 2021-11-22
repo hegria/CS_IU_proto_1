@@ -324,10 +324,10 @@ public class MyRecord extends AppCompatActivity {
             tag_sort_type *= -1;
             if(tag_sort_type == 1) {
                 Collections.sort(tag_list);
-                btnTagSort.setText("태그 ⇑");
+                btnTagSort.setText("그룹명 ⇑");
             } else {
                 Collections.sort(tag_list, Collections.reverseOrder());
-                btnTagSort.setText("태그 ⇓");
+                btnTagSort.setText("그룹명 ⇓");
             }
             adapter_tag.notifyDataSetChanged();
         });
@@ -648,7 +648,7 @@ public class MyRecord extends AppCompatActivity {
             holder.comp2.setText(mData.get(position).filename);
             holder.comp3.setText("개수: " +mData.get(position).number);
             holder.comp4.setText("평균직경: " + mData.get(position).avDiameter);
-            holder.comp5.setText("평균부피: " + mData.get(position).volume);
+            holder.comp5.setText("전체부피: " + mData.get(position).volume);
         }
 
         // getItemCount() - 전체 데이터 갯수 리턴.
