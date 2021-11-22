@@ -18,10 +18,10 @@ import java.util.ArrayList;
 public class OpenCVJNI {
 
     private static final String ModelDir = "trained_model/";
-    private static final String TrainedModel = "svmModel.xml";
+    private static final String TrainedModel = "trained2.xml";
     private boolean xmlUnavailable;
     private boolean modHOG = false;
-    private double threshold = 0.5f;
+    private double threshold = 0.2;
 
     private final ByteBuffer bufferYUV;
 

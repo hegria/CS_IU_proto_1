@@ -76,38 +76,42 @@ void JNICALL J_OPENCV_FUNC(loadTrainedModel, jstring model) {
 }
 
 jobject J_OPENCV_FUNC(J_FIND_TIMBER_CONTOUR2, jobject data_yuv420_n12, jint width, jint height, jdouble th) {
-    using namespace std;
-    using namespace cv;
+    using Mat = cv::Mat;
 
     Mat img_bgr = getMatrixFromYUV420N12(
             reinterpret_cast<byte*>( env->GetDirectBufferAddress(data_yuv420_n12) ),
             width, height
     );
 
+    double ratio = 1000.0 / std::max(img_bgr.cols, img_bgr.rows);
+    cv::resize(img_bgr, img_bgr, cv::Size(0, 0), ratio, ratio);
+
     int h = img_bgr.rows;
     int w = img_bgr.cols;
     float x_factor = 2.0f / static_cast<float>(w);
     float y_factor = 2.0f / static_cast<float>(h);
 
-    vector<Rect> detections;
-    vector<double> weights;
+    std::vector<cv::Rect> detections;
+    std::vector<double> weights;
     hog.detectMultiScale(img_bgr, detections, weights, th);
 
     jobject contour_list = env->NewObject(JC_ArrayList, JMID_ArrayList_Ctor);
 
     for (const auto& rect : detections) {
-        float radius = rect.width * sqrt(0.35f) / 2.0f;
+        float radius = rect.width * sqrt(0.40f) * 0.5f;
         float x = rect.x + rect.width / 2.0f;
         float y = rect.y + rect.width / 2.0f;
+
         float arr[] = {
-                (x - radius) * x_factor - 1.0f, (y - radius) * y_factor - 1.0f,
-                (x + radius) * x_factor - 1.0f, (y - radius) * y_factor - 1.0f,
-                (x + radius) * x_factor - 1.0f, (y + radius) * y_factor - 1.0f,
-                (x - radius) * x_factor - 1.0f, (y + radius) * y_factor - 1.0f
+                (x + radius) * x_factor - 1.0f, (y + 0) * y_factor - 1.0f,
+                (x + 0) * x_factor - 1.0f, (y - radius) * y_factor - 1.0f,
+                (x - radius) * x_factor - 1.0f, (y + 0) * y_factor - 1.0f,
+                (x + 0) * x_factor - 1.0f, (y + radius) * y_factor - 1.0f
         };
+
         auto* ptr = reinterpret_cast<jfloat*>(arr);
-        jfloatArray jxy = env->NewFloatArray(8);
-        env->SetFloatArrayRegion(jxy, 0, 8, ptr);
+        jfloatArray jxy = env->NewFloatArray(sizeof(arr)/sizeof(float));
+        env->SetFloatArrayRegion(jxy, 0, sizeof(arr)/sizeof(float), ptr);
         jobject jcontour = env->NewObject(JC_Contour, JMID_Contour_Ctor, jxy);
         env->CallBooleanMethod(contour_list, JMID_ArrayList_Add, jcontour);
     }
