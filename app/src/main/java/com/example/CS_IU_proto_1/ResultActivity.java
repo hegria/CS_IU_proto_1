@@ -10,17 +10,23 @@ import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -29,24 +35,35 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import org.florescu.android.rangeseekbar.RangeSeekBar;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -82,17 +99,22 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     boolean isAlready = false;
     boolean isEdit = false;
 
+    ArrayList<String> taglist;
+    Map<String, GroupInfo> grouplist;
+
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
     TextView txtDate;
     EditText txtAddress;
-    EditText txtFilename;
+//    EditText txtFilename;
     EditText txtSpecies;
     EditText txtHuman;
     EditText txtlocation;
+    AutoCompleteTextView txtTag;
     TextView textCont;
     TextView textAvgdia;
     TextView textvolumn;
+    TextView textnum;
     Switch switch1, switch2, switch3;
     RangeSeekBar<Integer> seekBar;
     SeekBar seekBar2;
@@ -105,12 +127,19 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     Ellipse tempellipse;
     int selected_index;
     int temp_index;
+    float nowdiameter;
+    int nowcount;
+    float nowvol;
 
     BackgroundImage backgroundImage;
     ExecutorService worker;
     EllipsePool ellipsePool;
 
+    //키보드 수동 제어
+    InputMethodManager inputMethodManager;
+
     long backKeyPressedTime;
+    boolean tagFirstPressed = false;
 
     //for Long touch
     static int LONG_PRESS_TIME = 300;
@@ -128,8 +157,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String datestr = "";
     String addressstr = "";
     String locationstr = "";
+    String templocationstr = "";
     String speices = "";
     String human = "";
+    String group = "";
+    String num = "";
 
 
     //1. file IO
@@ -150,6 +182,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     long now;
     Date date;
     SimpleDateFormat dateFormat;
+
+    private TimberinfoDB timberinfoDB = null;
+    private Context context;
 
     //Gson
     Gson gson;
@@ -180,6 +215,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},100);
         }
 
+        timberinfoDB = TimberinfoDB.getInstance(this);
+        context = getApplicationContext();
+
 
         guideLine = new GuideLine(this);
         pf = new PrefManager(this);
@@ -204,6 +242,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         image = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
 
 
+
         editLongivity = findViewById(R.id.editTextTextPersonName);
         txtSpecies = findViewById(R.id.txtSpecies);
         txtHuman = findViewById(R.id.txtHuman2);
@@ -221,7 +260,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 if(location == null){
                     locationstr = "";
                     Toast.makeText(this, "위치를 찾지 못했습니다.\n직접 입력해주세요.", Toast.LENGTH_SHORT).show();
-                    filename = locationstr +"_"+datestr;
+
                 }else{
 
                     geocoder = new Geocoder(this);
@@ -232,19 +271,21 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     } catch (IOException e){
                         e.printStackTrace();
                     }
-                    if(list.get(0).getLocality()==null){
-                        locationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
-                    }else{
-                        locationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                    if(!list.isEmpty()) {
+                        if (list.get(0).getLocality() == null) {
+                            templocationstr = list.get(0).getAdminArea() + " " + list.get(0).getAddressLine(0).split(" ")[2];
+                        } else {
+                            templocationstr = list.get(0).getLocality() + " " + list.get(0).getThoroughfare();
+                        }
+                        locationstr = list.get(0).getAddressLine(0);
                     }
-                    filename = locationstr +"_"+datestr;
-                    locationstr = list.get(0).getAddressLine(0);
                 }
 
                 now = System.currentTimeMillis();
                 date = new Date(now);
                 dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 datestr = dateFormat.format(date);
+                //filename = templocationstr +"_"+datestr;
                 Log.i("a", addressstr);
 
                 break;
@@ -257,12 +298,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 longivity = intent.getFloatExtra("long",0);
                 filename = intent.getStringExtra("filename");
                 human = intent.getStringExtra("human");
+                group = intent.getStringExtra("tag");
                 // now date
-                Log.i("ass",""+longivity);
                 CharSequence cs = Float.toString(longivity);
                 editLongivity.setText(cs);
                 txtSpecies.setText(speices);
                 txtHuman.setText(human);
+                num = filename.split("_")[filename.split("_").length-1];
                 break;
             default:
                 break;
@@ -282,9 +324,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         btnDrawer = findViewById(R.id.btnDrawer);
         drawerLayout = findViewById(R.id.drawerLayout);
-        txtFilename = findViewById(R.id.txtFilename2);
         txtAddress = findViewById(R.id.txtAddress2);
         txtlocation = findViewById(R.id.txtlocation2);
+        txtTag = findViewById(R.id.txtTagedit);
         txtDate = findViewById(R.id.txtDate);
         textCont = findViewById(R.id.text_logCount);
         textAvgdia = findViewById(R.id.text_avgDiameter);
@@ -294,16 +336,102 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         switch3 = findViewById(R.id.switch3);
         seekBar = findViewById(R.id.seekBar);
         seekBar2 = findViewById(R.id.seekBar2);
+        textnum = findViewById(R.id.txtTag2);
         seekBar2.setVisibility(View.INVISIBLE);
         correctionbutton = findViewById(R.id.correction);
         correctionbutton.setVisibility(View.INVISIBLE);
 
+        txtTag.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
 
 
+        gson = new Gson();
+        File file = getBaseContext().getFileStreamPath("_mytags.json");
+        if(file.exists()){
+            try {
+                JsonReader jsonReader = new JsonReader(new InputStreamReader(openFileInput("_mytags.json"),"UTF-8"));
+                jsonReader.setLenient(true);
+                Type listtype = new TypeToken<Map<String, GroupInfo>>() {}.getType();
+                grouplist = gson.fromJson(jsonReader,listtype);
+                if(grouplist!=null){
+                    Set<String> a= grouplist.keySet();
+                    taglist = new ArrayList<>(a);
+                    txtTag.setAdapter(new ArrayAdapter<String>(this,R.layout.support_simple_spinner_dropdown_item,taglist));
+                }else{
+                    taglist = new ArrayList<>();
+                    grouplist = new HashMap<>();
+                }
 
-        txtFilename.setText(filename);
+            } catch (UnsupportedEncodingException | FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }else{
+            taglist = new ArrayList<>();
+            grouplist = new HashMap<>();
+        }
+
+
+//        txtFilename.setText(filename);
         txtDate.setText("날짜:   " + datestr);
         txtlocation.setText(locationstr);
+        txtAddress.setText(addressstr);
+        txtTag.setText(group);
+        textnum.setText(num);
+
+        int inType = txtTag.getInputType();
+
+        txtTag.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    if(!tagFirstPressed) {
+                        Toast.makeText(getApplicationContext(), "한번 더 터치하여 직접 입력", Toast.LENGTH_SHORT).show();
+                        //드랍다운 메뉴는 보여주고
+                        txtTag.showDropDown();
+                        //키보드 숨기기
+                        txtTag.setInputType(InputType.TYPE_NULL);
+                        tagFirstPressed = true;
+                    }else{
+                        //키보드 보이기
+                        txtTag.setInputType(inType);
+                        tagFirstPressed = false;
+                    }
+                }
+                return false;
+            }
+        });
+
+        txtTag.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String tempstr = s.toString();
+                if(!tempstr.isEmpty()){
+                    if(taglist.contains(tempstr)){
+                        if(txtlocation.getText().toString().isEmpty()){
+                            txtlocation.setText(grouplist.get(tempstr).location);
+                        }
+                        txtHuman.setText(grouplist.get(tempstr).human);
+                        txtSpecies.setText(grouplist.get(tempstr).spices);
+                        filename = tempstr+"_"+grouplist.get(tempstr).maxnum;
+                        textnum.setText(Integer.toString(grouplist.get(tempstr).maxnum));
+                        txtAddress.setText(grouplist.get(tempstr).address);
+                    }else{
+                        textnum.setText("1");
+                        filename = tempstr+"_1";
+                    }
+                }
+            }
+        });
 
 
         editLongivity.addTextChangedListener(new TextWatcher() {
@@ -425,8 +553,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             public void afterTextChanged(Editable s) {
                 if(!s.toString().isEmpty()){
                     locationstr = s.toString();
-                    filename = s.toString() +"_"+datestr;
-                    txtFilename.setText(filename);
+                    //filename = s.toString() +"_"+datestr;
+                    //txtFilename.setText(filename);
                 }
             }
         });
@@ -439,9 +567,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
                 speices = txtSpecies.getText().toString();
-                filename = txtFilename.getText().toString();
                 human = txtHuman.getText().toString();
                 addressstr = txtAddress.getText().toString();
+                group = txtTag.getText().toString();
 
                 if(addressstr.isEmpty()){
                     Toast.makeText(ResultActivity.this,"촬영 장소를 입력해 주세요.", Toast.LENGTH_SHORT).show();
@@ -463,10 +591,42 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     Toast.makeText(ResultActivity.this,"위치를 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                if(group.isEmpty()){
+                    Toast.makeText(ResultActivity.this,"태그를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(!taglist.contains(group)) {
+                    GroupInfo groupInfo = new GroupInfo();
+                    groupInfo.location = locationstr;
+                    groupInfo.address = addressstr;
+                    groupInfo.human = human;
+                    groupInfo.spices = speices;
+                    groupInfo.maxnum = 2;
+
+                    grouplist.put(group, groupInfo);
+                }else{
+                    grouplist.get(group).maxnum = grouplist.get(group).maxnum +1;
+
+                }
+
+                File file2 = getBaseContext().getFileStreamPath("_mytags.json");
+                if(file2.exists()){
+                    file2.delete();
+                }
+                try {
+                    JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(openFileOutput("_mytags.json",Context.MODE_PRIVATE),"UTF-8"));
+                    Type listtype = new TypeToken<Map<String,GroupInfo>>() {}.getType();
+                    gson.toJson(grouplist,listtype,jsonWriter);
+                    jsonWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
 
                 FileOutputStream fos_img = null;
 
-                gson = new Gson();
+
+
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.add("plane",gson.toJsonTree(plane).getAsJsonObject());
                 jsonObject.add("ellipses",gson.toJsonTree(ellipses).getAsJsonArray());
@@ -474,12 +634,39 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.add("viewMX",gson.toJsonTree(viewMX).getAsJsonArray());
                 jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
                 jsonObject.addProperty("offset",offset);
-                jsonObject.addProperty("speice",speices);
-                jsonObject.addProperty("date",datestr);
-                jsonObject.addProperty("location",locationstr);
-                jsonObject.addProperty("space",addressstr);
-                jsonObject.addProperty("long",longivity);
-                jsonObject.addProperty("human",human);
+
+                // TODO 이미 info가 있는지 확인해야함.
+
+                Timberinfo timberinfo = new Timberinfo();
+                timberinfo.filename = filename;
+                timberinfo.spiece = speices;
+                timberinfo.date =datestr;
+                timberinfo.location = locationstr;
+                timberinfo.space = addressstr;
+                timberinfo.longivity = longivity;
+                timberinfo.human = human;
+                timberinfo.count = nowcount;
+                timberinfo.avgDiameter = nowdiameter;
+                timberinfo.volumn = nowvol;
+                timberinfo.tag = group;
+
+
+                class InsertRunnable implements Runnable{
+                    Timberinfo timberinfo;
+                    public InsertRunnable(Timberinfo _timberinfo){
+                        timberinfo = _timberinfo;
+                    }
+                    @Override
+                    public void run() {
+                        TimberinfoDB.getInstance(context).timberinfoDao().delete(filename);
+                        TimberinfoDB.getInstance(context).timberinfoDao().insertAll(timberinfo);
+                    }
+                }
+                InsertRunnable insertRunnable = new InsertRunnable(timberinfo);
+                Thread t = new Thread(insertRunnable);
+                t.start();
+
+
                 File file = getBaseContext().getFileStreamPath(filename+".json");
                 if(file.exists()){
                     try {
@@ -507,6 +694,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                         e.printStackTrace();
                     }
                 }
+
 
 
             }
@@ -709,8 +897,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         btnDrawer.setOnClickListener(v -> {
             if (!drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
                 drawerLayout.openDrawer(Gravity.RIGHT) ;
-            }else
-                drawerLayout.closeDrawer(Gravity.RIGHT); ;
+            }else {
+                drawerLayout.closeDrawer(Gravity.RIGHT);
+                tagFirstPressed = false;
+            }
+
         });
     }
 
@@ -820,11 +1011,15 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             dia /= count;
         int finalCount = count;
         float finalDia = dia;
+        float finalVolumn = volumn;
+        nowcount = count;
+        nowdiameter = dia;
+        nowvol = volumn;
         runOnUiThread(() -> {
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
             if(haslongivity){
-                textvolumn.setText(String.format("부피 : %.2fcm³",volumn));
+                textvolumn.setText(String.format("부피 : %.2fcm³",finalVolumn));
             }
         });
     }
@@ -833,8 +1028,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if(event.getAction() == MotionEvent.ACTION_UP) {
-            if (drawerLayout.isDrawerOpen(Gravity.RIGHT))
-                drawerLayout.closeDrawer(Gravity.RIGHT) ;
+            if (drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                drawerLayout.closeDrawer(Gravity.RIGHT);
+                tagFirstPressed = false;
+            }
             switch (gl_state){
                 case Filtering:
                     guideLine.gl7();
@@ -886,6 +1083,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 delbutton.setText("DONE");
                 seekBar2.setVisibility(View.INVISIBLE);
                 Toast.makeText(this, "원상 복구 되었습니다.", Toast.LENGTH_SHORT).show();
+            }else if (drawerLayout.isDrawerOpen(Gravity.RIGHT)) {
+                drawerLayout.closeDrawer(Gravity.RIGHT);
+                tagFirstPressed = false;
             }
             //1번째 백버튼 클릭
             else if(System.currentTimeMillis()>backKeyPressedTime+2000){
@@ -898,7 +1098,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }
-
-
     }
+
+
+
+
+}
+class GroupInfo{
+    String location;
+    String human;
+    String spices;
+    String address;
+    int maxnum;
 }
