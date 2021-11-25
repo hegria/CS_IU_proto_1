@@ -52,8 +52,8 @@ Operation Procedure
 3. Set Seed Point and find Plane by touching the screen.
 4. Send camera image data (format: YUV420_N12) to JNI. (OpenCV codes)
 5. Perform image processing (OpenCV) to get timber contours  
-    Method I: perform classical image processing (heuristic) method (see cpp/TimberDetector.h for more details)
-    Mehtod II: perform hog & svm classifier to find regions that encloses a timber, which are later than converted into circular contours*
+    *Method I*: perform classical image processing (heuristic) method (see cpp/TimberDetector.h for more details)  
+    *Mehtod II*: perform hog & svm classifier to find regions that encloses a timber, which are later than converted into circular contours*  
 6. Find Bounding Box from each Contour.
 7. Find Ellipse inscribed in Bounding box and derive diameter information.
 8. Display the number of timber and diameter of each timber on the screen.
