@@ -436,7 +436,7 @@
         android:id="@+id/seekBar2"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:max="300"
+        android:max="600"
         android:min="10"
         android:progress="20"
         android:progressDrawable="@drawable/seekbar"
