@@ -116,7 +116,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:padding="8dp"
-                        android:text="부피: 0cm"
+                        android:text="부피: 0재"
                         android:textSize="12sp" />
 
                 </LinearLayout>

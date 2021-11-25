@@ -270,9 +270,9 @@ public class MyRecord extends AppCompatActivity {
                                 list.sort(new CompFilename(filename_sort_type));
 
                                 //전체 정보 세팅2
-                                infoTotalCnt.setText("전체 개수: " + totalNum);
-                                infoAvgDia.setText("평균 직경: " + String.format("%.1f", (totalDia/list.size())));
-                                infoTotalVol.setText("전체 부피: " + String.format("%.1f", totalVol));
+                                infoTotalCnt.setText("전체 개수: " + totalNum+ "개");
+                                infoAvgDia.setText("평균 직경: " + String.format("%.1f", (totalDia/list.size()))+ "cm");
+                                infoTotalVol.setText("전체 부피: " + String.format("%.1f", totalVol)+ "재");
                             }
                             adapter.notifyDataSetChanged();
                         }
@@ -656,9 +656,9 @@ public class MyRecord extends AppCompatActivity {
         public void onBindViewHolder(CustomAdapter.ViewHolder holder, int position) {
             holder.comp1.setImageBitmap(mData.get(position).img);
             holder.comp2.setText(mData.get(position).filename);
-            holder.comp3.setText("개수: " +mData.get(position).number);
-            holder.comp4.setText("평균직경: " + mData.get(position).avDiameter);
-            holder.comp5.setText("전체부피: " + mData.get(position).volume);
+            holder.comp3.setText("개수: " +mData.get(position).number+ "개");
+            holder.comp4.setText("평균직경: " + mData.get(position).avDiameter+ "cm");
+            holder.comp5.setText("전체부피: " + mData.get(position).volume+ "재");
         }
 
         // getItemCount() - 전체 데이터 갯수 리턴.
