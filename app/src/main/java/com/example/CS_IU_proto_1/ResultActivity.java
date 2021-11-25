@@ -1011,15 +1011,15 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             dia /= count;
         int finalCount = count;
         float finalDia = dia;
-        float finalVolumn = volumn;
+        float finalVolumn = volumn / 3338.450667f;
         nowcount = count;
         nowdiameter = dia;
-        nowvol = volumn;
+        nowvol = volumn / 3338.450667f;
         runOnUiThread(() -> {
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
             if(haslongivity){
-                textvolumn.setText(String.format("부피 : %.2fcm³",finalVolumn));
+                textvolumn.setText(String.format("부피 : %.2f 재",finalVolumn));
             }
         });
     }
