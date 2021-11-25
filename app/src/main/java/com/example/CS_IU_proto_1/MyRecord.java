@@ -413,9 +413,9 @@ public class MyRecord extends AppCompatActivity {
                     InputStream inputStream = openFileInput(filename+".JPG");
                     Bitmap image = BitmapFactory.decodeStream(inputStream);
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    if((listFiles[order.get(current_tinfo_idx)+1].length()/1024)>=500 ){
+                    if((getBaseContext().getFileStreamPath(filename+".JPG").length()/1024)>=500 ){
 
-                        image.compress(Bitmap.CompressFormat.JPEG, 30,stream);
+                        image.compress(Bitmap.CompressFormat.JPEG, 25,stream);
                     }else{
 
                         image.compress(Bitmap.CompressFormat.JPEG, 100,stream);
