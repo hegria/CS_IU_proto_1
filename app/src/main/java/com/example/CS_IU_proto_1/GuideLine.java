@@ -201,7 +201,7 @@ public class GuideLine{
         TextView text3 = activity.findViewById(R.id.gl_text3);
         TextView text5 = activity.findViewById(R.id.gl_text5);
         ImageView img = activity.findViewById(R.id.gl_image2);
-        text3.setText("빈칸을 모두 입력한 후 Save 버튼을 통해 저장할 수 있습니다.");
+        text3.setText("기존 그룹명을 선택 또는 새롭게 입력한 후 저장할 수 있습니다.");
         text5.setText("7/8 저장하기");
         Glide.with(activity).load(R.drawable.resultview_img7).into(img);
     }
