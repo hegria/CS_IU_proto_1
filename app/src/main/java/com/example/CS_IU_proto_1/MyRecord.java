@@ -232,13 +232,15 @@ public class MyRecord extends AppCompatActivity {
                             float totalDia = 0.0f;
                             float totalVol = 0.0f;
 
+                            boolean writeTotalInfo = false;
                             for(int i = 0; i < timberList.size(); i++){
                                 if(timberList.get(i).tag.equals(tag_list.get(pos))) {
                                     idx.get(i).inTag = pos;
                                     idx.get(i).inItem = list.size();
 
                                     //전체 정보 세팅1
-                                    if(i == 0) {
+                                    if(!writeTotalInfo) {
+                                        writeTotalInfo = true;
                                         infoDate.setText("일시: " + timberList.get(i).date);
                                         infoPlace.setText("장소: " + timberList.get(i).space);
                                         infoPerson.setText("검척자: " + timberList.get(i).human);
