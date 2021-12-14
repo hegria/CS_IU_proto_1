@@ -74,9 +74,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     GLSurfaceView glView;
     Bitmap image;
-
     ArrayList<Ellipse> ellipses;
-
     DrawText drawText;
 
     float[] projMX;
@@ -91,8 +89,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     float offset;
 
     //경계 값 (원래라면 각각 15, 30)
-    final int b1 = 2;
-    final int b2 = 3;
+    final int b1 = 15;
+    final int b2 = 30;
 
     boolean isBusy = false;
     boolean correctionmode = false;
@@ -104,9 +102,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     ImageButton btnDrawer;
     DrawerLayout drawerLayout;
+
     TextView txtDate;
     EditText txtAddress;
-//    EditText txtFilename;
     EditText txtSpecies;
     EditText txtHuman;
     EditText txtlocation;
@@ -115,13 +113,17 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     TextView textAvgdia;
     TextView textvolumn;
     TextView textnum;
+
     Switch switch1, switch2, switch3;
     RangeSeekBar<Integer> seekBar;
     SeekBar seekBar2;
+
+
     Button correctionbutton;
     Button delbutton;
     Button savebutton;
     Button editbutton;
+
     Plane plane;
     Ellipse nowellipse;
     Ellipse tempellipse;
@@ -163,16 +165,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     String group = "";
     String num = "";
 
-
-    //1. file IO
-    //1-1 image save
-    //1-2 make json file
-    //1-a Load 기능
-    //2. edit button / Save button
-    // visibilty 설정
-    //3. Plane text로 변경
-    //4. Doker
-
     //locaiton
     LocationManager lm;
     Location location;
@@ -192,9 +184,15 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
     // 재장 및 부피
 
     EditText editLongivity;
+
+    // 재장이 있는 경우 부피 계산
+
     boolean haslongivity = false;
     float longivity = 0;
     float volumn;
+
+    // 1인 경우 촬영해서 진입해온 것
+    // 2인 경우 LOAD 기능을 통해 진입해온 것.
 
     int from;
 
@@ -218,7 +216,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         timberinfoDB = TimberinfoDB.getInstance(this);
         context = getApplicationContext();
 
-
+        gson = new Gson();
         guideLine = new GuideLine(this);
         pf = new PrefManager(this);
         if (pf.isFirstTimeLaunch2()) {
@@ -226,9 +224,49 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             gl_state = Gl_State.Filtering;
         }
 
-        // Image랑 Ellipse를 받아내고, 이를 다시 그려내야함.
-        // 그려내는 부분에서 차라리 Ellipse를 평면에 정사영 시키는 편이 낫지 않을까?
-        // Background 같은경우도 새로운 자료형을 만들어내야함( Image를 Bitmap을 통해서 그려낼 수 있는
+        maxVal = 0;
+        minVal = 100;
+
+        glView = (GLSurfaceView) findViewById(R.id.subsurface);
+        glView.setPreserveEGLContextOnPause(true);
+        glView.setEGLContextClientVersion(2);
+        glView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        glView.setRenderer(this);
+        glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        glView.setWillNotDraw(false);
+
+        btnDrawer = findViewById(R.id.btnDrawer);
+        drawerLayout = findViewById(R.id.drawerLayout);
+        txtAddress = findViewById(R.id.txtAddress2);
+        txtlocation = findViewById(R.id.txtlocation2);
+        txtTag = findViewById(R.id.txtTagedit);
+        txtDate = findViewById(R.id.txtDate);
+        textCont = findViewById(R.id.text_logCount);
+        textAvgdia = findViewById(R.id.text_avgDiameter);
+        textvolumn = findViewById(R.id.text_avgDiameter2);
+        switch1 = findViewById(R.id.switch1);
+        switch2 = findViewById(R.id.switch2);
+        switch3 = findViewById(R.id.switch3);
+        seekBar = findViewById(R.id.seekBar);
+        seekBar2 = findViewById(R.id.seekBar2);
+        textnum = findViewById(R.id.txtTag2);
+        correctionbutton = findViewById(R.id.correction);
+        delbutton = findViewById(R.id.correction3);
+        editbutton= findViewById(R.id.Editbtn);
+        savebutton = findViewById(R.id.SaveButton);
+        editLongivity = findViewById(R.id.editTextTextPersonName);
+        txtSpecies = findViewById(R.id.txtSpecies);
+        txtHuman = findViewById(R.id.txtHuman2);
+
+        seekBar2.setVisibility(View.INVISIBLE);
+        correctionbutton.setVisibility(View.INVISIBLE);
+
+        txtTag.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
+        inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+
+
+        // Intent 받아오는 부분
+
         Intent intent = getIntent();
         from = intent.getIntExtra("from",0);
         //1은 그냥 2는 로딩
@@ -241,11 +279,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         byte[] byteArray = intent.getByteArrayExtra("image");
         image = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
 
-
-
-        editLongivity = findViewById(R.id.editTextTextPersonName);
-        txtSpecies = findViewById(R.id.txtSpecies);
-        txtHuman = findViewById(R.id.txtHuman2);
+        // 1일때는 main activity
+        // 2일때는 Load기능에서
 
         switch (from){
             case 1:
@@ -312,40 +347,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
 
-
-        Log.i("img",""+byteArray.length);
-        glView = (GLSurfaceView) findViewById(R.id.subsurface);
-        glView.setPreserveEGLContextOnPause(true);
-        glView.setEGLContextClientVersion(2);
-        glView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-        glView.setRenderer(this);
-        glView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-        glView.setWillNotDraw(false);
-
-        btnDrawer = findViewById(R.id.btnDrawer);
-        drawerLayout = findViewById(R.id.drawerLayout);
-        txtAddress = findViewById(R.id.txtAddress2);
-        txtlocation = findViewById(R.id.txtlocation2);
-        txtTag = findViewById(R.id.txtTagedit);
-        txtDate = findViewById(R.id.txtDate);
-        textCont = findViewById(R.id.text_logCount);
-        textAvgdia = findViewById(R.id.text_avgDiameter);
-        textvolumn = findViewById(R.id.text_avgDiameter2);
-        switch1 = findViewById(R.id.switch1);
-        switch2 = findViewById(R.id.switch2);
-        switch3 = findViewById(R.id.switch3);
-        seekBar = findViewById(R.id.seekBar);
-        seekBar2 = findViewById(R.id.seekBar2);
-        textnum = findViewById(R.id.txtTag2);
-        seekBar2.setVisibility(View.INVISIBLE);
-        correctionbutton = findViewById(R.id.correction);
-        correctionbutton.setVisibility(View.INVISIBLE);
-
-        txtTag.setImeOptions(EditorInfo.IME_FLAG_NO_EXTRACT_UI);
-        inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-
-
-        gson = new Gson();
         File file = getBaseContext().getFileStreamPath("_mytags.json");
         if(file.exists()){
             try {
@@ -371,7 +372,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         }
 
 
-//        txtFilename.setText(filename);
         txtDate.setText("날짜:   " + datestr);
         txtlocation.setText(locationstr);
         txtAddress.setText(addressstr);
@@ -458,8 +458,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
        });
 
+        // 목제가 선택되었을 때는 Apply, 목재가 선택 안되었을 때는 ADD
 
-        // add button
         correctionbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -492,7 +492,10 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 setText();
             }
         });
-        delbutton = findViewById(R.id.correction3);
+
+        // delbtn 목제가 선택이 안되었을 때는 DONE(작업 완료라는 뜻), 목제가 선택되었을 땐 DEL
+
+
         delbutton.setVisibility(View.INVISIBLE);
         delbutton.setText("DONE");
 
@@ -526,7 +529,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
-        editbutton= findViewById(R.id.Editbtn);
+
+
         editbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -553,14 +557,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             public void afterTextChanged(Editable s) {
                 if(!s.toString().isEmpty()){
                     locationstr = s.toString();
-                    //filename = s.toString() +"_"+datestr;
-                    //txtFilename.setText(filename);
                 }
             }
         });
 
 
-        savebutton = findViewById(R.id.SaveButton);
+        //저장 버튼
+
         savebutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -592,9 +595,12 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                     return;
                 }
                 if(group.isEmpty()){
-                    Toast.makeText(ResultActivity.this,"태그를 입력해 주세요.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ResultActivity.this,"그룹명을 입력해 주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                // group 값 검사.
+
                 if(!taglist.contains(group)) {
                     GroupInfo groupInfo = new GroupInfo();
                     groupInfo.location = locationstr;
@@ -625,8 +631,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
                 FileOutputStream fos_img = null;
 
-
-
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.add("plane",gson.toJsonTree(plane).getAsJsonObject());
                 jsonObject.add("ellipses",gson.toJsonTree(ellipses).getAsJsonArray());
@@ -635,7 +639,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 jsonObject.add("cameratrans",gson.toJsonTree(cameratrans).getAsJsonArray());
                 jsonObject.addProperty("offset",offset);
 
-                // TODO 이미 info가 있는지 확인해야함.
+                // DATABASE 저장
 
                 Timberinfo timberinfo = new Timberinfo();
                 timberinfo.filename = filename;
@@ -649,7 +653,6 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 timberinfo.avgDiameter = nowdiameter;
                 timberinfo.volumn = nowvol;
                 timberinfo.tag = group;
-
 
                 class InsertRunnable implements Runnable{
                     Timberinfo timberinfo;
@@ -666,6 +669,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 Thread t = new Thread(insertRunnable);
                 t.start();
 
+                // 화면 내용에 대해서 json로 저장.
 
                 File file = getBaseContext().getFileStreamPath(filename+".json");
                 if(file.exists()){
@@ -723,6 +727,9 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                 case MotionEvent.ACTION_UP:
                     long deltatime = event.getEventTime() - event.getDownTime();
                     Log.i("Time",""+deltatime);
+
+                    // 길게 터치 안 했을때
+
                     if(deltatime<LONG_PRESS_TIME||!isEdit){
 
                         if(!correctionmode){
@@ -753,6 +760,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
                             nowellipse.movepivot(ray,plane,projMX,viewMX);
                         }
                     }else {
+
+                        // 길게 터치 했을 때
 
                         if (!correctionmode&&isEdit) {
                             worker.execute(() -> {
@@ -853,15 +862,16 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             setText();
         });
 
-        maxVal = 0;
-        minVal = 100;
 
-        for(Ellipse ellipse : ellipses){
-            if(ellipse.size < minVal)
+        for(Ellipse ellipse : ellipses) {
+            if (ellipse.size < minVal)
                 minVal = ellipse.size;
-            if(ellipse.size > maxVal)
+            if (ellipse.size > maxVal)
                 maxVal = ellipse.size;
         }
+
+
+        // SEEK BAR 제어
 
         seekBar.setRangeValues(minVal, maxVal);
         seekBar.setOnRangeSeekBarChangeListener((bar, minValue, maxValue) -> {
@@ -874,6 +884,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             }
             setText();
         });
+
         seekBar2.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -904,6 +915,11 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
         });
     }
+
+    //##############
+    //    GLView
+    //##############
+
 
     @Override
     protected void onPause() {
@@ -936,6 +952,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
     }
 
+    // onDrawFrame TOOGLE 된 것들만 그려내기.
+
     @Override
     public void onDrawFrame(GL10 gl) {
         if(!isBusy) {
@@ -965,6 +983,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         drawText.draw();
     }
 
+
+    // ##############
+    //   나머지 기능
+    // ##############
+
+    //Toggle 입력에 따라 minval maxval 조정.
+
     void setRange(){
         if(switch1.isChecked() && switch2.isChecked() && switch3.isChecked()) {
             seekBar.setSelectedMinValue(minVal);
@@ -992,6 +1017,8 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
             seekBar.setSelectedMaxValue(minVal);
         }
     }
+    
+    // Text 정보 새로고침
 
     @SuppressLint("DefaultLocale")
     void setText(){
@@ -1009,12 +1036,17 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         }
         if(count != 0)
             dia /= count;
+
+        // UI 적용을 위한 값 계산.
+
         int finalCount = count;
         float finalDia = dia;
         float finalVolumn = volumn / 3338.450667f;
+
         nowcount = count;
         nowdiameter = dia;
         nowvol = volumn / 3338.450667f;
+
         runOnUiThread(() -> {
             textCont.setText(String.format("개수 : %d개", finalCount));
             textAvgdia.setText(String.format("평균 직경 : %.1fcm", finalDia));
@@ -1024,6 +1056,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         });
     }
 
+    // GuideLine
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -1070,6 +1103,7 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
         return true;
     }
 
+    // 뒤로가기 버튼 제어
 
     @Override
     public void onBackPressed() {
@@ -1104,10 +1138,13 @@ public class ResultActivity extends AppCompatActivity implements GLSurfaceView.R
 
 
 }
+
 class GroupInfo{
+
     String location;
     String human;
     String spices;
     String address;
     int maxnum;
+
 }
